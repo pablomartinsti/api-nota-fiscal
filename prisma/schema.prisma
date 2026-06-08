@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PerfilUsuario {
+  DONO
+  ADMIN
+  OPERADOR
+}
+
+enum RegimeTributario {
+  MEI
+  SIMPLES_NACIONAL
+  LUCRO_PRESUMIDO
+  LUCRO_REAL
+}
+
+enum StatusNota {
+  RASCUNHO
+  EMITIDA
+  CANCELADA
+  ERRO
+}
+
+model Empresa {
+  id                 String            @id @default(uuid())
+  razaoSocial        String
+  nomeFantasia       String?
+  cnpj               String            @unique
+  inscricaoMunicipal String?
+  regimeTributario   RegimeTributario
+  cidade             String
+  uf                 String
+  ativo              Boolean           @default(true)
+
+  usuarios           Usuario[]
+  clientes           Cliente[]
+  servicos           Servico[]
+  notas              NotaServico[]
+
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  @@map("empresas")
+}
+
+model Usuario {
+  id          String        @id @default(uuid())
+  empresaId   String
+  nome        String
+  email       String        @unique
+  senhaHash   String
+  perfil      PerfilUsuario @default(DONO)
+  ativo       Boolean       @default(true)
+
+  empresa     Empresa       @relation(fields: [empresaId], references: [id])
+  notas       NotaServico[]
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([empresaId])
+  @@map("usuarios")
+}
+
+model Cliente {
+  id                 String        @id @default(uuid())
+  empresaId          String
+  nomeRazaoSocial    String
+  cpfCnpj            String
+  email              String?
+  telefone           String?
+  cep                String?
+  endereco           String?
+  numero             String?
+  bairro             String?
+  cidade             String
+  uf                 String
+  inscricaoMunicipal String?
+  ativo              Boolean       @default(true)
+
+  empresa            Empresa       @relation(fields: [empresaId], references: [id])
+  notas              NotaServico[]
+
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@unique([empresaId, cpfCnpj])
+  @@index([empresaId])
+  @@map("clientes")
+}
+
+model Servico {
+  id                       String        @id @default(uuid())
+  empresaId                String
+  descricao                String
+  codigoServico            String
+  codigoTributacaoMunicipal String?
+  aliquotaIss              Decimal       @db.Decimal(5, 2)
+  valorPadrao              Decimal?      @db.Decimal(10, 2)
+  ativo                    Boolean       @default(true)
+
+  empresa                  Empresa       @relation(fields: [empresaId], references: [id])
+  notas                    NotaServico[]
+
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
+
+  @@index([empresaId])
+  @@map("servicos")
+}
+
+model NotaServico {
+  id                String      @id @default(uuid())
+
+  empresaId         String
+  usuarioId         String
+  clienteId         String
+  servicoId         String
+
+  numeroNfse        String?
+  codigoVerificacao String?
+
+  valorServico      Decimal     @db.Decimal(10, 2)
+  valorIss          Decimal     @db.Decimal(10, 2)
+  aliquotaIss       Decimal     @db.Decimal(5, 2)
+
+  descricao         String
+  status            StatusNota  @default(RASCUNHO)
+
+  dataEmissao       DateTime?
+  linkPdf           String?
+  xmlUrl            String?
+  mensagemErro      String?
+
+  empresa           Empresa     @relation(fields: [empresaId], references: [id])
+  usuario           Usuario     @relation(fields: [usuarioId], references: [id])
+  cliente           Cliente     @relation(fields: [clienteId], references: [id])
+  servico           Servico     @relation(fields: [servicoId], references: [id])
+
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([empresaId])
+  @@index([clienteId])
+  @@index([servicoId])
+  @@index([usuarioId])
+  @@index([status])
+  @@map("notas_servico")
+}
