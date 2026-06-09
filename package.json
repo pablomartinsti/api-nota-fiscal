@@ -6,6 +6,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "start": "node build/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
