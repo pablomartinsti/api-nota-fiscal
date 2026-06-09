@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { RegimeTributario } from '../entities/Empresa';
+import { CnpjJaCadastradoError } from '../errors/CnpjJaCadastradoError';
 import { InMemoryEmpresaRepository } from '../repositories/in-memory/InMemoryEmpresaRepository';
 import { CadastrarEmpresaService } from './CadastrarEmpresaService';
 
@@ -30,8 +31,8 @@ describe('CadastrarEmpresaService', () => {
 
     await service.executar(dadosEmpresa);
 
-    await expect(service.executar(dadosEmpresa)).rejects.toThrow(
-      'Já existe uma empresa cadastrada com este CNPJ.',
+    await expect(service.executar(dadosEmpresa)).rejects.toBeInstanceOf(
+      CnpjJaCadastradoError,
     );
   });
 });

@@ -1,4 +1,5 @@
 import { Empresa, RegimeTributario } from '../entities/Empresa';
+import { CnpjJaCadastradoError } from '../errors/CnpjJaCadastradoError';
 import { EmpresaRepository } from '../repositories/EmpresaRepository';
 
 export interface CadastrarEmpresaInput {
@@ -21,7 +22,7 @@ export class CadastrarEmpresaService {
     );
 
     if (empresaExistente) {
-      throw new Error('Já existe uma empresa cadastrada com este CNPJ.');
+      throw new CnpjJaCadastradoError();
     }
 
     return this.empresaRepository.salvar(empresa);
