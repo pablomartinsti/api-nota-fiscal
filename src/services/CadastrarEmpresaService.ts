@@ -24,8 +24,6 @@ export class CadastrarEmpresaService {
       throw new Error('Já existe uma empresa cadastrada com este CNPJ.');
     }
 
-    await this.empresaRepository.salvar(empresa);
-
-    return empresa;
+    return this.empresaRepository.salvar(empresa);
   }
 }

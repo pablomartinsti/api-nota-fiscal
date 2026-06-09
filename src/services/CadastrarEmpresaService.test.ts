@@ -19,6 +19,7 @@ describe('CadastrarEmpresaService', () => {
 
     const empresa = await service.executar(dadosEmpresa);
 
+    expect(empresa.id).toBeDefined();
     expect(empresa.cnpj).toBe('12345678000190');
     await expect(repository.buscarPorCnpj(empresa.cnpj)).resolves.toBe(empresa);
   });

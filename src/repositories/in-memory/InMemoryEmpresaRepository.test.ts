@@ -71,4 +71,14 @@ describe('InMemoryEmpresaRepository', () => {
 
     expect(repository.items).toHaveLength(2);
   });
+
+  it('deve retornar uma empresa persistida com ID ao salvar uma empresa nova', async () => {
+    const repository = new InMemoryEmpresaRepository();
+    const empresa = criarEmpresa(undefined, '12345678000190');
+
+    const empresaPersistida = await repository.salvar(empresa);
+
+    expect(empresaPersistida.id).toBeDefined();
+    expect(empresaPersistida.cnpj).toBe(empresa.cnpj);
+  });
 });
