@@ -58,6 +58,9 @@ describe('PrismaUsuarioRepository', () => {
     );
 
     expect(usuario.id).toBeDefined();
+    await expect(usuarioRepository.buscarPorId(usuario.id!)).resolves.toEqual(
+      usuario,
+    );
     await expect(usuarioRepository.buscarPorEmail(usuario.email)).resolves.toEqual(
       usuario,
     );
@@ -67,6 +70,9 @@ describe('PrismaUsuarioRepository', () => {
   });
 
   it('deve retornar null quando não encontrar usuário', async () => {
+    await expect(
+      usuarioRepository.buscarPorId(randomUUID()),
+    ).resolves.toBeNull();
     await expect(
       usuarioRepository.buscarPorEmail('inexistente@exemplo.com'),
     ).resolves.toBeNull();

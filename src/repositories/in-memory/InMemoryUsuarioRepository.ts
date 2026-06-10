@@ -34,6 +34,10 @@ export class InMemoryUsuarioRepository implements UsuarioRepository {
     return usuarioPersistido;
   }
 
+  async buscarPorId(id: string): Promise<Usuario | null> {
+    return this.items.find((usuario) => usuario.id === id) ?? null;
+  }
+
   async buscarPorEmail(email: string): Promise<Usuario | null> {
     return this.items.find((usuario) => usuario.email === email) ?? null;
   }

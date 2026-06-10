@@ -19,6 +19,14 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
     return PrismaUsuarioMapper.paraDominio(registro);
   }
 
+  async buscarPorId(id: string): Promise<Usuario | null> {
+    const registro = await prisma.usuario.findUnique({
+      where: { id },
+    });
+
+    return registro ? PrismaUsuarioMapper.paraDominio(registro) : null;
+  }
+
   async buscarPorEmail(email: string): Promise<Usuario | null> {
     const registro = await prisma.usuario.findUnique({
       where: { email },

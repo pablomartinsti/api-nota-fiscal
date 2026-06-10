@@ -1,7 +1,9 @@
 import { ErrorRequestHandler } from 'express';
 import { ZodError } from 'zod';
 
+import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
 import { CnpjJaCadastradoError } from '../errors/CnpjJaCadastradoError';
+import { CredenciaisInvalidasError } from '../errors/CredenciaisInvalidasError';
 import { EmailJaCadastradoError } from '../errors/EmailJaCadastradoError';
 import { EmpresaInativaError } from '../errors/EmpresaInativaError';
 import { EmpresaNaoEncontradaError } from '../errors/EmpresaNaoEncontradaError';
@@ -29,6 +31,16 @@ export const errorHandler: ErrorRequestHandler = (
 
   if (error instanceof EmpresaNaoEncontradaError) {
     response.status(404).json({
+      message: error.message,
+    });
+    return;
+  }
+
+  if (
+    error instanceof AutenticacaoInvalidaError ||
+    error instanceof CredenciaisInvalidasError
+  ) {
+    response.status(401).json({
       message: error.message,
     });
     return;
