@@ -11,6 +11,7 @@ import { EmailJaCadastradoError } from '../errors/EmailJaCadastradoError';
 import { EmpresaInativaError } from '../errors/EmpresaInativaError';
 import { EmpresaNaoEncontradaError } from '../errors/EmpresaNaoEncontradaError';
 import { ProprietarioJaCadastradoError } from '../errors/ProprietarioJaCadastradoError';
+import { ServicoNaoEncontradoError } from '../errors/ServicoNaoEncontradoError';
 import { UsuarioNaoEncontradoError } from '../errors/UsuarioNaoEncontradoError';
 
 export const errorHandler: ErrorRequestHandler = (
@@ -35,7 +36,8 @@ export const errorHandler: ErrorRequestHandler = (
 
   if (
     error instanceof EmpresaNaoEncontradaError ||
-    error instanceof ClienteNaoEncontradoError
+    error instanceof ClienteNaoEncontradoError ||
+    error instanceof ServicoNaoEncontradoError
   ) {
     response.status(404).json({
       message: error.message,
