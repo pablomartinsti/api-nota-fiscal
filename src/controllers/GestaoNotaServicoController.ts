@@ -3,13 +3,17 @@ import { Request, Response } from 'express';
 import {
   atualizarRascunhoNotaServicoSchema,
   cadastrarRascunhoNotaServicoSchema,
+  emitirNotaServicoSchema,
   notaServicoParamsSchema,
 } from '../dtos/GestaoNotaServicoDto';
 import { NotaServicoPresenter } from '../presenters/NotaServicoPresenter';
 import { AtualizarRascunhoNotaServicoService } from '../services/AtualizarRascunhoNotaServicoService';
 import { BuscarNotaServicoService } from '../services/BuscarNotaServicoService';
+import { CancelarNotaServicoService } from '../services/CancelarNotaServicoService';
 import { CadastrarRascunhoNotaServicoService } from '../services/CadastrarRascunhoNotaServicoService';
+import { EmitirNotaServicoService } from '../services/EmitirNotaServicoService';
 import { ListarNotasServicoService } from '../services/ListarNotasServicoService';
+import { RetornarNotaServicoParaRascunhoService } from '../services/RetornarNotaServicoParaRascunhoService';
 
 export class GestaoNotaServicoController {
   constructor(
@@ -17,6 +21,9 @@ export class GestaoNotaServicoController {
     private readonly listarService: ListarNotasServicoService,
     private readonly buscarService: BuscarNotaServicoService,
     private readonly atualizarService: AtualizarRascunhoNotaServicoService,
+    private readonly emitirService: EmitirNotaServicoService,
+    private readonly retornarParaRascunhoService: RetornarNotaServicoParaRascunhoService,
+    private readonly cancelarService: CancelarNotaServicoService,
   ) {}
 
   async cadastrar(request: Request, response: Response): Promise<Response> {
@@ -52,6 +59,41 @@ export class GestaoNotaServicoController {
       request.autenticacao,
       notaId,
       input,
+    );
+
+    return response.status(200).json(NotaServicoPresenter.paraHttp(nota));
+  }
+
+  async emitir(request: Request, response: Response): Promise<Response> {
+    const { notaId } = notaServicoParamsSchema.parse(request.params);
+    const { simularFalha } = emitirNotaServicoSchema.parse(request.body ?? {});
+    const nota = await this.emitirService.executar(
+      request.autenticacao,
+      notaId,
+      simularFalha,
+    );
+
+    return response.status(200).json(NotaServicoPresenter.paraHttp(nota));
+  }
+
+  async retornarParaRascunho(
+    request: Request,
+    response: Response,
+  ): Promise<Response> {
+    const { notaId } = notaServicoParamsSchema.parse(request.params);
+    const nota = await this.retornarParaRascunhoService.executar(
+      request.autenticacao,
+      notaId,
+    );
+
+    return response.status(200).json(NotaServicoPresenter.paraHttp(nota));
+  }
+
+  async cancelar(request: Request, response: Response): Promise<Response> {
+    const { notaId } = notaServicoParamsSchema.parse(request.params);
+    const nota = await this.cancelarService.executar(
+      request.autenticacao,
+      notaId,
     );
 
     return response.status(200).json(NotaServicoPresenter.paraHttp(nota));

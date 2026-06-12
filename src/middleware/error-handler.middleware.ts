@@ -16,6 +16,7 @@ import { NotaServicoNaoPodeSerAlteradaError } from '../errors/NotaServicoNaoPode
 import { ProprietarioJaCadastradoError } from '../errors/ProprietarioJaCadastradoError';
 import { ServicoInativoError } from '../errors/ServicoInativoError';
 import { ServicoNaoEncontradoError } from '../errors/ServicoNaoEncontradoError';
+import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { UsuarioNaoEncontradoError } from '../errors/UsuarioNaoEncontradoError';
 
 export const errorHandler: ErrorRequestHandler = (
@@ -81,7 +82,8 @@ export const errorHandler: ErrorRequestHandler = (
     error instanceof CpfCnpjJaCadastradoError ||
     error instanceof ClienteInativoError ||
     error instanceof ServicoInativoError ||
-    error instanceof NotaServicoNaoPodeSerAlteradaError
+    error instanceof NotaServicoNaoPodeSerAlteradaError ||
+    error instanceof TransicaoStatusNotaInvalidaError
   ) {
     response.status(409).json({
       message: error.message,

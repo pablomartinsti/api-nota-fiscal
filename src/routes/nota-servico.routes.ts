@@ -22,5 +22,15 @@ notaServicoRoutes.get('/notas-servico/:notaId', (request, response) =>
 notaServicoRoutes.put('/notas-servico/:notaId', (request, response) =>
   controller.atualizar(request, response),
 );
+notaServicoRoutes.post('/notas-servico/:notaId/emitir', (request, response) =>
+  controller.emitir(request, response),
+);
+notaServicoRoutes.post(
+  '/notas-servico/:notaId/retornar-rascunho',
+  (request, response) => controller.retornarParaRascunho(request, response),
+);
+notaServicoRoutes.post('/notas-servico/:notaId/cancelar', (request, response) =>
+  controller.cancelar(request, response),
+);
 
 export { notaServicoRoutes };

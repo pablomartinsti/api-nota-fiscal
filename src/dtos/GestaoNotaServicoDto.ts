@@ -18,3 +18,7 @@ export const atualizarRascunhoNotaServicoSchema = z.object(
 export const notaServicoParamsSchema = z.object({
   notaId: z.string().trim().min(1),
 });
+
+export const emitirNotaServicoSchema = z.object({
+  simularFalha: z.boolean().optional(),
+});
