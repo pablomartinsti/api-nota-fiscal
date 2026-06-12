@@ -9,11 +9,8 @@ import { CnpjJaCadastradoError } from '../errors/CnpjJaCadastradoError';
 import { CpfCnpjJaCadastradoError } from '../errors/CpfCnpjJaCadastradoError';
 import { CredenciaisInvalidasError } from '../errors/CredenciaisInvalidasError';
 import { EmailJaCadastradoError } from '../errors/EmailJaCadastradoError';
-import { EmpresaInativaError } from '../errors/EmpresaInativaError';
-import { EmpresaNaoEncontradaError } from '../errors/EmpresaNaoEncontradaError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { NotaServicoNaoPodeSerAlteradaError } from '../errors/NotaServicoNaoPodeSerAlteradaError';
-import { ProprietarioJaCadastradoError } from '../errors/ProprietarioJaCadastradoError';
 import { ServicoInativoError } from '../errors/ServicoInativoError';
 import { ServicoNaoEncontradoError } from '../errors/ServicoNaoEncontradoError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
@@ -40,7 +37,6 @@ export const errorHandler: ErrorRequestHandler = (
   }
 
   if (
-    error instanceof EmpresaNaoEncontradaError ||
     error instanceof ClienteNaoEncontradoError ||
     error instanceof ServicoNaoEncontradoError ||
     error instanceof NotaServicoNaoEncontradaError
@@ -77,8 +73,6 @@ export const errorHandler: ErrorRequestHandler = (
 
   if (
     error instanceof EmailJaCadastradoError ||
-    error instanceof EmpresaInativaError ||
-    error instanceof ProprietarioJaCadastradoError ||
     error instanceof CpfCnpjJaCadastradoError ||
     error instanceof ClienteInativoError ||
     error instanceof ServicoInativoError ||
