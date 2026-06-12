@@ -15,6 +15,12 @@ export interface RealizarOnboardingInput {
     cnpj: string;
     inscricaoMunicipal?: string;
     regimeTributario: RegimeTributario;
+    email?: string;
+    telefone?: string;
+    cep?: string;
+    endereco?: string;
+    numero?: string;
+    bairro?: string;
     cidade: string;
     uf: string;
   };

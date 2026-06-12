@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 
 import { realizarOnboardingSchema } from '../dtos/RealizarOnboardingDto';
+import { EmpresaPresenter } from '../presenters/EmpresaPresenter';
 import { RealizarOnboardingService } from '../services/RealizarOnboardingService';
 
 export class RealizarOnboardingController {
@@ -14,19 +15,7 @@ export class RealizarOnboardingController {
       await this.realizarOnboardingService.executar(input);
 
     return response.status(201).json({
-      empresa: {
-        id: empresa.id,
-        razaoSocial: empresa.razaoSocial,
-        nomeFantasia: empresa.nomeFantasia,
-        cnpj: empresa.cnpj,
-        inscricaoMunicipal: empresa.inscricaoMunicipal,
-        regimeTributario: empresa.regimeTributario,
-        cidade: empresa.cidade,
-        uf: empresa.uf,
-        ativo: empresa.ativo,
-        createdAt: empresa.createdAt,
-        updatedAt: empresa.updatedAt,
-      },
+      empresa: EmpresaPresenter.paraHttp(empresa),
       proprietario: {
         id: proprietario.id,
         empresaId: proprietario.empresaId,

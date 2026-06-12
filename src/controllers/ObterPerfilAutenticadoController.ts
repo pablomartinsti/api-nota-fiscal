@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 
+import { EmpresaPresenter } from '../presenters/EmpresaPresenter';
 import { ObterPerfilAutenticadoService } from '../services/ObterPerfilAutenticadoService';
 
 export class ObterPerfilAutenticadoController {
@@ -20,17 +21,7 @@ export class ObterPerfilAutenticadoController {
         perfil: usuario.perfil,
         ativo: usuario.ativo,
       },
-      empresa: {
-        id: empresa.id,
-        razaoSocial: empresa.razaoSocial,
-        nomeFantasia: empresa.nomeFantasia,
-        cnpj: empresa.cnpj,
-        inscricaoMunicipal: empresa.inscricaoMunicipal,
-        regimeTributario: empresa.regimeTributario,
-        cidade: empresa.cidade,
-        uf: empresa.uf,
-        ativo: empresa.ativo,
-      },
+      empresa: EmpresaPresenter.paraResumoHttp(empresa),
     });
   }
 }

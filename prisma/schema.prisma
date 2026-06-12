@@ -33,6 +33,12 @@ model Empresa {
   cnpj               String            @unique
   inscricaoMunicipal String?
   regimeTributario   RegimeTributario
+  email              String?
+  telefone           String?
+  cep                String?
+  endereco           String?
+  numero             String?
+  bairro             String?
   cidade             String
   uf                 String
   ativo              Boolean           @default(true)

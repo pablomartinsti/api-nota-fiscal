@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import { autenticacaoRoutes } from './autenticacao.routes';
 import { clienteRoutes } from './cliente.routes';
+import { empresaRoutes } from './empresa.routes';
 import { notaServicoRoutes } from './nota-servico.routes';
 import { onboardingRoutes } from './onboarding.routes';
 import { servicoRoutes } from './servico.routes';
@@ -17,6 +18,7 @@ routes.get('/', (request, response) => {
 
 routes.use(onboardingRoutes);
 routes.use(autenticacaoRoutes);
+routes.use(empresaRoutes);
 routes.use(usuarioRoutes);
 routes.use(clienteRoutes);
 routes.use(servicoRoutes);
