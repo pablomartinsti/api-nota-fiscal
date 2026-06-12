@@ -27,6 +27,20 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
     return registro ? PrismaUsuarioMapper.paraDominio(registro) : null;
   }
 
+  async buscarPorIdEEmpresaId(
+    id: string,
+    empresaId: string,
+  ): Promise<Usuario | null> {
+    const registro = await prisma.usuario.findFirst({
+      where: {
+        id,
+        empresaId,
+      },
+    });
+
+    return registro ? PrismaUsuarioMapper.paraDominio(registro) : null;
+  }
+
   async buscarPorEmail(email: string): Promise<Usuario | null> {
     const registro = await prisma.usuario.findUnique({
       where: { email },
@@ -44,5 +58,14 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
     });
 
     return registro ? PrismaUsuarioMapper.paraDominio(registro) : null;
+  }
+
+  async listarPorEmpresaId(empresaId: string): Promise<Usuario[]> {
+    const registros = await prisma.usuario.findMany({
+      where: { empresaId },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return registros.map(PrismaUsuarioMapper.paraDominio);
   }
 }

@@ -1,6 +1,7 @@
 import { ErrorRequestHandler } from 'express';
 import { ZodError } from 'zod';
 
+import { AcessoNegadoError } from '../errors/AcessoNegadoError';
 import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
 import { CnpjJaCadastradoError } from '../errors/CnpjJaCadastradoError';
 import { CredenciaisInvalidasError } from '../errors/CredenciaisInvalidasError';
@@ -8,6 +9,7 @@ import { EmailJaCadastradoError } from '../errors/EmailJaCadastradoError';
 import { EmpresaInativaError } from '../errors/EmpresaInativaError';
 import { EmpresaNaoEncontradaError } from '../errors/EmpresaNaoEncontradaError';
 import { ProprietarioJaCadastradoError } from '../errors/ProprietarioJaCadastradoError';
+import { UsuarioNaoEncontradoError } from '../errors/UsuarioNaoEncontradoError';
 
 export const errorHandler: ErrorRequestHandler = (
   error,
@@ -36,11 +38,25 @@ export const errorHandler: ErrorRequestHandler = (
     return;
   }
 
+  if (error instanceof UsuarioNaoEncontradoError) {
+    response.status(404).json({
+      message: error.message,
+    });
+    return;
+  }
+
   if (
     error instanceof AutenticacaoInvalidaError ||
     error instanceof CredenciaisInvalidasError
   ) {
     response.status(401).json({
+      message: error.message,
+    });
+    return;
+  }
+
+  if (error instanceof AcessoNegadoError) {
+    response.status(403).json({
       message: error.message,
     });
     return;

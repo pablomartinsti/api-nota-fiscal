@@ -38,6 +38,17 @@ export class InMemoryUsuarioRepository implements UsuarioRepository {
     return this.items.find((usuario) => usuario.id === id) ?? null;
   }
 
+  async buscarPorIdEEmpresaId(
+    id: string,
+    empresaId: string,
+  ): Promise<Usuario | null> {
+    return (
+      this.items.find(
+        (usuario) => usuario.id === id && usuario.empresaId === empresaId,
+      ) ?? null
+    );
+  }
+
   async buscarPorEmail(email: string): Promise<Usuario | null> {
     return this.items.find((usuario) => usuario.email === email) ?? null;
   }
@@ -50,5 +61,9 @@ export class InMemoryUsuarioRepository implements UsuarioRepository {
           usuario.perfil === PerfilUsuario.DONO,
       ) ?? null
     );
+  }
+
+  async listarPorEmpresaId(empresaId: string): Promise<Usuario[]> {
+    return this.items.filter((usuario) => usuario.empresaId === empresaId);
   }
 }

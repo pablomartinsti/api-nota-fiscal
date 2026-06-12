@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import { autenticacaoRoutes } from './autenticacao.routes';
 import { empresaRoutes } from './empresa.routes';
+import { usuarioRoutes } from './usuario.routes';
 
 const routes = Router();
 
@@ -13,5 +14,6 @@ routes.get('/', (request, response) => {
 
 routes.use(empresaRoutes);
 routes.use(autenticacaoRoutes);
+routes.use(usuarioRoutes);
 
 export { routes };
