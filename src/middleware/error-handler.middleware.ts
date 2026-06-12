@@ -3,7 +3,9 @@ import { ZodError } from 'zod';
 
 import { AcessoNegadoError } from '../errors/AcessoNegadoError';
 import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
+import { ClienteNaoEncontradoError } from '../errors/ClienteNaoEncontradoError';
 import { CnpjJaCadastradoError } from '../errors/CnpjJaCadastradoError';
+import { CpfCnpjJaCadastradoError } from '../errors/CpfCnpjJaCadastradoError';
 import { CredenciaisInvalidasError } from '../errors/CredenciaisInvalidasError';
 import { EmailJaCadastradoError } from '../errors/EmailJaCadastradoError';
 import { EmpresaInativaError } from '../errors/EmpresaInativaError';
@@ -31,7 +33,10 @@ export const errorHandler: ErrorRequestHandler = (
     return;
   }
 
-  if (error instanceof EmpresaNaoEncontradaError) {
+  if (
+    error instanceof EmpresaNaoEncontradaError ||
+    error instanceof ClienteNaoEncontradoError
+  ) {
     response.status(404).json({
       message: error.message,
     });
@@ -65,7 +70,8 @@ export const errorHandler: ErrorRequestHandler = (
   if (
     error instanceof EmailJaCadastradoError ||
     error instanceof EmpresaInativaError ||
-    error instanceof ProprietarioJaCadastradoError
+    error instanceof ProprietarioJaCadastradoError ||
+    error instanceof CpfCnpjJaCadastradoError
   ) {
     response.status(409).json({
       message: error.message,

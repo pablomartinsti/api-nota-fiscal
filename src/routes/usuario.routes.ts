@@ -14,10 +14,10 @@ const gestoresMiddleware = new AutorizacaoPerfilMiddleware([
 const donoMiddleware = new AutorizacaoPerfilMiddleware([PerfilUsuario.DONO]);
 const controller = criarGestaoUsuarioController();
 
-usuarioRoutes.use((request, response, next) =>
+usuarioRoutes.use('/usuarios', (request, response, next) =>
   autenticacaoMiddleware.handle(request, response, next),
 );
-usuarioRoutes.use((request, response, next) =>
+usuarioRoutes.use('/usuarios', (request, response, next) =>
   gestoresMiddleware.handle(request, response, next),
 );
 
