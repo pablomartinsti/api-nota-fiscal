@@ -5,6 +5,7 @@ import { clienteRoutes } from './cliente.routes';
 import { empresaRoutes } from './empresa.routes';
 import { notaServicoRoutes } from './nota-servico.routes';
 import { onboardingRoutes } from './onboarding.routes';
+import { operacionalRoutes } from './operacional.routes';
 import { servicoRoutes } from './servico.routes';
 import { usuarioRoutes } from './usuario.routes';
 
@@ -16,6 +17,7 @@ routes.get('/', (request, response) => {
   });
 });
 
+routes.use(operacionalRoutes);
 routes.use(onboardingRoutes);
 routes.use(autenticacaoRoutes);
 routes.use(empresaRoutes);

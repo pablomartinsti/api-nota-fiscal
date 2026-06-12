@@ -157,7 +157,7 @@ describe('POST /onboarding', () => {
       .send(dados.proprietario);
 
     expect(invalido.status).toBe(400);
-    expect(cadastroEmpresaAntigo.status).toBe(401);
-    expect(cadastroDonoAntigo.status).toBe(401);
+    expect(cadastroEmpresaAntigo.status).toBe(404);
+    expect(cadastroDonoAntigo.status).toBe(404);
   });
 });

@@ -1,19 +1,11 @@
-# Sistema de Emissão de NFS-e
+# API de Emissao de NFS-e
 
-Sistema SaaS para emissão de Notas Fiscais de Serviço (NFS-e), desenvolvido com Node.js, TypeScript, Express, Prisma e PostgreSQL.
+API SaaS multiempresa para gestao e futura emissao de Notas Fiscais de
+Servico Eletronicas (NFS-e).
 
-## Objetivo
-
-O objetivo deste projeto é permitir que empresas emitam notas fiscais de serviço de forma rápida, organizada e segura.
-
-Cada empresa possui seu próprio ambiente com:
-
-- Usuários
-- Clientes
-- Serviços
-- Notas Fiscais
-
-O sistema foi projetado utilizando arquitetura em camadas e preparado para integração futura com a NFS-e Nacional.
+O projeto possui autenticacao, isolamento de dados por empresa e gestao de
+usuarios, clientes, servicos e notas. A comunicacao com a NFS-e Nacional ainda
+nao foi integrada: emissao e cancelamento utilizam um emissor simulado.
 
 ## Tecnologias
 
@@ -25,51 +17,151 @@ O sistema foi projetado utilizando arquitetura em camadas e preparado para integ
 - Docker
 - JWT
 - Zod
+- Vitest e Supertest
+
+## Funcionalidades implementadas
+
+- Onboarding atomico de empresa e usuario proprietario
+- Autenticacao JWT e alteracao de senha
+- Perfis `DONO`, `ADMIN` e `OPERADOR`
+- Isolamento multiempresa
+- Gestao da empresa autenticada
+- Gestao de usuarios, clientes e servicos
+- Criacao e atualizacao de notas em rascunho
+- Calculo de ISS
+- Ciclo simulado de emissao, erro, retorno para rascunho e cancelamento
+- Health check, readiness check e resposta JSON para rotas inexistentes
+- Testes unitarios e testes de integracao HTTP
 
 ## Arquitetura
 
+```text
 Route
-↓
-Controller
-↓
-Service
-↓
-Repository
-↓
-Prisma
-↓
-PostgreSQL
+  -> Controller
+    -> Service
+      -> Repository
+        -> Prisma
+          -> PostgreSQL
+```
 
-## Estrutura do Projeto
+As entidades concentram regras de dominio. Os services coordenam casos de uso,
+e os repositories isolam a persistencia. O contrato `EmissorNotaServico`
+permite substituir o emissor simulado por uma integracao fiscal real no futuro.
 
-src
-├── controllers
-├── database
-├── dtos
-├── entities
-├── errors
-├── factories
-├── middleware
-├── routes
-├── services
-└── server.ts
+## Requisitos
 
-## Funcionalidades Planejadas
+- Node.js
+- Docker e Docker Compose
+- npm
 
-- [x] Configuração inicial do projeto
-- [x] Docker
-- [x] PostgreSQL
-- [x] Prisma
-- [x] Primeira rota da API
+## Configuracao
 
-- [ ] Autenticação
-- [ ] Empresas
-- [ ] Usuários
-- [ ] Clientes
-- [ ] Serviços
-- [ ] Notas Fiscais
-- [ ] Integração com NFS-e Nacional
+1. Instale as dependencias:
 
-## Status do Projeto
+```bash
+npm install
+```
 
-🚧 Em desenvolvimento
+2. Crie o arquivo `.env` a partir de `.env.example` e configure:
+
+```env
+DATABASE_URL="postgresql://usuario:senha@localhost:5432/banco"
+JWT_SECRET="substitua-por-uma-chave-secreta-forte"
+PORT=3333
+CORS_ORIGIN="http://localhost:3000"
+NODE_ENV="development"
+```
+
+Use `CORS_ORIGIN="*"` para liberar todas as origens durante desenvolvimento.
+Mais de uma origem pode ser informada separando os enderecos por virgula.
+
+3. Inicie o PostgreSQL:
+
+```bash
+docker compose up -d
+```
+
+4. Gere o Prisma Client e execute as migrations:
+
+```bash
+npm run prisma:generate
+npm run prisma:migrate
+```
+
+5. Inicie a API:
+
+```bash
+npm run dev
+```
+
+## Scripts
+
+```bash
+npm run dev
+npm run build
+npm test
+npm run test:integration
+npm run prisma:generate
+npm run prisma:migrate
+npm run prisma:studio
+```
+
+## Rotas principais
+
+### Operacao
+
+- `GET /health`: verifica se o processo da API esta ativo
+- `GET /ready`: verifica se a API consegue acessar o PostgreSQL
+
+### Acesso e conta
+
+- `POST /onboarding`
+- `POST /sessoes`
+- `GET /me`
+- `PUT /me`
+- `PUT /me/senha`
+
+### Empresa e usuarios
+
+- `GET /empresa`
+- `PUT /empresa`
+- `POST /usuarios`
+- `GET /usuarios`
+- `PATCH /usuarios/:usuarioId/perfil`
+- `PATCH /usuarios/:usuarioId/status`
+
+### Clientes e servicos
+
+- `POST /clientes`
+- `GET /clientes`
+- `GET /clientes/:clienteId`
+- `PUT /clientes/:clienteId`
+- `PATCH /clientes/:clienteId/status`
+- `POST /servicos`
+- `GET /servicos`
+- `GET /servicos/:servicoId`
+- `PUT /servicos/:servicoId`
+- `PATCH /servicos/:servicoId/status`
+
+### Notas de servico
+
+- `POST /notas-servico`
+- `GET /notas-servico`
+- `GET /notas-servico/:notaId`
+- `PUT /notas-servico/:notaId`
+- `POST /notas-servico/:notaId/emitir`
+- `POST /notas-servico/:notaId/retornar-rascunho`
+- `POST /notas-servico/:notaId/cancelar`
+
+Exceto onboarding, login e rotas operacionais, as rotas exigem o cabecalho:
+
+```text
+Authorization: Bearer <token>
+```
+
+## Estado da integracao fiscal
+
+A API ainda nao transmite documentos para o governo. Antes da integracao real,
+sera necessario adequar o dominio fiscal, armazenar certificados digitais com
+seguranca, gerar e assinar a DPS e integrar com a SEFIN Nacional em ambiente de
+Producao Restrita.

@@ -7,7 +7,7 @@ const servicoRoutes = Router();
 const autenticacaoMiddleware = criarAutenticacaoMiddleware();
 const controller = criarGestaoServicoController();
 
-servicoRoutes.use((request, response, next) =>
+servicoRoutes.use('/servicos', (request, response, next) =>
   autenticacaoMiddleware.handle(request, response, next),
 );
 servicoRoutes.post('/servicos', (request, response) =>

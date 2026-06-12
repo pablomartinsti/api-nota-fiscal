@@ -7,7 +7,7 @@ const clienteRoutes = Router();
 const autenticacaoMiddleware = criarAutenticacaoMiddleware();
 const controller = criarGestaoClienteController();
 
-clienteRoutes.use((request, response, next) =>
+clienteRoutes.use('/clientes', (request, response, next) =>
   autenticacaoMiddleware.handle(request, response, next),
 );
 clienteRoutes.post('/clientes', (request, response) =>

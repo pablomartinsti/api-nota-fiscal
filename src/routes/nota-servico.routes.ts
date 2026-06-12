@@ -7,7 +7,7 @@ const notaServicoRoutes = Router();
 const autenticacaoMiddleware = criarAutenticacaoMiddleware();
 const controller = criarGestaoNotaServicoController();
 
-notaServicoRoutes.use((request, response, next) =>
+notaServicoRoutes.use('/notas-servico', (request, response, next) =>
   autenticacaoMiddleware.handle(request, response, next),
 );
 notaServicoRoutes.post('/notas-servico', (request, response) =>
