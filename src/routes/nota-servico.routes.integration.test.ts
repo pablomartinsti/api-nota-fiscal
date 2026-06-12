@@ -1,0 +1,254 @@
+import { randomInt, randomUUID } from 'node:crypto';
+
+import request from 'supertest';
+import { afterAll, describe, expect, it } from 'vitest';
+
+import { app } from '../app';
+import { PrismaClienteRepository } from '../database/repositories/PrismaClienteRepository';
+import { PrismaEmpresaRepository } from '../database/repositories/PrismaEmpresaRepository';
+import { PrismaServicoRepository } from '../database/repositories/PrismaServicoRepository';
+import { PrismaUsuarioRepository } from '../database/repositories/PrismaUsuarioRepository';
+import { prisma } from '../database/prisma.client';
+import { Cliente } from '../entities/Cliente';
+import { Empresa, RegimeTributario } from '../entities/Empresa';
+import { Servico } from '../entities/Servico';
+import { PerfilUsuario, Usuario } from '../entities/Usuario';
+import { BcryptGeradorHash } from '../security/BcryptGeradorHash';
+
+const empresaIdsCriados: string[] = [];
+const empresaRepository = new PrismaEmpresaRepository();
+const usuarioRepository = new PrismaUsuarioRepository();
+const clienteRepository = new PrismaClienteRepository();
+const servicoRepository = new PrismaServicoRepository();
+const geradorHash = new BcryptGeradorHash(4);
+
+function documentoUnico(): string {
+  return randomInt(10_000_000_000_000, 100_000_000_000_000).toString();
+}
+
+async function criarContexto(perfil = PerfilUsuario.OPERADOR) {
+  const empresa = await empresaRepository.salvar(
+    new Empresa({
+      razaoSocial: 'Empresa Notas Ltda',
+      cnpj: documentoUnico(),
+      regimeTributario: RegimeTributario.SIMPLES_NACIONAL,
+      cidade: 'Campinas',
+      uf: 'SP',
+    }),
+  );
+  empresaIdsCriados.push(empresa.id!);
+
+  const usuario = await usuarioRepository.salvar(
+    new Usuario({
+      empresaId: empresa.id!,
+      nome: 'Usuario Notas',
+      email: `${randomUUID()}@exemplo.com`,
+      senhaHash: await geradorHash.gerar('senha-segura'),
+      perfil,
+    }),
+  );
+  const login = await request(app).post('/sessoes').send({
+    email: usuario.email,
+    senha: 'senha-segura',
+  });
+
+  return {
+    empresa,
+    usuario,
+    token: login.body.token as string,
+  };
+}
+
+async function criarCliente(empresaId: string, ativo = true) {
+  return clienteRepository.salvar(
+    new Cliente({
+      empresaId,
+      nomeRazaoSocial: 'Cliente Nota Ltda',
+      cpfCnpj: documentoUnico(),
+      cidade: 'Campinas',
+      uf: 'SP',
+      ativo,
+    }),
+  );
+}
+
+async function criarServico(
+  empresaId: string,
+  aliquotaIss = 5,
+  ativo = true,
+) {
+  return servicoRepository.salvar(
+    new Servico({
+      empresaId,
+      descricao: 'Consultoria tecnica',
+      codigoServico: '01.01',
+      aliquotaIss,
+      ativo,
+    }),
+  );
+}
+
+function dadosRascunho(clienteId: string, servicoId: string) {
+  return {
+    clienteId,
+    servicoId,
+    valorServico: 200,
+    descricao: 'Consultoria realizada',
+  };
+}
+
+describe('Gestao de rascunhos de notas de servico HTTP', () => {
+  afterAll(async () => {
+    if (empresaIdsCriados.length > 0) {
+      await prisma.notaServico.deleteMany({
+        where: { empresaId: { in: empresaIdsCriados } },
+      });
+      await prisma.cliente.deleteMany({
+        where: { empresaId: { in: empresaIdsCriados } },
+      });
+      await prisma.servico.deleteMany({
+        where: { empresaId: { in: empresaIdsCriados } },
+      });
+      await prisma.usuario.deleteMany({
+        where: { empresaId: { in: empresaIdsCriados } },
+      });
+      await prisma.empresa.deleteMany({
+        where: { id: { in: empresaIdsCriados } },
+      });
+    }
+
+    await prisma.$disconnect();
+  });
+
+  it('deve criar e atualizar rascunho usando contexto e aliquota do servico', async () => {
+    const contexto = await criarContexto();
+    const outraEmpresa = await criarContexto();
+    const cliente = await criarCliente(contexto.empresa.id!);
+    const servico = await criarServico(contexto.empresa.id!, 5);
+
+    const cadastro = await request(app)
+      .post('/notas-servico')
+      .set('Authorization', `Bearer ${contexto.token}`)
+      .send({
+        ...dadosRascunho(cliente.id!, servico.id!),
+        empresaId: outraEmpresa.empresa.id,
+        usuarioId: outraEmpresa.usuario.id,
+        aliquotaIss: 99,
+        status: 'EMITIDA',
+      });
+
+    expect(cadastro.status).toBe(201);
+    expect(cadastro.body.empresaId).toBe(contexto.empresa.id);
+    expect(cadastro.body.usuarioId).toBe(contexto.usuario.id);
+    expect(cadastro.body.status).toBe('RASCUNHO');
+    expect(cadastro.body.aliquotaIss).toBe(5);
+    expect(cadastro.body.valorIss).toBe(10);
+
+    const consulta = await request(app)
+      .get(`/notas-servico/${cadastro.body.id}`)
+      .set('Authorization', `Bearer ${contexto.token}`);
+    const listagem = await request(app)
+      .get('/notas-servico')
+      .set('Authorization', `Bearer ${contexto.token}`);
+
+    expect(consulta.status).toBe(200);
+    expect(listagem.body).toHaveLength(1);
+
+    const novoCliente = await criarCliente(contexto.empresa.id!);
+    const novoServico = await criarServico(contexto.empresa.id!, 2.5);
+    const atualizacao = await request(app)
+      .put(`/notas-servico/${cadastro.body.id}`)
+      .set('Authorization', `Bearer ${contexto.token}`)
+      .send({
+        ...dadosRascunho(novoCliente.id!, novoServico.id!),
+        valorServico: 300,
+        aliquotaIss: 100,
+      });
+
+    expect(atualizacao.status).toBe(200);
+    expect(atualizacao.body.clienteId).toBe(novoCliente.id);
+    expect(atualizacao.body.servicoId).toBe(novoServico.id);
+    expect(atualizacao.body.aliquotaIss).toBe(2.5);
+    expect(atualizacao.body.valorIss).toBe(7.5);
+  });
+
+  it('deve rejeitar cliente ou servico inativo e referencias de outra Empresa', async () => {
+    const contexto = await criarContexto(PerfilUsuario.DONO);
+    const outraEmpresa = await criarContexto();
+    const clienteAtivo = await criarCliente(contexto.empresa.id!);
+    const clienteInativo = await criarCliente(contexto.empresa.id!, false);
+    const clienteOutraEmpresa = await criarCliente(outraEmpresa.empresa.id!);
+    const servicoAtivo = await criarServico(contexto.empresa.id!);
+    const servicoInativo = await criarServico(contexto.empresa.id!, 5, false);
+
+    const comClienteInativo = await request(app)
+      .post('/notas-servico')
+      .set('Authorization', `Bearer ${contexto.token}`)
+      .send(dadosRascunho(clienteInativo.id!, servicoAtivo.id!));
+    const comServicoInativo = await request(app)
+      .post('/notas-servico')
+      .set('Authorization', `Bearer ${contexto.token}`)
+      .send(dadosRascunho(clienteAtivo.id!, servicoInativo.id!));
+    const comClienteOutraEmpresa = await request(app)
+      .post('/notas-servico')
+      .set('Authorization', `Bearer ${contexto.token}`)
+      .send(dadosRascunho(clienteOutraEmpresa.id!, servicoAtivo.id!));
+
+    expect(comClienteInativo.status).toBe(409);
+    expect(comServicoInativo.status).toBe(409);
+    expect(comClienteOutraEmpresa.status).toBe(404);
+  });
+
+  it('deve ocultar notas pertencentes a outra Empresa', async () => {
+    const primeiroContexto = await criarContexto(PerfilUsuario.ADMIN);
+    const segundoContexto = await criarContexto();
+    const cliente = await criarCliente(segundoContexto.empresa.id!);
+    const servico = await criarServico(segundoContexto.empresa.id!);
+    const cadastroOutraEmpresa = await request(app)
+      .post('/notas-servico')
+      .set('Authorization', `Bearer ${segundoContexto.token}`)
+      .send(dadosRascunho(cliente.id!, servico.id!));
+
+    const consulta = await request(app)
+      .get(`/notas-servico/${cadastroOutraEmpresa.body.id}`)
+      .set('Authorization', `Bearer ${primeiroContexto.token}`);
+    const atualizacao = await request(app)
+      .put(`/notas-servico/${cadastroOutraEmpresa.body.id}`)
+      .set('Authorization', `Bearer ${primeiroContexto.token}`)
+      .send(dadosRascunho(cliente.id!, servico.id!));
+    const listagem = await request(app)
+      .get('/notas-servico')
+      .set('Authorization', `Bearer ${primeiroContexto.token}`);
+
+    expect(consulta.status).toBe(404);
+    expect(atualizacao.status).toBe(404);
+    expect(listagem.body).toHaveLength(0);
+  });
+
+  it('deve impedir alteracao de nota fora de rascunho', async () => {
+    const contexto = await criarContexto();
+    const cliente = await criarCliente(contexto.empresa.id!);
+    const servico = await criarServico(contexto.empresa.id!);
+    const cadastro = await request(app)
+      .post('/notas-servico')
+      .set('Authorization', `Bearer ${contexto.token}`)
+      .send(dadosRascunho(cliente.id!, servico.id!));
+
+    await prisma.notaServico.update({
+      where: { id: cadastro.body.id },
+      data: {
+        status: 'EMITIDA',
+        numeroNfse: '100',
+        codigoVerificacao: 'ABC123',
+        dataEmissao: new Date(),
+      },
+    });
+
+    const atualizacao = await request(app)
+      .put(`/notas-servico/${cadastro.body.id}`)
+      .set('Authorization', `Bearer ${contexto.token}`)
+      .send(dadosRascunho(cliente.id!, servico.id!));
+
+    expect(atualizacao.status).toBe(409);
+  });
+});

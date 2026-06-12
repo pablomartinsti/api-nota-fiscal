@@ -4,13 +4,17 @@ import { ZodError } from 'zod';
 import { AcessoNegadoError } from '../errors/AcessoNegadoError';
 import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
 import { ClienteNaoEncontradoError } from '../errors/ClienteNaoEncontradoError';
+import { ClienteInativoError } from '../errors/ClienteInativoError';
 import { CnpjJaCadastradoError } from '../errors/CnpjJaCadastradoError';
 import { CpfCnpjJaCadastradoError } from '../errors/CpfCnpjJaCadastradoError';
 import { CredenciaisInvalidasError } from '../errors/CredenciaisInvalidasError';
 import { EmailJaCadastradoError } from '../errors/EmailJaCadastradoError';
 import { EmpresaInativaError } from '../errors/EmpresaInativaError';
 import { EmpresaNaoEncontradaError } from '../errors/EmpresaNaoEncontradaError';
+import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
+import { NotaServicoNaoPodeSerAlteradaError } from '../errors/NotaServicoNaoPodeSerAlteradaError';
 import { ProprietarioJaCadastradoError } from '../errors/ProprietarioJaCadastradoError';
+import { ServicoInativoError } from '../errors/ServicoInativoError';
 import { ServicoNaoEncontradoError } from '../errors/ServicoNaoEncontradoError';
 import { UsuarioNaoEncontradoError } from '../errors/UsuarioNaoEncontradoError';
 
@@ -37,7 +41,8 @@ export const errorHandler: ErrorRequestHandler = (
   if (
     error instanceof EmpresaNaoEncontradaError ||
     error instanceof ClienteNaoEncontradoError ||
-    error instanceof ServicoNaoEncontradoError
+    error instanceof ServicoNaoEncontradoError ||
+    error instanceof NotaServicoNaoEncontradaError
   ) {
     response.status(404).json({
       message: error.message,
@@ -73,7 +78,10 @@ export const errorHandler: ErrorRequestHandler = (
     error instanceof EmailJaCadastradoError ||
     error instanceof EmpresaInativaError ||
     error instanceof ProprietarioJaCadastradoError ||
-    error instanceof CpfCnpjJaCadastradoError
+    error instanceof CpfCnpjJaCadastradoError ||
+    error instanceof ClienteInativoError ||
+    error instanceof ServicoInativoError ||
+    error instanceof NotaServicoNaoPodeSerAlteradaError
   ) {
     response.status(409).json({
       message: error.message,
