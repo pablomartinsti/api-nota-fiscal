@@ -1,4 +1,5 @@
 import { PerfilUsuario, Usuario } from '../../entities/Usuario';
+import { EmailJaCadastradoError } from '../../errors/EmailJaCadastradoError';
 import { UsuarioRepository } from '../../repositories/UsuarioRepository';
 import { PrismaUsuarioMapper } from '../mappers/PrismaUsuarioMapper';
 import { prisma } from '../prisma.client';
@@ -7,16 +8,24 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
   async salvar(usuario: Usuario): Promise<Usuario> {
     const dados = PrismaUsuarioMapper.paraPersistencia(usuario);
 
-    const registro = usuario.id
-      ? await prisma.usuario.update({
-          where: { id: usuario.id },
-          data: dados,
-        })
-      : await prisma.usuario.create({
-          data: dados,
-        });
+    try {
+      const registro = usuario.id
+        ? await prisma.usuario.update({
+            where: { id: usuario.id },
+            data: dados,
+          })
+        : await prisma.usuario.create({
+            data: dados,
+          });
 
-    return PrismaUsuarioMapper.paraDominio(registro);
+      return PrismaUsuarioMapper.paraDominio(registro);
+    } catch (error) {
+      if (this.ehConflitoEmail(error)) {
+        throw new EmailJaCadastradoError();
+      }
+
+      throw error;
+    }
   }
 
   async buscarPorId(id: string): Promise<Usuario | null> {
@@ -67,5 +76,19 @@ export class PrismaUsuarioRepository implements UsuarioRepository {
     });
 
     return registros.map(PrismaUsuarioMapper.paraDominio);
+  }
+
+  private ehConflitoEmail(error: unknown): boolean {
+    return (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'P2002' &&
+      'meta' in error &&
+      typeof error.meta === 'object' &&
+      error.meta !== null &&
+      'modelName' in error.meta &&
+      error.meta.modelName === 'Usuario'
+    );
   }
 }

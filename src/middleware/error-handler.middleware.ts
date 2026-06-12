@@ -13,6 +13,7 @@ import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontrad
 import { NotaServicoNaoPodeSerAlteradaError } from '../errors/NotaServicoNaoPodeSerAlteradaError';
 import { ServicoInativoError } from '../errors/ServicoInativoError';
 import { ServicoNaoEncontradoError } from '../errors/ServicoNaoEncontradoError';
+import { SenhaAtualIncorretaError } from '../errors/SenhaAtualIncorretaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { UsuarioNaoEncontradoError } from '../errors/UsuarioNaoEncontradoError';
 
@@ -56,7 +57,8 @@ export const errorHandler: ErrorRequestHandler = (
 
   if (
     error instanceof AutenticacaoInvalidaError ||
-    error instanceof CredenciaisInvalidasError
+    error instanceof CredenciaisInvalidasError ||
+    error instanceof SenhaAtualIncorretaError
   ) {
     response.status(401).json({
       message: error.message,
