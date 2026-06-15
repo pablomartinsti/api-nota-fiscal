@@ -148,6 +148,8 @@ npm run prisma:studio
 - `POST /notas-servico`
 - `GET /notas-servico`
 - `GET /notas-servico/:notaId`
+- `GET /notas-servico/:notaId/prontidao-fiscal`
+- `GET /notas-servico/:notaId/xml-dps`
 - `PUT /notas-servico/:notaId`
 - `POST /notas-servico/:notaId/emitir`
 - `POST /notas-servico/:notaId/retornar-rascunho`
@@ -161,7 +163,7 @@ Authorization: Bearer <token>
 
 ## Estado da integracao fiscal
 
-A API ainda nao transmite documentos para o governo. Antes da integracao real,
-sera necessario adequar o dominio fiscal, armazenar certificados digitais com
-seguranca, gerar e assinar a DPS e integrar com a SEFIN Nacional em ambiente de
-Producao Restrita.
+A API gera o XML basico nao assinado da DPS Nacional para notas fiscalmente
+prontas, mas ainda nao transmite documentos para o governo. Antes da integracao
+real, sera necessario armazenar certificados digitais com seguranca, assinar a
+DPS e integrar com a SEFIN Nacional em ambiente de Producao Restrita.

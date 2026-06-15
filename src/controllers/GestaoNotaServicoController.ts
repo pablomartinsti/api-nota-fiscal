@@ -12,6 +12,7 @@ import { BuscarNotaServicoService } from '../services/BuscarNotaServicoService';
 import { CancelarNotaServicoService } from '../services/CancelarNotaServicoService';
 import { CadastrarRascunhoNotaServicoService } from '../services/CadastrarRascunhoNotaServicoService';
 import { EmitirNotaServicoService } from '../services/EmitirNotaServicoService';
+import { GerarXmlDpsNotaServicoService } from '../services/GerarXmlDpsNotaServicoService';
 import { ListarNotasServicoService } from '../services/ListarNotasServicoService';
 import { RetornarNotaServicoParaRascunhoService } from '../services/RetornarNotaServicoParaRascunhoService';
 import { ValidarProntidaoFiscalNotaServicoService } from '../services/ValidarProntidaoFiscalNotaServicoService';
@@ -26,6 +27,7 @@ export class GestaoNotaServicoController {
     private readonly retornarParaRascunhoService: RetornarNotaServicoParaRascunhoService,
     private readonly cancelarService: CancelarNotaServicoService,
     private readonly validarProntidaoFiscalService: ValidarProntidaoFiscalNotaServicoService,
+    private readonly gerarXmlDpsService: GerarXmlDpsNotaServicoService,
   ) {}
 
   async cadastrar(request: Request, response: Response): Promise<Response> {
@@ -112,5 +114,15 @@ export class GestaoNotaServicoController {
     );
 
     return response.status(200).json(resultado);
+  }
+
+  async gerarXmlDps(request: Request, response: Response): Promise<Response> {
+    const { notaId } = notaServicoParamsSchema.parse(request.params);
+    const xml = await this.gerarXmlDpsService.executar(
+      request.autenticacao,
+      notaId,
+    );
+
+    return response.status(200).type('application/xml').send(xml);
   }
 }

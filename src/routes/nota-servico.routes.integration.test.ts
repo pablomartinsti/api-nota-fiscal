@@ -360,6 +360,81 @@ describe('Gestao de rascunhos de notas de servico HTTP', () => {
     });
   });
 
+  it('deve gerar o XML da DPS sem alterar o rascunho e manter isolamento', async () => {
+    const contexto = await criarContexto(PerfilUsuario.OPERADOR, '3509502');
+    const outraEmpresa = await criarContexto();
+    const cliente = await criarCliente(contexto.empresa.id!);
+    const servico = await criarServico(
+      contexto.empresa.id!,
+      5,
+      true,
+      '010101',
+    );
+    const cadastro = await request(app)
+      .post('/notas-servico')
+      .set('Authorization', `Bearer ${contexto.token}`)
+      .send({
+        ...dadosRascunho(cliente.id!, servico.id!),
+        descricao: 'Consultoria & desenvolvimento',
+        serieDps: '1',
+        numeroDps: '100',
+        dataCompetencia: '2026-06-15',
+        codigoMunicipioPrestacao: '3509502',
+      });
+
+    const tentativaOutraEmpresa = await request(app)
+      .get(`/notas-servico/${cadastro.body.id}/xml-dps`)
+      .set('Authorization', `Bearer ${outraEmpresa.token}`);
+    const geracao = await request(app)
+      .get(`/notas-servico/${cadastro.body.id}/xml-dps`)
+      .set('Authorization', `Bearer ${contexto.token}`);
+    const consulta = await request(app)
+      .get(`/notas-servico/${cadastro.body.id}`)
+      .set('Authorization', `Bearer ${contexto.token}`);
+
+    expect(tentativaOutraEmpresa.status).toBe(404);
+    expect(geracao.status).toBe(200);
+    expect(geracao.headers['content-type']).toContain('application/xml');
+    expect(geracao.text).toContain(
+      '<DPS xmlns="http://www.sped.fazenda.gov.br/nfse" versao="1.01">',
+    );
+    expect(geracao.text).toContain('<cTribNac>010101</cTribNac>');
+    expect(geracao.text).toContain(
+      '<xDescServ>Consultoria &amp; desenvolvimento</xDescServ>',
+    );
+    expect(geracao.text).not.toContain('<Signature');
+    expect(consulta.body.status).toBe('RASCUNHO');
+  });
+
+  it('nao deve gerar XML quando a nota possui pendencias fiscais', async () => {
+    const contexto = await criarContexto();
+    const cliente = await criarCliente(contexto.empresa.id!);
+    const servico = await criarServico(contexto.empresa.id!);
+    const cadastro = await request(app)
+      .post('/notas-servico')
+      .set('Authorization', `Bearer ${contexto.token}`)
+      .send(dadosRascunho(cliente.id!, servico.id!));
+
+    const geracao = await request(app)
+      .get(`/notas-servico/${cadastro.body.id}/xml-dps`)
+      .set('Authorization', `Bearer ${contexto.token}`);
+
+    expect(geracao.status).toBe(409);
+    expect(geracao.body.message).toBe(
+      'A nota possui pendencias fiscais para gerar a DPS.',
+    );
+    expect(geracao.body.pendencias).toEqual(
+      expect.arrayContaining([
+        'empresa.codigoMunicipioIbge',
+        'servico.codigoTributacaoNacional',
+        'nota.serieDps',
+        'nota.numeroDps',
+        'nota.dataCompetencia',
+        'nota.codigoMunicipioPrestacao',
+      ]),
+    );
+  });
+
   it('deve registrar falha, retornar para rascunho e manter isolamento', async () => {
     const contexto = await criarContexto();
     const outraEmpresa = await criarContexto();

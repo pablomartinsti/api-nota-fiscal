@@ -23,6 +23,9 @@ notaServicoRoutes.get(
   '/notas-servico/:notaId/prontidao-fiscal',
   (request, response) => controller.validarProntidaoFiscal(request, response),
 );
+notaServicoRoutes.get('/notas-servico/:notaId/xml-dps', (request, response) =>
+  controller.gerarXmlDps(request, response),
+);
 notaServicoRoutes.put('/notas-servico/:notaId', (request, response) =>
   controller.atualizar(request, response),
 );

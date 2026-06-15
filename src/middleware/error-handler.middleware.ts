@@ -10,6 +10,7 @@ import { CpfCnpjJaCadastradoError } from '../errors/CpfCnpjJaCadastradoError';
 import { CredenciaisInvalidasError } from '../errors/CredenciaisInvalidasError';
 import { EmailJaCadastradoError } from '../errors/EmailJaCadastradoError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
+import { NotaServicoComPendenciasFiscaisError } from '../errors/NotaServicoComPendenciasFiscaisError';
 import { NotaServicoNaoPodeSerAlteradaError } from '../errors/NotaServicoNaoPodeSerAlteradaError';
 import { ServicoInativoError } from '../errors/ServicoInativoError';
 import { ServicoNaoEncontradoError } from '../errors/ServicoNaoEncontradoError';
@@ -44,6 +45,14 @@ export const errorHandler: ErrorRequestHandler = (
   ) {
     response.status(404).json({
       message: error.message,
+    });
+    return;
+  }
+
+  if (error instanceof NotaServicoComPendenciasFiscaisError) {
+    response.status(409).json({
+      message: error.message,
+      pendencias: error.pendencias,
     });
     return;
   }
