@@ -1,9 +1,16 @@
 import {
   Empresa as PrismaEmpresa,
+  RegimeApuracaoSimplesNacional as PrismaRegimeApuracaoSimplesNacional,
+  RegimeEspecialTributacao as PrismaRegimeEspecialTributacao,
   RegimeTributario as PrismaRegimeTributario,
 } from '@prisma/client';
 
-import { Empresa, RegimeTributario } from '../../entities/Empresa';
+import {
+  Empresa,
+  RegimeApuracaoSimplesNacional,
+  RegimeEspecialTributacao,
+  RegimeTributario,
+} from '../../entities/Empresa';
 
 export class PrismaEmpresaMapper {
   static paraDominio(registro: PrismaEmpresa): Empresa {
@@ -14,6 +21,12 @@ export class PrismaEmpresaMapper {
       cnpj: registro.cnpj,
       inscricaoMunicipal: registro.inscricaoMunicipal ?? undefined,
       regimeTributario: registro.regimeTributario as RegimeTributario,
+      regimeEspecialTributacao:
+        registro.regimeEspecialTributacao as RegimeEspecialTributacao,
+      regimeApuracaoSimplesNacional:
+        (registro.regimeApuracaoSimplesNacional as RegimeApuracaoSimplesNacional) ??
+        undefined,
+      codigoMunicipioIbge: registro.codigoMunicipioIbge ?? undefined,
       email: registro.email ?? undefined,
       telefone: registro.telefone ?? undefined,
       cep: registro.cep ?? undefined,
@@ -35,6 +48,12 @@ export class PrismaEmpresaMapper {
       cnpj: empresa.cnpj,
       inscricaoMunicipal: empresa.inscricaoMunicipal,
       regimeTributario: empresa.regimeTributario as PrismaRegimeTributario,
+      regimeEspecialTributacao:
+        empresa.regimeEspecialTributacao as PrismaRegimeEspecialTributacao,
+      regimeApuracaoSimplesNacional:
+        (empresa.regimeApuracaoSimplesNacional as PrismaRegimeApuracaoSimplesNacional) ??
+        null,
+      codigoMunicipioIbge: empresa.codigoMunicipioIbge ?? null,
       email: empresa.email,
       telefone: empresa.telefone,
       cep: empresa.cep,

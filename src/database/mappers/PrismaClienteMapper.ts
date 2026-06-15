@@ -18,6 +18,7 @@ export class PrismaClienteMapper {
       cidade: registro.cidade,
       uf: registro.uf,
       inscricaoMunicipal: registro.inscricaoMunicipal ?? undefined,
+      codigoMunicipioIbge: registro.codigoMunicipioIbge ?? undefined,
       ativo: registro.ativo,
       createdAt: registro.createdAt,
       updatedAt: registro.updatedAt,
@@ -38,6 +39,7 @@ export class PrismaClienteMapper {
       cidade: cliente.cidade,
       uf: cliente.uf,
       inscricaoMunicipal: cliente.inscricaoMunicipal,
+      codigoMunicipioIbge: cliente.codigoMunicipioIbge ?? null,
       ativo: cliente.ativo,
     };
   }

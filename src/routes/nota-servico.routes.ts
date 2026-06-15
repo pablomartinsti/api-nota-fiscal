@@ -19,6 +19,10 @@ notaServicoRoutes.get('/notas-servico', (request, response) =>
 notaServicoRoutes.get('/notas-servico/:notaId', (request, response) =>
   controller.buscar(request, response),
 );
+notaServicoRoutes.get(
+  '/notas-servico/:notaId/prontidao-fiscal',
+  (request, response) => controller.validarProntidaoFiscal(request, response),
+);
 notaServicoRoutes.put('/notas-servico/:notaId', (request, response) =>
   controller.atualizar(request, response),
 );

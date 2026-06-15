@@ -9,8 +9,11 @@ export class PrismaServicoMapper {
       empresaId: registro.empresaId,
       descricao: registro.descricao,
       codigoServico: registro.codigoServico,
+      codigoTributacaoNacional:
+        registro.codigoTributacaoNacional ?? undefined,
       codigoTributacaoMunicipal:
         registro.codigoTributacaoMunicipal ?? undefined,
+      codigoNbs: registro.codigoNbs ?? undefined,
       aliquotaIss: registro.aliquotaIss.toNumber(),
       valorPadrao: registro.valorPadrao?.toNumber(),
       ativo: registro.ativo,
@@ -24,7 +27,9 @@ export class PrismaServicoMapper {
       empresaId: servico.empresaId,
       descricao: servico.descricao,
       codigoServico: servico.codigoServico,
+      codigoTributacaoNacional: servico.codigoTributacaoNacional ?? null,
       codigoTributacaoMunicipal: servico.codigoTributacaoMunicipal ?? null,
+      codigoNbs: servico.codigoNbs ?? null,
       aliquotaIss: servico.aliquotaIss,
       valorPadrao: servico.valorPadrao ?? null,
       ativo: servico.ativo,

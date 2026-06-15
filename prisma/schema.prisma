@@ -19,6 +19,41 @@ enum RegimeTributario {
   LUCRO_REAL
 }
 
+enum RegimeEspecialTributacao {
+  NENHUM
+  ATO_COOPERADO
+  ESTIMATIVA
+  MICROEMPRESA_MUNICIPAL
+  NOTARIO_REGISTRADOR
+  PROFISSIONAL_AUTONOMO
+  SOCIEDADE_PROFISSIONAIS
+  OUTROS
+}
+
+enum RegimeApuracaoSimplesNacional {
+  TRIBUTOS_FEDERAIS_E_MUNICIPAL_PELO_SN
+  TRIBUTOS_FEDERAIS_PELO_SN_E_ISS_FORA
+  TRIBUTOS_FEDERAIS_E_MUNICIPAL_FORA_DO_SN
+}
+
+enum AmbienteFiscal {
+  PRODUCAO
+  HOMOLOGACAO
+}
+
+enum TributacaoIssqn {
+  TRIBUTAVEL
+  IMUNIDADE
+  EXPORTACAO
+  NAO_INCIDENCIA
+}
+
+enum TipoRetencaoIssqn {
+  NAO_RETIDO
+  RETIDO_PELO_TOMADOR
+  RETIDO_PELO_INTERMEDIARIO
+}
+
 enum StatusNota {
   RASCUNHO
   EMITIDA
@@ -33,6 +68,9 @@ model Empresa {
   cnpj               String            @unique
   inscricaoMunicipal String?
   regimeTributario   RegimeTributario
+  regimeEspecialTributacao RegimeEspecialTributacao @default(NENHUM)
+  regimeApuracaoSimplesNacional RegimeApuracaoSimplesNacional?
+  codigoMunicipioIbge String?
   email              String?
   telefone           String?
   cep                String?
@@ -87,6 +125,7 @@ model Cliente {
   cidade             String
   uf                 String
   inscricaoMunicipal String?
+  codigoMunicipioIbge String?
   ativo              Boolean       @default(true)
 
   empresa            Empresa       @relation(fields: [empresaId], references: [id])
@@ -105,7 +144,9 @@ model Servico {
   empresaId                String
   descricao                String
   codigoServico            String
+  codigoTributacaoNacional String?
   codigoTributacaoMunicipal String?
+  codigoNbs                 String?
   aliquotaIss              Decimal       @db.Decimal(5, 2)
   valorPadrao              Decimal?      @db.Decimal(10, 2)
   ativo                    Boolean       @default(true)
@@ -130,6 +171,14 @@ model NotaServico {
 
   numeroNfse        String?
   codigoVerificacao String?
+  ambienteFiscal    AmbienteFiscal       @default(HOMOLOGACAO)
+  serieDps          String?
+  numeroDps         String?
+  dataCompetencia   DateTime?
+  codigoMunicipioPrestacao String?
+  tributacaoIssqn   TributacaoIssqn      @default(TRIBUTAVEL)
+  tipoRetencaoIssqn TipoRetencaoIssqn    @default(NAO_RETIDO)
+  informacoesComplementares String?
 
   valorServico      Decimal     @db.Decimal(10, 2)
   valorIss          Decimal     @db.Decimal(10, 2)

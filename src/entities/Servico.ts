@@ -3,7 +3,9 @@ export interface ServicoProps {
   empresaId: string;
   descricao: string;
   codigoServico: string;
+  codigoTributacaoNacional?: string;
   codigoTributacaoMunicipal?: string;
+  codigoNbs?: string;
   aliquotaIss: number;
   valorPadrao?: number;
   ativo?: boolean;
@@ -14,7 +16,9 @@ export interface ServicoProps {
 export interface AlterarDadosServicoProps {
   descricao: string;
   codigoServico: string;
+  codigoTributacaoNacional?: string;
   codigoTributacaoMunicipal?: string;
+  codigoNbs?: string;
 }
 
 export class Servico {
@@ -22,7 +26,9 @@ export class Servico {
   private readonly _empresaId: string;
   private _descricao: string;
   private _codigoServico: string;
+  private _codigoTributacaoNacional?: string;
   private _codigoTributacaoMunicipal?: string;
+  private _codigoNbs?: string;
   private _aliquotaIss: number;
   private _valorPadrao?: number;
   private _ativo: boolean;
@@ -37,6 +43,8 @@ export class Servico {
     Servico.validarEmpresaId(empresaId);
     Servico.validarDescricao(descricao);
     Servico.validarCodigoServico(codigoServico);
+    Servico.validarCodigoTributacaoNacional(props.codigoTributacaoNacional);
+    Servico.validarCodigoNbs(props.codigoNbs);
     Servico.validarAliquotaIss(props.aliquotaIss);
     Servico.validarValorPadrao(props.valorPadrao);
 
@@ -44,7 +52,9 @@ export class Servico {
     this._empresaId = empresaId;
     this._descricao = descricao;
     this._codigoServico = codigoServico;
+    this._codigoTributacaoNacional = props.codigoTributacaoNacional;
     this._codigoTributacaoMunicipal = props.codigoTributacaoMunicipal;
+    this._codigoNbs = props.codigoNbs;
     this._aliquotaIss = props.aliquotaIss;
     this._valorPadrao = props.valorPadrao;
     this._ativo = props.ativo ?? true;
@@ -70,6 +80,14 @@ export class Servico {
 
   get codigoTributacaoMunicipal(): string | undefined {
     return this._codigoTributacaoMunicipal;
+  }
+
+  get codigoTributacaoNacional(): string | undefined {
+    return this._codigoTributacaoNacional;
+  }
+
+  get codigoNbs(): string | undefined {
+    return this._codigoNbs;
   }
 
   get aliquotaIss(): number {
@@ -98,10 +116,14 @@ export class Servico {
 
     Servico.validarDescricao(descricao);
     Servico.validarCodigoServico(codigoServico);
+    Servico.validarCodigoTributacaoNacional(props.codigoTributacaoNacional);
+    Servico.validarCodigoNbs(props.codigoNbs);
 
     this._descricao = descricao;
     this._codigoServico = codigoServico;
+    this._codigoTributacaoNacional = props.codigoTributacaoNacional;
     this._codigoTributacaoMunicipal = props.codigoTributacaoMunicipal;
+    this._codigoNbs = props.codigoNbs;
     this.atualizarDataDeAlteracao();
   }
 
@@ -154,6 +176,18 @@ export class Servico {
 
     if (aliquotaIss < 0 || aliquotaIss > 100) {
       throw new Error('Alíquota de ISS deve estar entre 0 e 100.');
+    }
+  }
+
+  private static validarCodigoTributacaoNacional(codigo?: string): void {
+    if (codigo !== undefined && !/^\d{6}$/.test(codigo)) {
+      throw new Error('Codigo de tributacao nacional deve conter 6 digitos.');
+    }
+  }
+
+  private static validarCodigoNbs(codigo?: string): void {
+    if (codigo !== undefined && !/^\d{9}$/.test(codigo)) {
+      throw new Error('Codigo NBS deve conter 9 digitos.');
     }
   }
 

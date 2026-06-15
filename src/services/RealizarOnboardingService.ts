@@ -1,6 +1,11 @@
 import { randomUUID } from 'node:crypto';
 
-import { Empresa, RegimeTributario } from '../entities/Empresa';
+import {
+  Empresa,
+  RegimeApuracaoSimplesNacional,
+  RegimeEspecialTributacao,
+  RegimeTributario,
+} from '../entities/Empresa';
 import { PerfilUsuario, Usuario } from '../entities/Usuario';
 import {
   OnboardingRepository,
@@ -15,6 +20,9 @@ export interface RealizarOnboardingInput {
     cnpj: string;
     inscricaoMunicipal?: string;
     regimeTributario: RegimeTributario;
+    regimeEspecialTributacao?: RegimeEspecialTributacao;
+    regimeApuracaoSimplesNacional?: RegimeApuracaoSimplesNacional;
+    codigoMunicipioIbge?: string;
     email?: string;
     telefone?: string;
     cep?: string;

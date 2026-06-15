@@ -131,10 +131,9 @@ describe('Autenticação HTTP', () => {
       empresa: {
         id: empresa.id,
         razaoSocial: empresa.razaoSocial,
-        nomeFantasia: empresa.nomeFantasia,
         cnpj: empresa.cnpj,
-        inscricaoMunicipal: empresa.inscricaoMunicipal,
         regimeTributario: empresa.regimeTributario,
+        regimeEspecialTributacao: 'NENHUM',
         cidade: empresa.cidade,
         uf: empresa.uf,
         ativo: true,

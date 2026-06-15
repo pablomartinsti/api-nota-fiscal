@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { Empresa, RegimeTributario } from './Empresa';
+import {
+  Empresa,
+  RegimeApuracaoSimplesNacional,
+  RegimeEspecialTributacao,
+  RegimeTributario,
+} from './Empresa';
 
 const criarEmpresa = () =>
   new Empresa({
@@ -137,5 +142,44 @@ describe('Empresa', () => {
 
     empresa.ativar();
     expect(empresa.ativo).toBe(true);
+  });
+
+  it('deve validar e armazenar a configuracao fiscal da DPS', () => {
+    const empresa = new Empresa({
+      razaoSocial: 'Empresa Fiscal Ltda',
+      cnpj: '12345678000190',
+      regimeTributario: RegimeTributario.SIMPLES_NACIONAL,
+      regimeEspecialTributacao: RegimeEspecialTributacao.NENHUM,
+      regimeApuracaoSimplesNacional:
+        RegimeApuracaoSimplesNacional.TRIBUTOS_FEDERAIS_E_MUNICIPAL_PELO_SN,
+      codigoMunicipioIbge: '3509502',
+      cidade: 'Campinas',
+      uf: 'SP',
+    });
+
+    expect(empresa.codigoMunicipioIbge).toBe('3509502');
+    expect(empresa.regimeEspecialTributacao).toBe(
+      RegimeEspecialTributacao.NENHUM,
+    );
+    expect(empresa.regimeApuracaoSimplesNacional).toBe(
+      RegimeApuracaoSimplesNacional.TRIBUTOS_FEDERAIS_E_MUNICIPAL_PELO_SN,
+    );
+  });
+
+  it('deve rejeitar regime de apuracao do Simples para empresa nao optante', () => {
+    expect(
+      () =>
+        new Empresa({
+          razaoSocial: 'Empresa Fiscal Ltda',
+          cnpj: '12345678000190',
+          regimeTributario: RegimeTributario.LUCRO_PRESUMIDO,
+          regimeApuracaoSimplesNacional:
+            RegimeApuracaoSimplesNacional.TRIBUTOS_FEDERAIS_E_MUNICIPAL_PELO_SN,
+          cidade: 'Campinas',
+          uf: 'SP',
+        }),
+    ).toThrow(
+      'Regime de apuracao do Simples Nacional exige empresa do Simples Nacional.',
+    );
   });
 });

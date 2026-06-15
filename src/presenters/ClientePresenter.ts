@@ -16,6 +16,7 @@ export class ClientePresenter {
       cidade: cliente.cidade,
       uf: cliente.uf,
       inscricaoMunicipal: cliente.inscricaoMunicipal,
+      codigoMunicipioIbge: cliente.codigoMunicipioIbge,
       ativo: cliente.ativo,
       createdAt: cliente.createdAt,
       updatedAt: cliente.updatedAt,

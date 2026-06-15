@@ -42,6 +42,13 @@ export class AtualizarRascunhoNotaServicoService {
       valorServico: dados.valorServico,
       aliquotaIss: servico.aliquotaIss,
       descricao: dados.descricao,
+      serieDps: dados.serieDps,
+      numeroDps: dados.numeroDps,
+      dataCompetencia: dados.dataCompetencia,
+      codigoMunicipioPrestacao: dados.codigoMunicipioPrestacao,
+      tributacaoIssqn: dados.tributacaoIssqn,
+      tipoRetencaoIssqn: dados.tipoRetencaoIssqn,
+      informacoesComplementares: dados.informacoesComplementares,
     });
 
     return this.notaRepository.salvar(nota);

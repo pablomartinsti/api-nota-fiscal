@@ -14,6 +14,7 @@ import { CadastrarRascunhoNotaServicoService } from '../services/CadastrarRascun
 import { EmitirNotaServicoService } from '../services/EmitirNotaServicoService';
 import { ListarNotasServicoService } from '../services/ListarNotasServicoService';
 import { RetornarNotaServicoParaRascunhoService } from '../services/RetornarNotaServicoParaRascunhoService';
+import { ValidarProntidaoFiscalNotaServicoService } from '../services/ValidarProntidaoFiscalNotaServicoService';
 
 export class GestaoNotaServicoController {
   constructor(
@@ -24,6 +25,7 @@ export class GestaoNotaServicoController {
     private readonly emitirService: EmitirNotaServicoService,
     private readonly retornarParaRascunhoService: RetornarNotaServicoParaRascunhoService,
     private readonly cancelarService: CancelarNotaServicoService,
+    private readonly validarProntidaoFiscalService: ValidarProntidaoFiscalNotaServicoService,
   ) {}
 
   async cadastrar(request: Request, response: Response): Promise<Response> {
@@ -97,5 +99,18 @@ export class GestaoNotaServicoController {
     );
 
     return response.status(200).json(NotaServicoPresenter.paraHttp(nota));
+  }
+
+  async validarProntidaoFiscal(
+    request: Request,
+    response: Response,
+  ): Promise<Response> {
+    const { notaId } = notaServicoParamsSchema.parse(request.params);
+    const resultado = await this.validarProntidaoFiscalService.executar(
+      request.autenticacao,
+      notaId,
+    );
+
+    return response.status(200).json(resultado);
   }
 }

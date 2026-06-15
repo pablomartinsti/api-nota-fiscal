@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { NotaServico, StatusNota } from './NotaServico';
+import {
+  AmbienteFiscal,
+  NotaServico,
+  StatusNota,
+  TipoRetencaoIssqn,
+  TributacaoIssqn,
+} from './NotaServico';
 
 const dadosBase = {
   empresaId: 'empresa-1',
@@ -22,6 +28,51 @@ describe('NotaServico', () => {
     expect(nota.valorIss).toBe(5);
     expect(nota.createdAt).toBeInstanceOf(Date);
     expect(nota.updatedAt).toBeInstanceOf(Date);
+    expect(nota.ambienteFiscal).toBe(AmbienteFiscal.HOMOLOGACAO);
+    expect(nota.tributacaoIssqn).toBe(TributacaoIssqn.TRIBUTAVEL);
+    expect(nota.tipoRetencaoIssqn).toBe(TipoRetencaoIssqn.NAO_RETIDO);
+  });
+
+  it('deve armazenar e validar dados fiscais da DPS no rascunho', () => {
+    const dataCompetencia = new Date('2026-06-15T00:00:00.000Z');
+    const nota = new NotaServico({
+      ...dadosBase,
+      serieDps: '1',
+      numeroDps: '10',
+      dataCompetencia,
+      codigoMunicipioPrestacao: '3509502',
+      tributacaoIssqn: TributacaoIssqn.TRIBUTAVEL,
+      tipoRetencaoIssqn: TipoRetencaoIssqn.RETIDO_PELO_TOMADOR,
+      informacoesComplementares: 'Contrato 123',
+    });
+
+    expect(nota.serieDps).toBe('1');
+    expect(nota.numeroDps).toBe('10');
+    expect(nota.dataCompetencia).toBe(dataCompetencia);
+    expect(nota.codigoMunicipioPrestacao).toBe('3509502');
+    expect(nota.tipoRetencaoIssqn).toBe(
+      TipoRetencaoIssqn.RETIDO_PELO_TOMADOR,
+    );
+  });
+
+  it('deve rejeitar formatos fiscais invalidos da DPS', () => {
+    expect(
+      () =>
+        new NotaServico({
+          ...dadosBase,
+          serieDps: 'ABC',
+        }),
+    ).toThrow('Serie da DPS deve conter de 1 a 5 digitos.');
+
+    expect(
+      () =>
+        new NotaServico({
+          ...dadosBase,
+          codigoMunicipioPrestacao: '123',
+        }),
+    ).toThrow(
+      'Codigo IBGE do municipio da prestacao deve conter 7 digitos.',
+    );
   });
 
   it('deve arredondar o valor do ISS para duas casas decimais', () => {

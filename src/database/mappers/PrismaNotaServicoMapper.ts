@@ -1,9 +1,18 @@
 import {
+  AmbienteFiscal as PrismaAmbienteFiscal,
   NotaServico as PrismaNotaServico,
   StatusNota as PrismaStatusNota,
+  TipoRetencaoIssqn as PrismaTipoRetencaoIssqn,
+  TributacaoIssqn as PrismaTributacaoIssqn,
 } from '@prisma/client';
 
-import { NotaServico, StatusNota } from '../../entities/NotaServico';
+import {
+  AmbienteFiscal,
+  NotaServico,
+  StatusNota,
+  TipoRetencaoIssqn,
+  TributacaoIssqn,
+} from '../../entities/NotaServico';
 
 export class PrismaNotaServicoMapper {
   static paraDominio(registro: PrismaNotaServico): NotaServico {
@@ -15,6 +24,16 @@ export class PrismaNotaServicoMapper {
       servicoId: registro.servicoId,
       numeroNfse: registro.numeroNfse ?? undefined,
       codigoVerificacao: registro.codigoVerificacao ?? undefined,
+      ambienteFiscal: registro.ambienteFiscal as AmbienteFiscal,
+      serieDps: registro.serieDps ?? undefined,
+      numeroDps: registro.numeroDps ?? undefined,
+      dataCompetencia: registro.dataCompetencia ?? undefined,
+      codigoMunicipioPrestacao:
+        registro.codigoMunicipioPrestacao ?? undefined,
+      tributacaoIssqn: registro.tributacaoIssqn as TributacaoIssqn,
+      tipoRetencaoIssqn: registro.tipoRetencaoIssqn as TipoRetencaoIssqn,
+      informacoesComplementares:
+        registro.informacoesComplementares ?? undefined,
       valorServico: registro.valorServico.toNumber(),
       valorIss: registro.valorIss.toNumber(),
       aliquotaIss: registro.aliquotaIss.toNumber(),
@@ -37,6 +56,14 @@ export class PrismaNotaServicoMapper {
       servicoId: nota.servicoId,
       numeroNfse: nota.numeroNfse ?? null,
       codigoVerificacao: nota.codigoVerificacao ?? null,
+      ambienteFiscal: nota.ambienteFiscal as PrismaAmbienteFiscal,
+      serieDps: nota.serieDps ?? null,
+      numeroDps: nota.numeroDps ?? null,
+      dataCompetencia: nota.dataCompetencia ?? null,
+      codigoMunicipioPrestacao: nota.codigoMunicipioPrestacao ?? null,
+      tributacaoIssqn: nota.tributacaoIssqn as PrismaTributacaoIssqn,
+      tipoRetencaoIssqn: nota.tipoRetencaoIssqn as PrismaTipoRetencaoIssqn,
+      informacoesComplementares: nota.informacoesComplementares ?? null,
       valorServico: nota.valorServico,
       valorIss: nota.valorIss,
       aliquotaIss: nota.aliquotaIss,

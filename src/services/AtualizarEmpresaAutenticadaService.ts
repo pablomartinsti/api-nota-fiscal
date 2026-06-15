@@ -1,6 +1,8 @@
 import {
   AlterarDadosCadastraisProps,
   Empresa,
+  RegimeApuracaoSimplesNacional,
+  RegimeEspecialTributacao,
   RegimeTributario,
 } from '../entities/Empresa';
 import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
@@ -10,6 +12,8 @@ import { TokenPayload } from '../security/GerenciadorToken';
 export interface AtualizarEmpresaAutenticadaInput
   extends AlterarDadosCadastraisProps {
   regimeTributario: RegimeTributario;
+  regimeEspecialTributacao: RegimeEspecialTributacao;
+  regimeApuracaoSimplesNacional?: RegimeApuracaoSimplesNacional;
 }
 
 export class AtualizarEmpresaAutenticadaService {
@@ -29,6 +33,10 @@ export class AtualizarEmpresaAutenticadaService {
 
     empresa.alterarDadosCadastrais(dados);
     empresa.alterarRegimeTributario(dados.regimeTributario);
+    empresa.alterarConfiguracaoFiscal(
+      dados.regimeEspecialTributacao,
+      dados.regimeApuracaoSimplesNacional,
+    );
 
     return this.empresaRepository.salvar(empresa);
   }

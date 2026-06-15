@@ -1,5 +1,6 @@
 import { GestaoNotaServicoController } from '../controllers/GestaoNotaServicoController';
 import { PrismaClienteRepository } from '../database/repositories/PrismaClienteRepository';
+import { PrismaEmpresaRepository } from '../database/repositories/PrismaEmpresaRepository';
 import { PrismaNotaServicoRepository } from '../database/repositories/PrismaNotaServicoRepository';
 import { PrismaServicoRepository } from '../database/repositories/PrismaServicoRepository';
 import { EmissorNotaServicoSimulado } from '../fiscal/EmissorNotaServicoSimulado';
@@ -11,6 +12,7 @@ import { EmitirNotaServicoService } from '../services/EmitirNotaServicoService';
 import { ListarNotasServicoService } from '../services/ListarNotasServicoService';
 import { RetornarNotaServicoParaRascunhoService } from '../services/RetornarNotaServicoParaRascunhoService';
 import { ValidarReferenciasNotaServicoService } from '../services/ValidarReferenciasNotaServicoService';
+import { ValidarProntidaoFiscalNotaServicoService } from '../services/ValidarProntidaoFiscalNotaServicoService';
 
 export function criarGestaoNotaServicoController(): GestaoNotaServicoController {
   const notaRepository = new PrismaNotaServicoRepository();
@@ -36,5 +38,11 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     ),
     new RetornarNotaServicoParaRascunhoService(notaRepository),
     new CancelarNotaServicoService(notaRepository),
+    new ValidarProntidaoFiscalNotaServicoService(
+      new PrismaEmpresaRepository(),
+      new PrismaClienteRepository(),
+      new PrismaServicoRepository(),
+      notaRepository,
+    ),
   );
 }

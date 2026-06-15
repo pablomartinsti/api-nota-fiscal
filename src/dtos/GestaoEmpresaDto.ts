@@ -1,12 +1,23 @@
 import { z } from 'zod';
 
-import { RegimeTributario } from '../entities/Empresa';
+import {
+  RegimeApuracaoSimplesNacional,
+  RegimeEspecialTributacao,
+  RegimeTributario,
+} from '../entities/Empresa';
 
 export const atualizarEmpresaSchema = z.object({
   razaoSocial: z.string().trim().min(1),
   nomeFantasia: z.string().trim().min(1).optional(),
   inscricaoMunicipal: z.string().trim().min(1).optional(),
   regimeTributario: z.enum(RegimeTributario),
+  regimeEspecialTributacao: z
+    .enum(RegimeEspecialTributacao)
+    .default(RegimeEspecialTributacao.NENHUM),
+  regimeApuracaoSimplesNacional: z
+    .enum(RegimeApuracaoSimplesNacional)
+    .optional(),
+  codigoMunicipioIbge: z.string().regex(/^\d{7}$/).optional(),
   email: z.string().trim().toLowerCase().email().optional(),
   telefone: z.string().optional(),
   cep: z

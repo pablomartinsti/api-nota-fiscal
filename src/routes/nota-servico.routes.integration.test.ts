@@ -26,12 +26,16 @@ function documentoUnico(): string {
   return randomInt(10_000_000_000_000, 100_000_000_000_000).toString();
 }
 
-async function criarContexto(perfil = PerfilUsuario.OPERADOR) {
+async function criarContexto(
+  perfil = PerfilUsuario.OPERADOR,
+  codigoMunicipioIbge?: string,
+) {
   const empresa = await empresaRepository.salvar(
     new Empresa({
       razaoSocial: 'Empresa Notas Ltda',
       cnpj: documentoUnico(),
       regimeTributario: RegimeTributario.SIMPLES_NACIONAL,
+      codigoMunicipioIbge,
       cidade: 'Campinas',
       uf: 'SP',
     }),
@@ -76,12 +80,14 @@ async function criarServico(
   empresaId: string,
   aliquotaIss = 5,
   ativo = true,
+  codigoTributacaoNacional?: string,
 ) {
   return servicoRepository.salvar(
     new Servico({
       empresaId,
       descricao: 'Consultoria tecnica',
       codigoServico: '01.01',
+      codigoTributacaoNacional,
       aliquotaIss,
       ativo,
     }),
@@ -291,6 +297,67 @@ describe('Gestao de rascunhos de notas de servico HTTP', () => {
     expect(cancelamento.status).toBe(200);
     expect(cancelamento.body.status).toBe('CANCELADA');
     expect(segundoCancelamento.status).toBe(409);
+  });
+
+  it('deve informar pendencias e prontidao fiscal da DPS', async () => {
+    const contextoIncompleto = await criarContexto();
+    const clienteIncompleto = await criarCliente(contextoIncompleto.empresa.id!);
+    const servicoIncompleto = await criarServico(contextoIncompleto.empresa.id!);
+    const notaIncompleta = await request(app)
+      .post('/notas-servico')
+      .set('Authorization', `Bearer ${contextoIncompleto.token}`)
+      .send(dadosRascunho(clienteIncompleto.id!, servicoIncompleto.id!));
+
+    const prontidaoIncompleta = await request(app)
+      .get(`/notas-servico/${notaIncompleta.body.id}/prontidao-fiscal`)
+      .set('Authorization', `Bearer ${contextoIncompleto.token}`);
+
+    expect(prontidaoIncompleta.status).toBe(200);
+    expect(prontidaoIncompleta.body.pronto).toBe(false);
+    expect(prontidaoIncompleta.body.pendencias).toEqual(
+      expect.arrayContaining([
+        'empresa.codigoMunicipioIbge',
+        'servico.codigoTributacaoNacional',
+        'nota.serieDps',
+        'nota.numeroDps',
+        'nota.dataCompetencia',
+        'nota.codigoMunicipioPrestacao',
+      ]),
+    );
+
+    const contextoCompleto = await criarContexto(
+      PerfilUsuario.OPERADOR,
+      '3509502',
+    );
+    const clienteCompleto = await criarCliente(contextoCompleto.empresa.id!);
+    const servicoCompleto = await criarServico(
+      contextoCompleto.empresa.id!,
+      5,
+      true,
+      '010101',
+    );
+    const notaCompleta = await request(app)
+      .post('/notas-servico')
+      .set('Authorization', `Bearer ${contextoCompleto.token}`)
+      .send({
+        ...dadosRascunho(clienteCompleto.id!, servicoCompleto.id!),
+        serieDps: '1',
+        numeroDps: '100',
+        dataCompetencia: '2026-06-15',
+        codigoMunicipioPrestacao: '3509502',
+      });
+
+    const prontidaoCompleta = await request(app)
+      .get(`/notas-servico/${notaCompleta.body.id}/prontidao-fiscal`)
+      .set('Authorization', `Bearer ${contextoCompleto.token}`);
+
+    expect(notaCompleta.body.ambienteFiscal).toBe('HOMOLOGACAO');
+    expect(notaCompleta.body.serieDps).toBe('1');
+    expect(prontidaoCompleta.status).toBe(200);
+    expect(prontidaoCompleta.body).toEqual({
+      pronto: true,
+      pendencias: [],
+    });
   });
 
   it('deve registrar falha, retornar para rascunho e manter isolamento', async () => {

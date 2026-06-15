@@ -5,6 +5,24 @@ export enum StatusNota {
   ERRO = 'ERRO',
 }
 
+export enum AmbienteFiscal {
+  PRODUCAO = 'PRODUCAO',
+  HOMOLOGACAO = 'HOMOLOGACAO',
+}
+
+export enum TributacaoIssqn {
+  TRIBUTAVEL = 'TRIBUTAVEL',
+  IMUNIDADE = 'IMUNIDADE',
+  EXPORTACAO = 'EXPORTACAO',
+  NAO_INCIDENCIA = 'NAO_INCIDENCIA',
+}
+
+export enum TipoRetencaoIssqn {
+  NAO_RETIDO = 'NAO_RETIDO',
+  RETIDO_PELO_TOMADOR = 'RETIDO_PELO_TOMADOR',
+  RETIDO_PELO_INTERMEDIARIO = 'RETIDO_PELO_INTERMEDIARIO',
+}
+
 export interface NotaServicoProps {
   id?: string;
   empresaId: string;
@@ -13,6 +31,14 @@ export interface NotaServicoProps {
   servicoId: string;
   numeroNfse?: string;
   codigoVerificacao?: string;
+  ambienteFiscal?: AmbienteFiscal;
+  serieDps?: string;
+  numeroDps?: string;
+  dataCompetencia?: Date;
+  codigoMunicipioPrestacao?: string;
+  tributacaoIssqn?: TributacaoIssqn;
+  tipoRetencaoIssqn?: TipoRetencaoIssqn;
+  informacoesComplementares?: string;
   valorServico: number;
   valorIss?: number;
   aliquotaIss: number;
@@ -32,6 +58,13 @@ export interface AlterarRascunhoProps {
   valorServico: number;
   aliquotaIss: number;
   descricao: string;
+  serieDps?: string;
+  numeroDps?: string;
+  dataCompetencia?: Date;
+  codigoMunicipioPrestacao?: string;
+  tributacaoIssqn?: TributacaoIssqn;
+  tipoRetencaoIssqn?: TipoRetencaoIssqn;
+  informacoesComplementares?: string;
 }
 
 export interface EmitirNotaProps {
@@ -50,6 +83,14 @@ export class NotaServico {
   private _servicoId: string;
   private _numeroNfse?: string;
   private _codigoVerificacao?: string;
+  private _ambienteFiscal: AmbienteFiscal;
+  private _serieDps?: string;
+  private _numeroDps?: string;
+  private _dataCompetencia?: Date;
+  private _codigoMunicipioPrestacao?: string;
+  private _tributacaoIssqn: TributacaoIssqn;
+  private _tipoRetencaoIssqn: TipoRetencaoIssqn;
+  private _informacoesComplementares?: string;
   private _valorServico: number;
   private _valorIss: number;
   private _aliquotaIss: number;
@@ -69,6 +110,11 @@ export class NotaServico {
     const servicoId = props.servicoId.trim();
     const descricao = props.descricao.trim();
     const status = props.status ?? StatusNota.RASCUNHO;
+    const ambienteFiscal = props.ambienteFiscal ?? AmbienteFiscal.HOMOLOGACAO;
+    const tributacaoIssqn =
+      props.tributacaoIssqn ?? TributacaoIssqn.TRIBUTAVEL;
+    const tipoRetencaoIssqn =
+      props.tipoRetencaoIssqn ?? TipoRetencaoIssqn.NAO_RETIDO;
 
     NotaServico.validarIdentificador(empresaId, 'Empresa');
     NotaServico.validarIdentificador(usuarioId, 'Usuário');
@@ -78,6 +124,16 @@ export class NotaServico {
     NotaServico.validarValorServico(props.valorServico);
     NotaServico.validarAliquotaIss(props.aliquotaIss);
     NotaServico.validarStatus(status);
+    NotaServico.validarDadosFiscais({
+      ambienteFiscal,
+      serieDps: props.serieDps,
+      numeroDps: props.numeroDps,
+      dataCompetencia: props.dataCompetencia,
+      codigoMunicipioPrestacao: props.codigoMunicipioPrestacao,
+      tributacaoIssqn,
+      tipoRetencaoIssqn,
+      informacoesComplementares: props.informacoesComplementares,
+    });
 
     this._id = props.id;
     this._empresaId = empresaId;
@@ -86,6 +142,14 @@ export class NotaServico {
     this._servicoId = servicoId;
     this._numeroNfse = props.numeroNfse;
     this._codigoVerificacao = props.codigoVerificacao;
+    this._ambienteFiscal = ambienteFiscal;
+    this._serieDps = props.serieDps;
+    this._numeroDps = props.numeroDps;
+    this._dataCompetencia = props.dataCompetencia;
+    this._codigoMunicipioPrestacao = props.codigoMunicipioPrestacao;
+    this._tributacaoIssqn = tributacaoIssqn;
+    this._tipoRetencaoIssqn = tipoRetencaoIssqn;
+    this._informacoesComplementares = props.informacoesComplementares;
     this._valorServico = props.valorServico;
     this._valorIss = NotaServico.calcularIss(
       props.valorServico,
@@ -130,6 +194,38 @@ export class NotaServico {
 
   get codigoVerificacao(): string | undefined {
     return this._codigoVerificacao;
+  }
+
+  get ambienteFiscal(): AmbienteFiscal {
+    return this._ambienteFiscal;
+  }
+
+  get serieDps(): string | undefined {
+    return this._serieDps;
+  }
+
+  get numeroDps(): string | undefined {
+    return this._numeroDps;
+  }
+
+  get dataCompetencia(): Date | undefined {
+    return this._dataCompetencia;
+  }
+
+  get codigoMunicipioPrestacao(): string | undefined {
+    return this._codigoMunicipioPrestacao;
+  }
+
+  get tributacaoIssqn(): TributacaoIssqn {
+    return this._tributacaoIssqn;
+  }
+
+  get tipoRetencaoIssqn(): TipoRetencaoIssqn {
+    return this._tipoRetencaoIssqn;
+  }
+
+  get informacoesComplementares(): string | undefined {
+    return this._informacoesComplementares;
   }
 
   get valorServico(): number {
@@ -188,6 +284,17 @@ export class NotaServico {
     NotaServico.validarDescricao(descricao);
     NotaServico.validarValorServico(props.valorServico);
     NotaServico.validarAliquotaIss(props.aliquotaIss);
+    NotaServico.validarDadosFiscais({
+      ambienteFiscal: this._ambienteFiscal,
+      serieDps: props.serieDps,
+      numeroDps: props.numeroDps,
+      dataCompetencia: props.dataCompetencia,
+      codigoMunicipioPrestacao: props.codigoMunicipioPrestacao,
+      tributacaoIssqn: props.tributacaoIssqn ?? this._tributacaoIssqn,
+      tipoRetencaoIssqn:
+        props.tipoRetencaoIssqn ?? this._tipoRetencaoIssqn,
+      informacoesComplementares: props.informacoesComplementares,
+    });
 
     this._clienteId = clienteId;
     this._servicoId = servicoId;
@@ -198,6 +305,14 @@ export class NotaServico {
       props.aliquotaIss,
     );
     this._descricao = descricao;
+    this._serieDps = props.serieDps;
+    this._numeroDps = props.numeroDps;
+    this._dataCompetencia = props.dataCompetencia;
+    this._codigoMunicipioPrestacao = props.codigoMunicipioPrestacao;
+    this._tributacaoIssqn = props.tributacaoIssqn ?? this._tributacaoIssqn;
+    this._tipoRetencaoIssqn =
+      props.tipoRetencaoIssqn ?? this._tipoRetencaoIssqn;
+    this._informacoesComplementares = props.informacoesComplementares;
     this.atualizarDataDeAlteracao();
   }
 
@@ -300,6 +415,65 @@ export class NotaServico {
   private static validarStatus(status: StatusNota): void {
     if (!Object.values(StatusNota).includes(status)) {
       throw new Error('Status da nota inválido.');
+    }
+  }
+
+  private static validarDadosFiscais(dados: {
+    ambienteFiscal: AmbienteFiscal;
+    serieDps?: string;
+    numeroDps?: string;
+    dataCompetencia?: Date;
+    codigoMunicipioPrestacao?: string;
+    tributacaoIssqn: TributacaoIssqn;
+    tipoRetencaoIssqn: TipoRetencaoIssqn;
+    informacoesComplementares?: string;
+  }): void {
+    if (!Object.values(AmbienteFiscal).includes(dados.ambienteFiscal)) {
+      throw new Error('Ambiente fiscal invalido.');
+    }
+
+    if (dados.serieDps !== undefined && !/^\d{1,5}$/.test(dados.serieDps)) {
+      throw new Error('Serie da DPS deve conter de 1 a 5 digitos.');
+    }
+
+    if (
+      dados.numeroDps !== undefined &&
+      !/^[1-9]\d{0,14}$/.test(dados.numeroDps)
+    ) {
+      throw new Error('Numero da DPS deve conter de 1 a 15 digitos.');
+    }
+
+    if (
+      dados.dataCompetencia !== undefined &&
+      Number.isNaN(dados.dataCompetencia.getTime())
+    ) {
+      throw new Error('Data de competencia invalida.');
+    }
+
+    if (
+      dados.codigoMunicipioPrestacao !== undefined &&
+      !/^\d{7}$/.test(dados.codigoMunicipioPrestacao)
+    ) {
+      throw new Error(
+        'Codigo IBGE do municipio da prestacao deve conter 7 digitos.',
+      );
+    }
+
+    if (!Object.values(TributacaoIssqn).includes(dados.tributacaoIssqn)) {
+      throw new Error('Tributacao do ISSQN invalida.');
+    }
+
+    if (!Object.values(TipoRetencaoIssqn).includes(dados.tipoRetencaoIssqn)) {
+      throw new Error('Tipo de retencao do ISSQN invalido.');
+    }
+
+    if (
+      dados.informacoesComplementares !== undefined &&
+      dados.informacoesComplementares.length > 2000
+    ) {
+      throw new Error(
+        'Informacoes complementares devem conter no maximo 2000 caracteres.',
+      );
     }
   }
 

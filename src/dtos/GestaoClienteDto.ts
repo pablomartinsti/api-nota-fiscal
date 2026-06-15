@@ -11,6 +11,7 @@ const camposEditaveisCliente = {
   cidade: z.string().trim().min(1),
   uf: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/),
   inscricaoMunicipal: z.string().optional(),
+  codigoMunicipioIbge: z.string().regex(/^\d{7}$/).optional(),
 };
 
 export const cadastrarClienteSchema = z.object({

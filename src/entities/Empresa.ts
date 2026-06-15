@@ -5,6 +5,23 @@ export enum RegimeTributario {
   LUCRO_REAL = 'LUCRO_REAL',
 }
 
+export enum RegimeEspecialTributacao {
+  NENHUM = 'NENHUM',
+  ATO_COOPERADO = 'ATO_COOPERADO',
+  ESTIMATIVA = 'ESTIMATIVA',
+  MICROEMPRESA_MUNICIPAL = 'MICROEMPRESA_MUNICIPAL',
+  NOTARIO_REGISTRADOR = 'NOTARIO_REGISTRADOR',
+  PROFISSIONAL_AUTONOMO = 'PROFISSIONAL_AUTONOMO',
+  SOCIEDADE_PROFISSIONAIS = 'SOCIEDADE_PROFISSIONAIS',
+  OUTROS = 'OUTROS',
+}
+
+export enum RegimeApuracaoSimplesNacional {
+  TRIBUTOS_FEDERAIS_E_MUNICIPAL_PELO_SN = 'TRIBUTOS_FEDERAIS_E_MUNICIPAL_PELO_SN',
+  TRIBUTOS_FEDERAIS_PELO_SN_E_ISS_FORA = 'TRIBUTOS_FEDERAIS_PELO_SN_E_ISS_FORA',
+  TRIBUTOS_FEDERAIS_E_MUNICIPAL_FORA_DO_SN = 'TRIBUTOS_FEDERAIS_E_MUNICIPAL_FORA_DO_SN',
+}
+
 export interface EmpresaProps {
   id?: string;
   razaoSocial: string;
@@ -12,6 +29,9 @@ export interface EmpresaProps {
   cnpj: string;
   inscricaoMunicipal?: string;
   regimeTributario: RegimeTributario;
+  regimeEspecialTributacao?: RegimeEspecialTributacao;
+  regimeApuracaoSimplesNacional?: RegimeApuracaoSimplesNacional;
+  codigoMunicipioIbge?: string;
   email?: string;
   telefone?: string;
   cep?: string;
@@ -29,6 +49,7 @@ export interface AlterarDadosCadastraisProps {
   razaoSocial: string;
   nomeFantasia?: string;
   inscricaoMunicipal?: string;
+  codigoMunicipioIbge?: string;
   email?: string;
   telefone?: string;
   cep?: string;
@@ -46,6 +67,9 @@ export class Empresa {
   private readonly _cnpj: string;
   private _inscricaoMunicipal?: string;
   private _regimeTributario: RegimeTributario;
+  private _regimeEspecialTributacao: RegimeEspecialTributacao;
+  private _regimeApuracaoSimplesNacional?: RegimeApuracaoSimplesNacional;
+  private _codigoMunicipioIbge?: string;
   private _email?: string;
   private _telefone?: string;
   private _cep?: string;
@@ -65,6 +89,11 @@ export class Empresa {
     const cep = Empresa.normalizarCep(props.cep);
     const cidade = props.cidade.trim();
     const uf = props.uf.trim().toUpperCase();
+    const codigoMunicipioIbge = Empresa.normalizarCodigoMunicipioIbge(
+      props.codigoMunicipioIbge,
+    );
+    const regimeEspecialTributacao =
+      props.regimeEspecialTributacao ?? RegimeEspecialTributacao.NENHUM;
 
     if (!razaoSocial) {
       throw new Error('Razão social é obrigatória.');
@@ -86,6 +115,12 @@ export class Empresa {
       throw new Error('Regime tributário inválido.');
     }
 
+    Empresa.validarCodigoMunicipioIbge(codigoMunicipioIbge);
+    Empresa.validarRegimeEspecialTributacao(regimeEspecialTributacao);
+    Empresa.validarRegimeApuracaoSimplesNacional(
+      props.regimeTributario,
+      props.regimeApuracaoSimplesNacional,
+    );
     Empresa.validarEmail(email);
     Empresa.validarCep(cep);
 
@@ -95,6 +130,10 @@ export class Empresa {
     this._cnpj = cnpj;
     this._inscricaoMunicipal = props.inscricaoMunicipal;
     this._regimeTributario = props.regimeTributario;
+    this._regimeEspecialTributacao = regimeEspecialTributacao;
+    this._regimeApuracaoSimplesNacional =
+      props.regimeApuracaoSimplesNacional;
+    this._codigoMunicipioIbge = codigoMunicipioIbge;
     this._email = email;
     this._telefone = props.telefone;
     this._cep = cep;
@@ -130,6 +169,20 @@ export class Empresa {
 
   get regimeTributario(): RegimeTributario {
     return this._regimeTributario;
+  }
+
+  get regimeEspecialTributacao(): RegimeEspecialTributacao {
+    return this._regimeEspecialTributacao;
+  }
+
+  get regimeApuracaoSimplesNacional():
+    | RegimeApuracaoSimplesNacional
+    | undefined {
+    return this._regimeApuracaoSimplesNacional;
+  }
+
+  get codigoMunicipioIbge(): string | undefined {
+    return this._codigoMunicipioIbge;
   }
 
   get email(): string | undefined {
@@ -182,6 +235,9 @@ export class Empresa {
     const cep = Empresa.normalizarCep(props.cep);
     const cidade = props.cidade.trim();
     const uf = props.uf.trim().toUpperCase();
+    const codigoMunicipioIbge = Empresa.normalizarCodigoMunicipioIbge(
+      props.codigoMunicipioIbge,
+    );
 
     if (!razaoSocial) {
       throw new Error('Razão social é obrigatória.');
@@ -197,10 +253,12 @@ export class Empresa {
 
     Empresa.validarEmail(email);
     Empresa.validarCep(cep);
+    Empresa.validarCodigoMunicipioIbge(codigoMunicipioIbge);
 
     this._razaoSocial = razaoSocial;
     this._nomeFantasia = props.nomeFantasia;
     this._inscricaoMunicipal = props.inscricaoMunicipal;
+    this._codigoMunicipioIbge = codigoMunicipioIbge;
     this._email = email;
     this._telefone = props.telefone;
     this._cep = cep;
@@ -218,6 +276,26 @@ export class Empresa {
     }
 
     this._regimeTributario = regimeTributario;
+
+    if (regimeTributario !== RegimeTributario.SIMPLES_NACIONAL) {
+      this._regimeApuracaoSimplesNacional = undefined;
+    }
+
+    this._updatedAt = new Date();
+  }
+
+  alterarConfiguracaoFiscal(
+    regimeEspecialTributacao: RegimeEspecialTributacao,
+    regimeApuracaoSimplesNacional?: RegimeApuracaoSimplesNacional,
+  ): void {
+    Empresa.validarRegimeEspecialTributacao(regimeEspecialTributacao);
+    Empresa.validarRegimeApuracaoSimplesNacional(
+      this._regimeTributario,
+      regimeApuracaoSimplesNacional,
+    );
+
+    this._regimeEspecialTributacao = regimeEspecialTributacao;
+    this._regimeApuracaoSimplesNacional = regimeApuracaoSimplesNacional;
     this._updatedAt = new Date();
   }
 
@@ -254,6 +332,49 @@ export class Empresa {
   private static validarCep(cep?: string): void {
     if (cep !== undefined && cep.length !== 8) {
       throw new Error('CEP deve conter 8 digitos.');
+    }
+  }
+
+  private static normalizarCodigoMunicipioIbge(
+    codigo?: string,
+  ): string | undefined {
+    const normalizado = codigo?.replace(/\D/g, '');
+
+    return normalizado || undefined;
+  }
+
+  private static validarCodigoMunicipioIbge(codigo?: string): void {
+    if (codigo !== undefined && !/^\d{7}$/.test(codigo)) {
+      throw new Error('Codigo IBGE do municipio deve conter 7 digitos.');
+    }
+  }
+
+  private static validarRegimeEspecialTributacao(
+    regime: RegimeEspecialTributacao,
+  ): void {
+    if (!Object.values(RegimeEspecialTributacao).includes(regime)) {
+      throw new Error('Regime especial de tributacao invalido.');
+    }
+  }
+
+  private static validarRegimeApuracaoSimplesNacional(
+    regimeTributario: RegimeTributario,
+    regimeApuracao?: RegimeApuracaoSimplesNacional,
+  ): void {
+    if (
+      regimeApuracao !== undefined &&
+      !Object.values(RegimeApuracaoSimplesNacional).includes(regimeApuracao)
+    ) {
+      throw new Error('Regime de apuracao do Simples Nacional invalido.');
+    }
+
+    if (
+      regimeApuracao !== undefined &&
+      regimeTributario !== RegimeTributario.SIMPLES_NACIONAL
+    ) {
+      throw new Error(
+        'Regime de apuracao do Simples Nacional exige empresa do Simples Nacional.',
+      );
     }
   }
 }

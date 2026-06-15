@@ -12,6 +12,7 @@ export interface ClienteProps {
   cidade: string;
   uf: string;
   inscricaoMunicipal?: string;
+  codigoMunicipioIbge?: string;
   ativo?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -34,6 +35,7 @@ export interface AlterarEnderecoClienteProps {
   bairro?: string;
   cidade: string;
   uf: string;
+  codigoMunicipioIbge?: string;
 }
 
 export class Cliente {
@@ -50,6 +52,7 @@ export class Cliente {
   private _cidade: string;
   private _uf: string;
   private _inscricaoMunicipal?: string;
+  private _codigoMunicipioIbge?: string;
   private _ativo: boolean;
   private readonly _createdAt: Date;
   private _updatedAt: Date;
@@ -62,6 +65,9 @@ export class Cliente {
     const cep = Cliente.normalizarCep(props.cep);
     const cidade = props.cidade.trim();
     const uf = Cliente.normalizarUf(props.uf);
+    const codigoMunicipioIbge = Cliente.normalizarCodigoMunicipioIbge(
+      props.codigoMunicipioIbge,
+    );
 
     Cliente.validarEmpresaId(empresaId);
     Cliente.validarNomeRazaoSocial(nomeRazaoSocial);
@@ -70,6 +76,7 @@ export class Cliente {
     Cliente.validarCep(cep);
     Cliente.validarCidade(cidade);
     Cliente.validarUf(uf);
+    Cliente.validarCodigoMunicipioIbge(codigoMunicipioIbge);
 
     this._id = props.id;
     this._empresaId = empresaId;
@@ -84,6 +91,7 @@ export class Cliente {
     this._cidade = cidade;
     this._uf = uf;
     this._inscricaoMunicipal = props.inscricaoMunicipal;
+    this._codigoMunicipioIbge = codigoMunicipioIbge;
     this._ativo = props.ativo ?? true;
     this._createdAt = props.createdAt ?? new Date();
     this._updatedAt = props.updatedAt ?? new Date();
@@ -141,6 +149,10 @@ export class Cliente {
     return this._inscricaoMunicipal;
   }
 
+  get codigoMunicipioIbge(): string | undefined {
+    return this._codigoMunicipioIbge;
+  }
+
   get ativo(): boolean {
     return this._ativo;
   }
@@ -177,10 +189,14 @@ export class Cliente {
     const cep = Cliente.normalizarCep(props.cep);
     const cidade = props.cidade.trim();
     const uf = Cliente.normalizarUf(props.uf);
+    const codigoMunicipioIbge = Cliente.normalizarCodigoMunicipioIbge(
+      props.codigoMunicipioIbge,
+    );
 
     Cliente.validarCep(cep);
     Cliente.validarCidade(cidade);
     Cliente.validarUf(uf);
+    Cliente.validarCodigoMunicipioIbge(codigoMunicipioIbge);
 
     this._cep = cep;
     this._endereco = props.endereco;
@@ -188,6 +204,7 @@ export class Cliente {
     this._bairro = props.bairro;
     this._cidade = cidade;
     this._uf = uf;
+    this._codigoMunicipioIbge = codigoMunicipioIbge;
     this.atualizarDataDeAlteracao();
   }
 
@@ -262,6 +279,20 @@ export class Cliente {
   private static validarUf(uf: string): void {
     if (!/^[A-Z]{2}$/.test(uf)) {
       throw new Error('UF deve conter duas letras.');
+    }
+  }
+
+  private static normalizarCodigoMunicipioIbge(
+    codigo?: string,
+  ): string | undefined {
+    const normalizado = codigo?.replace(/\D/g, '');
+
+    return normalizado || undefined;
+  }
+
+  private static validarCodigoMunicipioIbge(codigo?: string): void {
+    if (codigo !== undefined && !/^\d{7}$/.test(codigo)) {
+      throw new Error('Codigo IBGE do municipio deve conter 7 digitos.');
     }
   }
 

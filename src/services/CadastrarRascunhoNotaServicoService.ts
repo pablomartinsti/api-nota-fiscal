@@ -1,4 +1,8 @@
-import { NotaServico } from '../entities/NotaServico';
+import {
+  NotaServico,
+  TipoRetencaoIssqn,
+  TributacaoIssqn,
+} from '../entities/NotaServico';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
 import { ValidarReferenciasNotaServicoService } from './ValidarReferenciasNotaServicoService';
@@ -8,6 +12,13 @@ export interface CadastrarRascunhoNotaServicoInput {
   servicoId: string;
   valorServico: number;
   descricao: string;
+  serieDps?: string;
+  numeroDps?: string;
+  dataCompetencia?: Date;
+  codigoMunicipioPrestacao?: string;
+  tributacaoIssqn?: TributacaoIssqn;
+  tipoRetencaoIssqn?: TipoRetencaoIssqn;
+  informacoesComplementares?: string;
 }
 
 export class CadastrarRascunhoNotaServicoService {
@@ -33,6 +44,13 @@ export class CadastrarRascunhoNotaServicoService {
       valorServico: dados.valorServico,
       aliquotaIss: servico.aliquotaIss,
       descricao: dados.descricao,
+      serieDps: dados.serieDps,
+      numeroDps: dados.numeroDps,
+      dataCompetencia: dados.dataCompetencia,
+      codigoMunicipioPrestacao: dados.codigoMunicipioPrestacao,
+      tributacaoIssqn: dados.tributacaoIssqn,
+      tipoRetencaoIssqn: dados.tipoRetencaoIssqn,
+      informacoesComplementares: dados.informacoesComplementares,
     });
 
     return this.notaRepository.salvar(nota);
