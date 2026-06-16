@@ -465,6 +465,37 @@ describe('Gestao de rascunhos de notas de servico HTTP', () => {
     });
   });
 
+  it('deve exigir configuracao fiscal para enviar DPS assinada', async () => {
+    const contexto = await criarContexto(PerfilUsuario.OPERADOR, '3509502');
+    const cliente = await criarCliente(contexto.empresa.id!);
+    const servico = await criarServico(
+      contexto.empresa.id!,
+      5,
+      true,
+      '010101',
+    );
+    const cadastro = await request(app)
+      .post('/notas-servico')
+      .set('Authorization', `Bearer ${contexto.token}`)
+      .send({
+        ...dadosRascunho(cliente.id!, servico.id!),
+        serieDps: '1',
+        numeroDps: '100',
+        dataCompetencia: '2026-06-15',
+        codigoMunicipioPrestacao: '3509502',
+      });
+
+    const envio = await request(app)
+      .post(`/notas-servico/${cadastro.body.id}/enviar-dps`)
+      .set('Authorization', `Bearer ${contexto.token}`)
+      .send({});
+
+    expect(envio.status).toBe(503);
+    expect(envio.body).toEqual({
+      message: 'Configuracao fiscal para assinatura da DPS nao foi informada.',
+    });
+  });
+
   it('deve registrar falha, retornar para rascunho e manter isolamento', async () => {
     const contexto = await criarContexto();
     const outraEmpresa = await criarContexto();

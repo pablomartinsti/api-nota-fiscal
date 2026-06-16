@@ -151,6 +151,7 @@ npm run prisma:studio
 - `GET /notas-servico/:notaId/prontidao-fiscal`
 - `GET /notas-servico/:notaId/xml-dps`
 - `GET /notas-servico/:notaId/xml-dps-assinado`
+- `POST /notas-servico/:notaId/enviar-dps`
 - `PUT /notas-servico/:notaId`
 - `POST /notas-servico/:notaId/emitir`
 - `POST /notas-servico/:notaId/retornar-rascunho`
@@ -169,8 +170,10 @@ prontas e pode validar e assinar esse XML usando um certificado A1 configurado
 por variaveis de ambiente.
 
 Tambem existe um cliente HTTP inicial para comunicacao com a SEFIN Nacional em
-Producao Restrita. Ele fica isolado na camada fiscal e ainda nao substitui o
-emissor simulado nem altera o status da NotaServico.
+Producao Restrita e uma rota para enviar a DPS assinada. O endpoint
+`POST /notas-servico/:notaId/enviar-dps` registra sucesso ou erro fiscal na
+NotaServico conforme o retorno recebido. A rota antiga
+`POST /notas-servico/:notaId/emitir` ainda usa o emissor simulado.
 
 Variaveis fiscais:
 

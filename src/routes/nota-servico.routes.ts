@@ -30,6 +30,10 @@ notaServicoRoutes.get(
   '/notas-servico/:notaId/xml-dps-assinado',
   (request, response) => controller.gerarXmlDpsAssinado(request, response),
 );
+notaServicoRoutes.post(
+  '/notas-servico/:notaId/enviar-dps',
+  (request, response) => controller.enviarDpsAssinada(request, response),
+);
 notaServicoRoutes.put('/notas-servico/:notaId', (request, response) =>
   controller.atualizar(request, response),
 );

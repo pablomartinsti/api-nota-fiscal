@@ -12,6 +12,7 @@ import { BuscarNotaServicoService } from '../services/BuscarNotaServicoService';
 import { CancelarNotaServicoService } from '../services/CancelarNotaServicoService';
 import { CadastrarRascunhoNotaServicoService } from '../services/CadastrarRascunhoNotaServicoService';
 import { EmitirNotaServicoService } from '../services/EmitirNotaServicoService';
+import { EnviarDpsAssinadaNotaServicoService } from '../services/EnviarDpsAssinadaNotaServicoService';
 import { GerarXmlDpsNotaServicoService } from '../services/GerarXmlDpsNotaServicoService';
 import { GerarXmlDpsAssinadoNotaServicoService } from '../services/GerarXmlDpsAssinadoNotaServicoService';
 import { ListarNotasServicoService } from '../services/ListarNotasServicoService';
@@ -30,6 +31,7 @@ export class GestaoNotaServicoController {
     private readonly validarProntidaoFiscalService: ValidarProntidaoFiscalNotaServicoService,
     private readonly gerarXmlDpsService: GerarXmlDpsNotaServicoService,
     private readonly gerarXmlDpsAssinadoService: GerarXmlDpsAssinadoNotaServicoService,
+    private readonly enviarDpsAssinadaService: EnviarDpsAssinadaNotaServicoService,
   ) {}
 
   async cadastrar(request: Request, response: Response): Promise<Response> {
@@ -139,5 +141,18 @@ export class GestaoNotaServicoController {
     );
 
     return response.status(200).type('application/xml').send(xml);
+  }
+
+  async enviarDpsAssinada(
+    request: Request,
+    response: Response,
+  ): Promise<Response> {
+    const { notaId } = notaServicoParamsSchema.parse(request.params);
+    const nota = await this.enviarDpsAssinadaService.executar(
+      request.autenticacao,
+      notaId,
+    );
+
+    return response.status(200).json(NotaServicoPresenter.paraHttp(nota));
   }
 }

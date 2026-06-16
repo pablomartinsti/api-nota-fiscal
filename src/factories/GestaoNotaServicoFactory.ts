@@ -4,6 +4,7 @@ import { PrismaClienteRepository } from '../database/repositories/PrismaClienteR
 import { PrismaEmpresaRepository } from '../database/repositories/PrismaEmpresaRepository';
 import { PrismaNotaServicoRepository } from '../database/repositories/PrismaNotaServicoRepository';
 import { PrismaServicoRepository } from '../database/repositories/PrismaServicoRepository';
+import { ClienteHttpSefinNacional } from '../fiscal/ClienteHttpSefinNacional';
 import { EmissorNotaServicoSimulado } from '../fiscal/EmissorNotaServicoSimulado';
 import { GeradorXmlDpsNacional } from '../fiscal/GeradorXmlDpsNacional';
 import { AssinadorXmlDpsXmlDsig } from '../fiscal/AssinadorXmlDpsXmlDsig';
@@ -14,6 +15,7 @@ import { BuscarNotaServicoService } from '../services/BuscarNotaServicoService';
 import { CancelarNotaServicoService } from '../services/CancelarNotaServicoService';
 import { CadastrarRascunhoNotaServicoService } from '../services/CadastrarRascunhoNotaServicoService';
 import { EmitirNotaServicoService } from '../services/EmitirNotaServicoService';
+import { EnviarDpsAssinadaNotaServicoService } from '../services/EnviarDpsAssinadaNotaServicoService';
 import { GerarXmlDpsNotaServicoService } from '../services/GerarXmlDpsNotaServicoService';
 import { GerarXmlDpsAssinadoNotaServicoService } from '../services/GerarXmlDpsAssinadoNotaServicoService';
 import { ListarNotasServicoService } from '../services/ListarNotasServicoService';
@@ -37,6 +39,21 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     notaRepository,
     new GeradorXmlDpsNacional(),
   );
+  const gerarXmlDpsAssinadoService = new GerarXmlDpsAssinadoNotaServicoService(
+    gerarXmlDpsService,
+    empresaRepository,
+    new ValidadorXmlDpsXsd(() => env.NFSE_XSD_DPS_PATH),
+    new ProvedorCertificadoA1Arquivo(() => ({
+      caminho: env.NFSE_CERTIFICADO_PATH,
+      senha: env.NFSE_CERTIFICADO_SENHA,
+    })),
+    new AssinadorXmlDpsXmlDsig(),
+  );
+  const clienteNfse = new ClienteHttpSefinNacional(() => ({
+    baseUrl: env.NFSE_SEFIN_BASE_URL,
+    endpointEnvioDps: env.NFSE_SEFIN_ENVIO_DPS_PATH,
+    timeoutMs: env.NFSE_SEFIN_TIMEOUT_MS,
+  }));
 
   return new GestaoNotaServicoController(
     new CadastrarRascunhoNotaServicoService(
@@ -62,15 +79,11 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       notaRepository,
     ),
     gerarXmlDpsService,
-    new GerarXmlDpsAssinadoNotaServicoService(
-      gerarXmlDpsService,
-      empresaRepository,
-      new ValidadorXmlDpsXsd(() => env.NFSE_XSD_DPS_PATH),
-      new ProvedorCertificadoA1Arquivo(() => ({
-        caminho: env.NFSE_CERTIFICADO_PATH,
-        senha: env.NFSE_CERTIFICADO_SENHA,
-      })),
-      new AssinadorXmlDpsXmlDsig(),
+    gerarXmlDpsAssinadoService,
+    new EnviarDpsAssinadaNotaServicoService(
+      notaRepository,
+      gerarXmlDpsAssinadoService,
+      clienteNfse,
     ),
   );
 }
