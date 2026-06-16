@@ -24,7 +24,7 @@ describe('ClienteHttpSefinNacional', () => {
     );
     const cliente = new ClienteHttpSefinNacional(
       () => ({
-        baseUrl: 'https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional',
+        baseUrl: 'https://sefin.producaorestrita.nfse.gov.br/SefinNacional',
         endpointEnvioDps: '/DPS',
         timeoutMs: 1000,
       }),
@@ -35,7 +35,7 @@ describe('ClienteHttpSefinNacional', () => {
 
     expect(fetchMock).toHaveBeenCalledOnce();
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional/DPS',
+      'https://sefin.producaorestrita.nfse.gov.br/SefinNacional/DPS',
       expect.objectContaining({
         method: 'POST',
         body: xmlAssinado,
@@ -75,7 +75,7 @@ describe('ClienteHttpSefinNacional', () => {
     );
     const cliente = new ClienteHttpSefinNacional(
       () => ({
-        baseUrl: 'https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional/',
+        baseUrl: 'https://sefin.producaorestrita.nfse.gov.br/SefinNacional/',
         endpointEnvioDps: 'DPS',
       }),
       fetchMock,
@@ -108,7 +108,7 @@ describe('ClienteHttpSefinNacional', () => {
     const fetchMock = vi.fn().mockRejectedValue(new Error('socket hang up'));
     const cliente = new ClienteHttpSefinNacional(
       () => ({
-        baseUrl: 'https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional',
+        baseUrl: 'https://sefin.producaorestrita.nfse.gov.br/SefinNacional',
       }),
       fetchMock,
     );
@@ -134,7 +134,7 @@ describe('ClienteHttpSefinNacional', () => {
     );
     const cliente = new ClienteHttpSefinNacional(
       () => ({
-        baseUrl: 'https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional',
+        baseUrl: 'https://sefin.producaorestrita.nfse.gov.br/SefinNacional',
         timeoutMs: 1,
       }),
       fetchMock,

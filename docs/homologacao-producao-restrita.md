@@ -3,6 +3,17 @@
 Este guia prepara o primeiro teste manual com a NFS-e Nacional em Producao
 Restrita. Ele nao substitui a documentacao oficial da SEFIN Nacional.
 
+Documentacao oficial consultada:
+
+- Portal gov.br de APIs da NFS-e:
+  `https://www.gov.br/nfse/pt-br/biblioteca/documentacao-tecnica/apis-prod-restrita-e-producao`
+- Documentacao da SEFIN Nacional em Producao Restrita:
+  `https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional/docs/index`
+
+A pagina da documentacao acima carrega o OpenAPI em
+`https://sefin.producaorestrita.nfse.gov.br/SefinNacional/swagger/docs/v1`.
+Por isso, a URL base da API fica sem `/API`.
+
 ## 1. Antes de comecar
 
 Confira estes itens:
@@ -26,13 +37,22 @@ Configure no `.env`:
 NFSE_CERTIFICADO_PATH="C:\caminho\certificados\empresa.pfx"
 NFSE_CERTIFICADO_SENHA="senha-do-certificado"
 NFSE_XSD_DPS_PATH="C:\caminho\nfse-xsd\Schemas\1.01\DPS_v1.01.xsd"
-NFSE_SEFIN_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional"
+NFSE_SEFIN_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/SefinNacional"
 NFSE_SEFIN_ENVIO_DPS_PATH="/DPS"
 NFSE_SEFIN_TIMEOUT_MS=15000
 ```
 
-O `NFSE_SEFIN_ENVIO_DPS_PATH` deve ser confirmado no Swagger oficial da SEFIN
-Nacional antes do primeiro envio real.
+A documentacao oficial da SEFIN Nacional abre pelo caminho com `/API`, mas os
+recursos carregados por ela apontam para `/SefinNacional`. Por isso:
+
+- `NFSE_SEFIN_BASE_URL` deve ser `https://sefin.producaorestrita.nfse.gov.br/SefinNacional`;
+- `NFSE_SEFIN_ENVIO_DPS_PATH` continua separado e configuravel;
+- confirme visualmente no ReDoc oficial se o path de envio da DPS continua
+  sendo `/DPS` antes do primeiro envio real.
+
+Observacao: a tentativa de acessar o OpenAPI JSON diretamente fora da pagina da
+documentacao retornou `403`. Entao essa conferencia final deve ser feita pelo
+ReDoc aberto no navegador.
 
 ## 3. Checagem local
 
@@ -104,25 +124,27 @@ A nota precisa estar em `RASCUNHO` e conter:
 
 1. Configure o `.env`.
 2. Rode `npm run nfse:check-homologacao`.
-3. Suba o banco com Docker.
-4. Rode as migrations.
-5. Suba a API.
-6. Crie ou atualize a empresa com o CNPJ do certificado.
-7. Crie cliente e servico de teste.
-8. Crie a NotaServico em rascunho.
-9. Consulte a prontidao fiscal:
+3. Abra a documentacao oficial da SEFIN Nacional em Producao Restrita e
+   confirme o path de envio da DPS no ReDoc.
+4. Suba o banco com Docker.
+5. Rode as migrations.
+6. Suba a API.
+7. Crie ou atualize a empresa com o CNPJ do certificado.
+8. Crie cliente e servico de teste.
+9. Crie a NotaServico em rascunho.
+10. Consulte a prontidao fiscal:
 
 ```http
 GET /notas-servico/:notaId/prontidao-fiscal
 ```
 
-10. Gere o XML assinado para conferencia:
+11. Gere o XML assinado para conferencia:
 
 ```http
 GET /notas-servico/:notaId/xml-dps-assinado
 ```
 
-11. Envie a DPS assinada:
+12. Envie a DPS assinada:
 
 ```http
 POST /notas-servico/:notaId/enviar-dps

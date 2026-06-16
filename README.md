@@ -171,7 +171,10 @@ prontas e pode validar e assinar esse XML usando um certificado A1 configurado
 por variaveis de ambiente.
 
 Tambem existe um cliente HTTP inicial para comunicacao com a SEFIN Nacional em
-Producao Restrita e uma rota para enviar a DPS assinada. O endpoint
+Producao Restrita e uma rota para enviar a DPS assinada. A pagina oficial de
+APIs do gov.br aponta a documentacao da SEFIN Nacional em Producao Restrita e o
+HTML dessa documentacao carrega o OpenAPI em `/SefinNacional/swagger/docs/v1`.
+Por isso, a `NFSE_SEFIN_BASE_URL` deve ficar sem `/API`. O endpoint
 `POST /notas-servico/:notaId/enviar-dps` registra sucesso ou erro fiscal na
 NotaServico conforme o retorno recebido. A rota antiga
 `POST /notas-servico/:notaId/emitir` ainda usa o emissor simulado.
@@ -182,14 +185,15 @@ Variaveis fiscais:
 NFSE_CERTIFICADO_PATH=""
 NFSE_CERTIFICADO_SENHA=""
 NFSE_XSD_DPS_PATH=""
-NFSE_SEFIN_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional"
+NFSE_SEFIN_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/SefinNacional"
 NFSE_SEFIN_ENVIO_DPS_PATH="/DPS"
 NFSE_SEFIN_TIMEOUT_MS=15000
 ```
 
 Antes da emissao real completa, sera necessario armazenar certificados digitais
-por empresa com seguranca, confirmar o endpoint de envio no Swagger oficial da
-SEFIN Nacional e persistir os retornos fiscais relevantes.
+por empresa com seguranca e confirmar visualmente no ReDoc oficial se o path de
+envio da DPS continua sendo `/DPS`, pois o OpenAPI JSON direto retornou `403`
+fora da pagina da documentacao.
 
 Para preparar o primeiro teste em Producao Restrita, consulte:
 
