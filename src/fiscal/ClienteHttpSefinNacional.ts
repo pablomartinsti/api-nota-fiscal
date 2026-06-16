@@ -1,3 +1,5 @@
+import { gzipSync, gunzipSync } from 'node:zlib';
+
 import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
 import { ConfiguracaoSefinNacionalAusenteError } from '../errors/ConfiguracaoSefinNacionalAusenteError';
 import {
@@ -16,7 +18,7 @@ export interface ConfiguracaoClienteHttpSefinNacional {
 type FetchFn = typeof fetch;
 
 const TIMEOUT_PADRAO_MS = 15_000;
-const ENDPOINT_ENVIO_DPS_PADRAO = '/DPS';
+const ENDPOINT_ENVIO_DPS_PADRAO = '/nfse';
 const TAMANHO_MAXIMO_MENSAGEM_ERRO = 500;
 
 export class ClienteHttpSefinNacional implements ClienteNfseNacional {
@@ -38,10 +40,10 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
       const resposta = await this.fetchFn(url, {
         method: 'POST',
         headers: {
-          Accept: 'application/json, application/xml, text/plain, */*',
-          'Content-Type': 'application/xml; charset=utf-8',
+          Accept: 'application/json',
+          'Content-Type': 'application/json; charset=utf-8',
         },
-        body: input.xmlAssinado,
+        body: this.criarCorpoEnvioDps(input.xmlAssinado),
         signal: controlador.signal,
       });
       const textoResposta = await resposta.text();
@@ -55,6 +57,8 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
         };
       }
 
+      const xmlAutorizado = this.extrairXmlAutorizado(corpo);
+
       return {
         sucesso: true,
         statusHttp: resposta.status,
@@ -63,6 +67,7 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
           'numeroProtocolo',
           'idProcessamento',
           'id',
+          'idDps',
         ]),
         chaveAcesso: this.buscarTexto(corpo, [
           'chaveAcesso',
@@ -73,16 +78,15 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
           'numeroNfse',
           'numeroNFSe',
           'numero',
-        ]),
+        ]) ?? this.buscarTextoEmXml(xmlAutorizado, ['nNFSe']),
         codigoVerificacao: this.buscarTexto(corpo, [
           'codigoVerificacao',
           'codVerificacao',
+        ]) ?? this.buscarTextoEmXml(xmlAutorizado, [
+          'cVerifNFSe',
+          'cVerifNFSeMun',
         ]),
-        xmlAutorizado: this.buscarTexto(corpo, [
-          'xmlAutorizado',
-          'xmlNfse',
-          'xml',
-        ]),
+        xmlAutorizado,
       };
     } catch (error) {
       if (error instanceof ConfiguracaoSefinNacionalAusenteError) {
@@ -127,6 +131,16 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
     return `${baseNormalizada}${endpointNormalizado}`;
   }
 
+  private criarCorpoEnvioDps(xmlAssinado: string): string {
+    return JSON.stringify({
+      dpsXmlGZipB64: this.compactarXmlGzipBase64(xmlAssinado),
+    });
+  }
+
+  private compactarXmlGzipBase64(xml: string): string {
+    return gzipSync(Buffer.from(xml, 'utf8')).toString('base64');
+  }
+
   private parsearResposta(textoResposta: string): unknown {
     if (!textoResposta.trim()) {
       return undefined;
@@ -145,6 +159,12 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
 
     if (Array.isArray(erros)) {
       return erros.map((erro) => this.normalizarErro(erro));
+    }
+
+    const erro = objeto ? objeto.erro ?? objeto.error : undefined;
+
+    if (erro) {
+      return [this.normalizarErro(erro)];
     }
 
     const mensagem = this.buscarTexto(corpo, [
@@ -181,7 +201,42 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
     };
   }
 
+  private extrairXmlAutorizado(corpo: unknown): string | undefined {
+    const xmlDireto = this.buscarString(corpo, [
+      'xmlAutorizado',
+      'xmlNfse',
+      'xmlNFSe',
+      'xml',
+    ]);
+
+    if (xmlDireto) {
+      return xmlDireto;
+    }
+
+    const xmlCompactado = this.buscarString(corpo, [
+      'nfseXmlGZipB64',
+      'xmlAutorizadoGZipB64',
+      'xmlNfseGZipB64',
+    ]);
+
+    if (!xmlCompactado) {
+      return undefined;
+    }
+
+    try {
+      return gunzipSync(Buffer.from(xmlCompactado, 'base64')).toString('utf8');
+    } catch {
+      return undefined;
+    }
+  }
+
   private buscarTexto(corpo: unknown, chaves: string[]): string | undefined {
+    const valor = this.buscarString(corpo, chaves);
+
+    return valor ? this.limitarMensagem(valor) : undefined;
+  }
+
+  private buscarString(corpo: unknown, chaves: string[]): string | undefined {
     const objeto = this.comoObjeto(corpo);
 
     if (!objeto) {
@@ -192,11 +247,35 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
       const valor = objeto[chave];
 
       if (typeof valor === 'string' && valor.trim()) {
-        return this.limitarMensagem(valor);
+        return valor.trim();
       }
 
       if (typeof valor === 'number') {
         return String(valor);
+      }
+    }
+
+    return undefined;
+  }
+
+  private buscarTextoEmXml(
+    xml: string | undefined,
+    chaves: string[],
+  ): string | undefined {
+    if (!xml) {
+      return undefined;
+    }
+
+    for (const chave of chaves) {
+      const resultado = xml.match(
+        new RegExp(
+          `<(?:[\\w.-]+:)?${chave}\\b[^>]*>([^<]+)</(?:[\\w.-]+:)?${chave}>`,
+        ),
+      );
+      const valor = resultado?.[1]?.trim();
+
+      if (valor) {
+        return this.limitarMensagem(valor);
       }
     }
 

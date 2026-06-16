@@ -14,7 +14,7 @@ const envSchema = z.object({
   NFSE_CERTIFICADO_SENHA: z.string().optional(),
   NFSE_XSD_DPS_PATH: z.string().trim().min(1).optional(),
   NFSE_SEFIN_BASE_URL: z.string().trim().url().optional(),
-  NFSE_SEFIN_ENVIO_DPS_PATH: z.string().trim().min(1).default('/DPS'),
+  NFSE_SEFIN_ENVIO_DPS_PATH: z.string().trim().min(1).default('/nfse'),
   NFSE_SEFIN_TIMEOUT_MS: z.coerce.number().int().min(1).default(15_000),
 });
 

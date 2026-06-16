@@ -12,7 +12,8 @@ Documentacao oficial consultada:
 
 A pagina da documentacao acima carrega o OpenAPI em
 `https://sefin.producaorestrita.nfse.gov.br/SefinNacional/swagger/docs/v1`.
-Por isso, a URL base da API fica sem `/API`.
+O Swagger oficial informa `basePath` `/SefinNacional` e recepcao sincrona em
+`POST /nfse`.
 
 ## 1. Antes de comecar
 
@@ -38,7 +39,7 @@ NFSE_CERTIFICADO_PATH="C:\caminho\certificados\empresa.pfx"
 NFSE_CERTIFICADO_SENHA="senha-do-certificado"
 NFSE_XSD_DPS_PATH="C:\caminho\nfse-xsd\Schemas\1.01\DPS_v1.01.xsd"
 NFSE_SEFIN_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/SefinNacional"
-NFSE_SEFIN_ENVIO_DPS_PATH="/DPS"
+NFSE_SEFIN_ENVIO_DPS_PATH="/nfse"
 NFSE_SEFIN_TIMEOUT_MS=15000
 ```
 
@@ -46,13 +47,10 @@ A documentacao oficial da SEFIN Nacional abre pelo caminho com `/API`, mas os
 recursos carregados por ela apontam para `/SefinNacional`. Por isso:
 
 - `NFSE_SEFIN_BASE_URL` deve ser `https://sefin.producaorestrita.nfse.gov.br/SefinNacional`;
-- `NFSE_SEFIN_ENVIO_DPS_PATH` continua separado e configuravel;
-- confirme visualmente no ReDoc oficial se o path de envio da DPS continua
-  sendo `/DPS` antes do primeiro envio real.
-
-Observacao: a tentativa de acessar o OpenAPI JSON diretamente fora da pagina da
-documentacao retornou `403`. Entao essa conferencia final deve ser feita pelo
-ReDoc aberto no navegador.
+- `NFSE_SEFIN_ENVIO_DPS_PATH` deve ser `/nfse`;
+- o body enviado para a SEFIN deve ser JSON no formato
+  `{ "dpsXmlGZipB64": "..." }`, com a DPS assinada compactada em GZip e
+  codificada em Base64.
 
 ## 3. Checagem local
 
@@ -155,7 +153,6 @@ POST /notas-servico/:notaId/enviar-dps
 Se a resposta vier como `EMITIDA`, confira:
 
 - `numeroNfse`;
-- `codigoVerificacao`;
 - `protocoloEmissao`;
 - `chaveAcesso`;
 - `dataAutorizacao`;

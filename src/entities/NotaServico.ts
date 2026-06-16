@@ -80,7 +80,12 @@ export interface EmitirNotaProps {
   xmlUrl?: string;
 }
 
-export interface RegistrarSucessoFiscalProps extends EmitirNotaProps {
+export interface RegistrarSucessoFiscalProps {
+  numeroNfse?: string;
+  codigoVerificacao?: string;
+  dataEmissao?: Date;
+  linkPdf?: string;
+  xmlUrl?: string;
   protocoloEmissao?: string;
   chaveAcesso?: string;
   xmlAutorizado?: string;
@@ -390,6 +395,12 @@ export class NotaServico {
   }
 
   registrarSucessoFiscal(props: RegistrarSucessoFiscalProps): void {
+    this.garantirRascunho();
+
+    const numeroNfse = NotaServico.normalizarTextoOpcional(props.numeroNfse);
+    const codigoVerificacao = NotaServico.normalizarTextoOpcional(
+      props.codigoVerificacao,
+    );
     const protocoloEmissao = NotaServico.normalizarTextoOpcional(
       props.protocoloEmissao,
     );
@@ -411,13 +422,18 @@ export class NotaServico {
       throw new Error('Data de autorizacao invalida.');
     }
 
-    this.emitir(props);
-
+    this._numeroNfse = numeroNfse;
+    this._codigoVerificacao = codigoVerificacao;
+    this._dataEmissao = props.dataEmissao ?? new Date();
+    this._linkPdf = props.linkPdf;
+    this._xmlUrl = props.xmlUrl;
     this._protocoloEmissao = protocoloEmissao;
     this._chaveAcesso = chaveAcesso;
     this._xmlAutorizado = xmlAutorizado;
     this._dataAutorizacao = props.dataAutorizacao ?? this._dataEmissao;
+    this._mensagemErro = undefined;
     this._mensagemErroFiscal = undefined;
+    this._status = StatusNota.EMITIDA;
     this.atualizarDataDeAlteracao();
   }
 

@@ -1,3 +1,5 @@
+import { gzipSync, gunzipSync } from 'node:zlib';
+
 import { describe, expect, it, vi } from 'vitest';
 
 import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
@@ -5,19 +7,23 @@ import { ConfiguracaoSefinNacionalAusenteError } from '../errors/ConfiguracaoSef
 import { ClienteHttpSefinNacional } from './ClienteHttpSefinNacional';
 
 const xmlAssinado = '<DPS><Signature>assinatura</Signature></DPS>';
+const xmlNfseAutorizada =
+  '<NFSe><infNFSe><nNFSe>789</nNFSe></infNFSe></NFSe>';
 
 describe('ClienteHttpSefinNacional', () => {
-  it('deve enviar DPS assinada para a URL configurada e normalizar resposta de sucesso', async () => {
+  it('deve enviar DPS assinada no formato oficial e normalizar resposta de sucesso', async () => {
+    const nfseXmlGZipB64 = gzipSync(
+      Buffer.from(xmlNfseAutorizada, 'utf8'),
+    ).toString('base64');
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
-          protocolo: 'PROTOCOLO-123',
+          idDps: 'DPS-123',
           chaveAcesso: 'CHAVE-456',
-          numeroNfse: '789',
-          codigoVerificacao: 'ABC123',
+          nfseXmlGZipB64,
         }),
         {
-          status: 202,
+          status: 201,
           headers: { 'Content-Type': 'application/json' },
         },
       ),
@@ -25,7 +31,7 @@ describe('ClienteHttpSefinNacional', () => {
     const cliente = new ClienteHttpSefinNacional(
       () => ({
         baseUrl: 'https://sefin.producaorestrita.nfse.gov.br/SefinNacional',
-        endpointEnvioDps: '/DPS',
+        endpointEnvioDps: '/nfse',
         timeoutMs: 1000,
       }),
       fetchMock,
@@ -34,24 +40,30 @@ describe('ClienteHttpSefinNacional', () => {
     const resultado = await cliente.enviarDpsAssinada({ xmlAssinado });
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://sefin.producaorestrita.nfse.gov.br/SefinNacional/DPS',
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe(
+      'https://sefin.producaorestrita.nfse.gov.br/SefinNacional/nfse',
+    );
+    expect(init).toEqual(
       expect.objectContaining({
         method: 'POST',
-        body: xmlAssinado,
         headers: expect.objectContaining({
-          'Content-Type': 'application/xml; charset=utf-8',
+          'Content-Type': 'application/json; charset=utf-8',
         }),
       }),
     );
+    const body = JSON.parse(init?.body as string) as { dpsXmlGZipB64: string };
+    expect(
+      gunzipSync(Buffer.from(body.dpsXmlGZipB64, 'base64')).toString('utf8'),
+    ).toBe(xmlAssinado);
     expect(resultado).toEqual({
       sucesso: true,
-      statusHttp: 202,
-      protocolo: 'PROTOCOLO-123',
+      statusHttp: 201,
+      protocolo: 'DPS-123',
       chaveAcesso: 'CHAVE-456',
       numeroNfse: '789',
-      codigoVerificacao: 'ABC123',
-      xmlAutorizado: undefined,
+      codigoVerificacao: undefined,
+      xmlAutorizado: xmlNfseAutorizada,
     });
   });
 
@@ -76,7 +88,7 @@ describe('ClienteHttpSefinNacional', () => {
     const cliente = new ClienteHttpSefinNacional(
       () => ({
         baseUrl: 'https://sefin.producaorestrita.nfse.gov.br/SefinNacional/',
-        endpointEnvioDps: 'DPS',
+        endpointEnvioDps: 'nfse',
       }),
       fetchMock,
     );

@@ -50,9 +50,9 @@ export class EnviarDpsAssinadaNotaServicoService {
       return this.notaRepository.salvar(nota);
     }
 
-    if (!resultado.numeroNfse || !resultado.codigoVerificacao) {
+    if (!resultado.protocolo && !resultado.chaveAcesso) {
       nota.registrarErroFiscal(
-        'Retorno fiscal da SEFIN nao informou numero da NFS-e ou codigo de verificacao.',
+        'Retorno fiscal da SEFIN nao informou protocolo ou chave de acesso.',
       );
 
       return this.notaRepository.salvar(nota);

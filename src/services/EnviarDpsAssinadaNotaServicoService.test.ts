@@ -92,21 +92,21 @@ describe('EnviarDpsAssinadaNotaServicoService', () => {
     );
   });
 
-  it('deve salvar erro fiscal quando sucesso vier incompleto', async () => {
+  it('deve salvar erro fiscal quando sucesso vier sem protocolo e sem chave', async () => {
     const nota = criarNota();
     const { service, clienteNfse } = criarService(nota);
 
     clienteNfse.enviarDpsAssinada = vi.fn().mockResolvedValue({
       sucesso: true,
       statusHttp: 202,
-      protocolo: 'PROTOCOLO-123',
+      numeroNfse: '100',
     });
 
     const resultado = await service.executar(autenticacao, 'nota-1');
 
     expect(resultado.status).toBe(StatusNota.ERRO);
     expect(resultado.mensagemErroFiscal).toBe(
-      'Retorno fiscal da SEFIN nao informou numero da NFS-e ou codigo de verificacao.',
+      'Retorno fiscal da SEFIN nao informou protocolo ou chave de acesso.',
     );
   });
 
