@@ -23,6 +23,7 @@ async function main(): Promise<void> {
     verificarValor('Endpoint de envio da DPS', env.NFSE_SEFIN_ENVIO_DPS_PATH),
   );
   resultados.push(verificarUrlSefin(env.NFSE_SEFIN_BASE_URL));
+  resultados.push(verificarEndpointEnvio(env.NFSE_SEFIN_ENVIO_DPS_PATH));
   resultados.push(await verificarGitignore());
   resultados.push(await verificarCertificado());
 
@@ -82,6 +83,22 @@ function verificarUrlSefin(baseUrl: string | undefined): ResultadoCheck {
       detalhe: 'URL invalida',
     };
   }
+}
+
+function verificarEndpointEnvio(endpoint: string | undefined): ResultadoCheck {
+  if (!endpoint) {
+    return { nome: 'Endpoint oficial de envio', sucesso: false };
+  }
+
+  const endpointNormalizado = endpoint.trim().toLowerCase();
+  const sucesso =
+    endpointNormalizado === '/nfse' || endpointNormalizado === 'nfse';
+
+  return {
+    nome: 'Endpoint oficial de envio',
+    sucesso,
+    detalhe: sucesso ? '/nfse' : 'esperado /nfse conforme Swagger da SEFIN',
+  };
 }
 
 async function verificarGitignore(): Promise<ResultadoCheck> {

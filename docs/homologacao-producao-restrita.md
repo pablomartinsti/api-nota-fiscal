@@ -75,7 +75,23 @@ Esse comando valida somente configuracao local:
 
 Ele nao envia XML para a SEFIN.
 
-## 4. Dados minimos para homologacao
+## 4. Ultima conferencia antes do envio
+
+Antes de chamar a rota que envia para a SEFIN, confira manualmente:
+
+- o `.env` aponta para Producao Restrita, nao para Producao;
+- o certificado A1 e o mesmo CNPJ da empresa prestadora;
+- o certificado nao esta vencido;
+- o XML assinado foi gerado sem erro;
+- o cliente/tomador usado e de teste;
+- a nota continua em `RASCUNHO`;
+- `GET /notas-servico/:notaId/prontidao-fiscal` retorna a nota pronta;
+- voce esta ciente de que `POST /notas-servico/:notaId/enviar-dps` faz envio
+  real para a SEFIN Nacional.
+
+Se qualquer item acima estiver incerto, pare e corrija antes do envio.
+
+## 5. Dados minimos para homologacao
 
 ### Empresa
 
@@ -121,12 +137,12 @@ A nota precisa estar em `RASCUNHO` e conter:
 - data de competencia;
 - codigo IBGE do municipio de prestacao.
 
-## 5. Ordem recomendada do teste
+## 6. Ordem recomendada do teste
 
 1. Configure o `.env`.
 2. Rode `npm run nfse:check-homologacao`.
-3. Abra a documentacao oficial da SEFIN Nacional em Producao Restrita e
-   confirme o path de envio da DPS no ReDoc.
+3. Abra a documentacao oficial da SEFIN Nacional em Producao Restrita, se
+   quiser revisar o contrato oficial.
 4. Suba o banco com Docker.
 5. Rode as migrations.
 6. Suba a API.
@@ -139,19 +155,31 @@ A nota precisa estar em `RASCUNHO` e conter:
 GET /notas-servico/:notaId/prontidao-fiscal
 ```
 
+Se essa rota retornar pendencias, nao envie a DPS ainda.
+
 11. Gere o XML assinado para conferencia:
 
 ```http
 GET /notas-servico/:notaId/xml-dps-assinado
 ```
 
-12. Envie a DPS assinada:
+12. Faca a ultima conferencia da secao 4.
+13. Envie a DPS assinada:
 
 ```http
 POST /notas-servico/:notaId/enviar-dps
 ```
 
-## 6. Como interpretar o resultado
+Exemplo com `curl`:
+
+```bash
+curl -X POST "http://localhost:3333/notas-servico/NOTA_ID/enviar-dps" \
+  -H "Authorization: Bearer SEU_TOKEN"
+```
+
+Nao cole certificado, senha, `.env` ou XML real em issue, chat ou commit.
+
+## 7. Como interpretar o resultado
 
 Se a resposta vier como `EMITIDA`, confira:
 
@@ -161,6 +189,10 @@ Se a resposta vier como `EMITIDA`, confira:
 - `dataAutorizacao`;
 - `xmlAutorizado`.
 
+Guarde como evidencia apenas dados nao sensiveis, como status HTTP interno,
+`chaveAcesso`, horario do teste e mensagem de retorno. Evite salvar XML real em
+repositorio.
+
 Se a resposta vier como `ERRO`, confira:
 
 - `mensagemErroFiscal`;
@@ -169,11 +201,39 @@ Se a resposta vier como `ERRO`, confira:
 - campos da DPS;
 - endpoint da SEFIN.
 
-## 7. Cuidados
+Erros comuns:
+
+- `Configuracao fiscal para assinatura da DPS nao foi informada.`: falta
+  certificado, senha ou XSD no `.env`.
+- `Configuracao da SEFIN Nacional nao foi informada.`: URL base ou endpoint da
+  SEFIN esta ausente ou invalido.
+- `Nao foi possivel comunicar com a SEFIN Nacional.`: falha de rede, TLS,
+  certificado recusado ou indisponibilidade externa.
+- `Tempo limite excedido ao comunicar com a SEFIN Nacional.`: aumente
+  `NFSE_SEFIN_TIMEOUT_MS` ou tente novamente depois.
+- resposta fiscal com `mensagemErroFiscal`: a SEFIN processou a requisicao e
+  recusou por regra fiscal, dados da DPS, prestador, tomador ou servico.
+
+## 8. Depois do primeiro envio
+
+Se a nota for emitida:
+
+1. copie a `chaveAcesso` para controle local;
+2. confira se `xmlAutorizado` foi persistido;
+3. mantenha a nota como evidencia de homologacao;
+4. nao use a rota simulada `POST /notas-servico/:notaId/emitir` para essa nota.
+
+Se a nota ficar com erro:
+
+1. leia `mensagemErroFiscal`;
+2. corrija empresa, cliente, servico ou nota;
+3. use a rota de retorno para rascunho apenas se fizer sentido no fluxo;
+4. gere novamente o XML assinado antes de reenviar.
+
+## 9. Cuidados
 
 - Nao use certificado real em testes automatizados.
 - Nao envie dados de producao em Producao Restrita.
 - Nao versionar `.env`, `.pfx`, `.p12` ou pasta `certificados/`.
-- Confirme o endpoint no Swagger oficial antes de considerar a homologacao
-  valida.
+- O envio real deve ser manual e intencional.
 - Guarde evidencias do retorno da SEFIN sem expor senha ou certificado.
