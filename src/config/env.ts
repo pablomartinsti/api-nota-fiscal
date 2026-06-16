@@ -10,6 +10,9 @@ const envSchema = z.object({
   JWT_SECRET: z.string().trim().min(1),
   PORT: z.coerce.number().int().min(1).max(65_535).default(3333),
   CORS_ORIGIN: z.string().trim().min(1).default('*'),
+  NFSE_CERTIFICADO_PATH: z.string().trim().min(1).optional(),
+  NFSE_CERTIFICADO_SENHA: z.string().optional(),
+  NFSE_XSD_DPS_PATH: z.string().trim().min(1).optional(),
 });
 
 const resultado = envSchema.safeParse(process.env);

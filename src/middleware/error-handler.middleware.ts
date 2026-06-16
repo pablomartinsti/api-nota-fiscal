@@ -5,7 +5,10 @@ import { AcessoNegadoError } from '../errors/AcessoNegadoError';
 import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
 import { ClienteNaoEncontradoError } from '../errors/ClienteNaoEncontradoError';
 import { ClienteInativoError } from '../errors/ClienteInativoError';
+import { CertificadoA1CnpjDivergenteError } from '../errors/CertificadoA1CnpjDivergenteError';
+import { CertificadoA1InvalidoError } from '../errors/CertificadoA1InvalidoError';
 import { CnpjJaCadastradoError } from '../errors/CnpjJaCadastradoError';
+import { ConfiguracaoFiscalAusenteError } from '../errors/ConfiguracaoFiscalAusenteError';
 import { CpfCnpjJaCadastradoError } from '../errors/CpfCnpjJaCadastradoError';
 import { CredenciaisInvalidasError } from '../errors/CredenciaisInvalidasError';
 import { EmailJaCadastradoError } from '../errors/EmailJaCadastradoError';
@@ -17,6 +20,7 @@ import { ServicoNaoEncontradoError } from '../errors/ServicoNaoEncontradoError';
 import { SenhaAtualIncorretaError } from '../errors/SenhaAtualIncorretaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { UsuarioNaoEncontradoError } from '../errors/UsuarioNaoEncontradoError';
+import { XmlDpsInvalidoError } from '../errors/XmlDpsInvalidoError';
 
 export const errorHandler: ErrorRequestHandler = (
   error,
@@ -77,6 +81,24 @@ export const errorHandler: ErrorRequestHandler = (
 
   if (error instanceof AcessoNegadoError) {
     response.status(403).json({
+      message: error.message,
+    });
+    return;
+  }
+
+  if (error instanceof ConfiguracaoFiscalAusenteError) {
+    response.status(503).json({
+      message: error.message,
+    });
+    return;
+  }
+
+  if (
+    error instanceof CertificadoA1InvalidoError ||
+    error instanceof CertificadoA1CnpjDivergenteError ||
+    error instanceof XmlDpsInvalidoError
+  ) {
+    response.status(422).json({
       message: error.message,
     });
     return;
