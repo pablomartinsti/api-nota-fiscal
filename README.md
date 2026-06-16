@@ -101,6 +101,7 @@ npm run dev
 npm run build
 npm test
 npm run test:integration
+npm run nfse:check-homologacao
 npm run prisma:generate
 npm run prisma:migrate
 npm run prisma:studio
@@ -189,3 +190,7 @@ NFSE_SEFIN_TIMEOUT_MS=15000
 Antes da emissao real completa, sera necessario armazenar certificados digitais
 por empresa com seguranca, confirmar o endpoint de envio no Swagger oficial da
 SEFIN Nacional e persistir os retornos fiscais relevantes.
+
+Para preparar o primeiro teste em Producao Restrita, consulte:
+
+- [Guia de homologacao em Producao Restrita](docs/homologacao-producao-restrita.md)
