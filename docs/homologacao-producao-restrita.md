@@ -51,6 +51,9 @@ recursos carregados por ela apontam para `/SefinNacional`. Por isso:
 - o body enviado para a SEFIN deve ser JSON no formato
   `{ "dpsXmlGZipB64": "..." }`, com a DPS assinada compactada em GZip e
   codificada em Base64.
+- o mesmo certificado A1 configurado em `NFSE_CERTIFICADO_PATH` e
+  `NFSE_CERTIFICADO_SENHA` tambem e apresentado na conexao HTTPS com
+  autenticacao mutua TLS.
 
 ## 3. Checagem local
 

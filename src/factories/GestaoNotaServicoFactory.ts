@@ -53,6 +53,8 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     baseUrl: env.NFSE_SEFIN_BASE_URL,
     endpointEnvioDps: env.NFSE_SEFIN_ENVIO_DPS_PATH,
     timeoutMs: env.NFSE_SEFIN_TIMEOUT_MS,
+    certificadoPath: env.NFSE_CERTIFICADO_PATH,
+    certificadoSenha: env.NFSE_CERTIFICADO_SENHA,
   }));
 
   return new GestaoNotaServicoController(

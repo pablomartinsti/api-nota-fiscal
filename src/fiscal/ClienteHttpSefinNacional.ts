@@ -1,6 +1,10 @@
+import { readFile } from 'node:fs/promises';
+import { request as httpsRequest } from 'node:https';
+import { URL } from 'node:url';
 import { gzipSync, gunzipSync } from 'node:zlib';
 
 import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
+import { ConfiguracaoFiscalAusenteError } from '../errors/ConfiguracaoFiscalAusenteError';
 import { ConfiguracaoSefinNacionalAusenteError } from '../errors/ConfiguracaoSefinNacionalAusenteError';
 import {
   ClienteNfseNacional,
@@ -13,9 +17,28 @@ export interface ConfiguracaoClienteHttpSefinNacional {
   baseUrl?: string;
   endpointEnvioDps?: string;
   timeoutMs?: number;
+  certificadoPath?: string;
+  certificadoSenha?: string;
 }
 
-type FetchFn = typeof fetch;
+export interface RequisicaoHttpSefinNacional {
+  url: string;
+  method: 'POST';
+  headers: Record<string, string>;
+  body: string;
+  timeoutMs: number;
+  certificadoPfx: Buffer;
+  certificadoSenha: string;
+}
+
+export interface RespostaHttpSefinNacional {
+  status: number;
+  body: string;
+}
+
+export type TransportadorHttpSefinNacional = (
+  requisicao: RequisicaoHttpSefinNacional,
+) => Promise<RespostaHttpSefinNacional>;
 
 const TIMEOUT_PADRAO_MS = 15_000;
 const ENDPOINT_ENVIO_DPS_PADRAO = '/nfse';
@@ -24,32 +47,25 @@ const TAMANHO_MAXIMO_MENSAGEM_ERRO = 500;
 export class ClienteHttpSefinNacional implements ClienteNfseNacional {
   constructor(
     private readonly obterConfiguracao: () => ConfiguracaoClienteHttpSefinNacional,
-    private readonly fetchFn: FetchFn = fetch,
+    private readonly transportador: TransportadorHttpSefinNacional = transportarComHttpsMutuo,
   ) {}
 
   async enviarDpsAssinada(
     input: EnviarDpsAssinadaInput,
   ): Promise<ResultadoEnvioDpsNfse> {
     const configuracao = this.obterConfiguracao();
-    const url = this.criarUrlEnvioDps(configuracao);
     const timeoutMs = configuracao.timeoutMs ?? TIMEOUT_PADRAO_MS;
-    const controlador = new AbortController();
-    const timeout = setTimeout(() => controlador.abort(), timeoutMs);
 
     try {
-      const resposta = await this.fetchFn(url, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json; charset=utf-8',
-        },
-        body: this.criarCorpoEnvioDps(input.xmlAssinado),
-        signal: controlador.signal,
-      });
-      const textoResposta = await resposta.text();
-      const corpo = this.parsearResposta(textoResposta);
+      const requisicao = await this.criarRequisicaoEnvioDps(
+        configuracao,
+        input.xmlAssinado,
+        timeoutMs,
+      );
+      const resposta = await this.transportador(requisicao);
+      const corpo = this.parsearResposta(resposta.body);
 
-      if (!resposta.ok) {
+      if (resposta.status < 200 || resposta.status >= 300) {
         return {
           sucesso: false,
           statusHttp: resposta.status,
@@ -74,22 +90,25 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
           'chaveNfse',
           'chaveNFSe',
         ]),
-        numeroNfse: this.buscarTexto(corpo, [
-          'numeroNfse',
-          'numeroNFSe',
-          'numero',
-        ]) ?? this.buscarTextoEmXml(xmlAutorizado, ['nNFSe']),
-        codigoVerificacao: this.buscarTexto(corpo, [
-          'codigoVerificacao',
-          'codVerificacao',
-        ]) ?? this.buscarTextoEmXml(xmlAutorizado, [
-          'cVerifNFSe',
-          'cVerifNFSeMun',
-        ]),
+        numeroNfse:
+          this.buscarTexto(corpo, ['numeroNfse', 'numeroNFSe', 'numero']) ??
+          this.buscarTextoEmXml(xmlAutorizado, ['nNFSe']),
+        codigoVerificacao:
+          this.buscarTexto(corpo, [
+            'codigoVerificacao',
+            'codVerificacao',
+          ]) ??
+          this.buscarTextoEmXml(xmlAutorizado, [
+            'cVerifNFSe',
+            'cVerifNFSeMun',
+          ]),
         xmlAutorizado,
       };
     } catch (error) {
-      if (error instanceof ConfiguracaoSefinNacionalAusenteError) {
+      if (
+        error instanceof ConfiguracaoSefinNacionalAusenteError ||
+        error instanceof ConfiguracaoFiscalAusenteError
+      ) {
         throw error;
       }
 
@@ -100,9 +119,55 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
       }
 
       throw new ComunicacaoNfseError();
-    } finally {
-      clearTimeout(timeout);
     }
+  }
+
+  private async criarRequisicaoEnvioDps(
+    configuracao: ConfiguracaoClienteHttpSefinNacional,
+    xmlAssinado: string,
+    timeoutMs: number,
+  ): Promise<RequisicaoHttpSefinNacional> {
+    const body = this.criarCorpoEnvioDps(xmlAssinado);
+
+    return {
+      url: this.criarUrlEnvioDps(configuracao),
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Length': Buffer.byteLength(body, 'utf8').toString(),
+      },
+      body,
+      timeoutMs,
+      certificadoPfx: await this.carregarCertificadoCliente(configuracao),
+      certificadoSenha: this.obterSenhaCertificado(configuracao),
+    };
+  }
+
+  private async carregarCertificadoCliente(
+    configuracao: ConfiguracaoClienteHttpSefinNacional,
+  ): Promise<Buffer> {
+    const caminho = configuracao.certificadoPath?.trim();
+
+    if (!caminho || configuracao.certificadoSenha === undefined) {
+      throw new ConfiguracaoFiscalAusenteError();
+    }
+
+    try {
+      return await readFile(caminho);
+    } catch {
+      throw new ConfiguracaoFiscalAusenteError();
+    }
+  }
+
+  private obterSenhaCertificado(
+    configuracao: ConfiguracaoClienteHttpSefinNacional,
+  ): string {
+    if (configuracao.certificadoSenha === undefined) {
+      throw new ConfiguracaoFiscalAusenteError();
+    }
+
+    return configuracao.certificadoSenha;
   }
 
   private criarUrlEnvioDps(
@@ -118,7 +183,11 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
     }
 
     try {
-      new URL(baseUrl);
+      const url = new URL(baseUrl);
+
+      if (url.protocol !== 'https:') {
+        throw new Error('Protocolo invalido.');
+      }
     } catch {
       throw new ConfiguracaoSefinNacionalAusenteError();
     }
@@ -297,4 +366,47 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
   private isAbortError(error: unknown): boolean {
     return error instanceof Error && error.name === 'AbortError';
   }
+}
+
+function transportarComHttpsMutuo(
+  requisicao: RequisicaoHttpSefinNacional,
+): Promise<RespostaHttpSefinNacional> {
+  return new Promise((resolve, reject) => {
+    const url = new URL(requisicao.url);
+    const request = httpsRequest(
+      {
+        protocol: url.protocol,
+        hostname: url.hostname,
+        port: url.port || undefined,
+        path: `${url.pathname}${url.search}`,
+        method: 'POST',
+        headers: requisicao.headers,
+        pfx: requisicao.certificadoPfx,
+        passphrase: requisicao.certificadoSenha,
+      },
+      (resposta) => {
+        const partes: Buffer[] = [];
+
+        resposta.on('data', (parte: Buffer | string) => {
+          partes.push(Buffer.isBuffer(parte) ? parte : Buffer.from(parte));
+        });
+        resposta.on('end', () => {
+          resolve({
+            status: resposta.statusCode ?? 0,
+            body: Buffer.concat(partes).toString('utf8'),
+          });
+        });
+      },
+    );
+
+    request.setTimeout(requisicao.timeoutMs, () => {
+      const erro = new Error('Tempo limite excedido.');
+      erro.name = 'AbortError';
+      request.destroy(erro);
+    });
+
+    request.on('error', reject);
+    request.write(requisicao.body);
+    request.end();
+  });
 }
