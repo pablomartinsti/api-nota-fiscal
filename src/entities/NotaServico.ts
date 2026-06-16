@@ -31,6 +31,11 @@ export interface NotaServicoProps {
   servicoId: string;
   numeroNfse?: string;
   codigoVerificacao?: string;
+  protocoloEmissao?: string;
+  chaveAcesso?: string;
+  xmlAutorizado?: string;
+  dataAutorizacao?: Date;
+  mensagemErroFiscal?: string;
   ambienteFiscal?: AmbienteFiscal;
   serieDps?: string;
   numeroDps?: string;
@@ -75,6 +80,13 @@ export interface EmitirNotaProps {
   xmlUrl?: string;
 }
 
+export interface RegistrarSucessoFiscalProps extends EmitirNotaProps {
+  protocoloEmissao?: string;
+  chaveAcesso?: string;
+  xmlAutorizado?: string;
+  dataAutorizacao?: Date;
+}
+
 export class NotaServico {
   private readonly _id?: string;
   private readonly _empresaId: string;
@@ -83,6 +95,11 @@ export class NotaServico {
   private _servicoId: string;
   private _numeroNfse?: string;
   private _codigoVerificacao?: string;
+  private _protocoloEmissao?: string;
+  private _chaveAcesso?: string;
+  private _xmlAutorizado?: string;
+  private _dataAutorizacao?: Date;
+  private _mensagemErroFiscal?: string;
   private _ambienteFiscal: AmbienteFiscal;
   private _serieDps?: string;
   private _numeroDps?: string;
@@ -134,6 +151,10 @@ export class NotaServico {
       tipoRetencaoIssqn,
       informacoesComplementares: props.informacoesComplementares,
     });
+    NotaServico.validarDataOpcional(
+      props.dataAutorizacao,
+      'Data de autorizacao',
+    );
 
     this._id = props.id;
     this._empresaId = empresaId;
@@ -142,6 +163,11 @@ export class NotaServico {
     this._servicoId = servicoId;
     this._numeroNfse = props.numeroNfse;
     this._codigoVerificacao = props.codigoVerificacao;
+    this._protocoloEmissao = props.protocoloEmissao;
+    this._chaveAcesso = props.chaveAcesso;
+    this._xmlAutorizado = props.xmlAutorizado;
+    this._dataAutorizacao = props.dataAutorizacao;
+    this._mensagemErroFiscal = props.mensagemErroFiscal;
     this._ambienteFiscal = ambienteFiscal;
     this._serieDps = props.serieDps;
     this._numeroDps = props.numeroDps;
@@ -161,7 +187,7 @@ export class NotaServico {
     this._dataEmissao = props.dataEmissao;
     this._linkPdf = props.linkPdf;
     this._xmlUrl = props.xmlUrl;
-    this._mensagemErro = props.mensagemErro;
+    this._mensagemErro = props.mensagemErro ?? props.mensagemErroFiscal;
     this._createdAt = props.createdAt ?? new Date();
     this._updatedAt = props.updatedAt ?? new Date();
 
@@ -194,6 +220,26 @@ export class NotaServico {
 
   get codigoVerificacao(): string | undefined {
     return this._codigoVerificacao;
+  }
+
+  get protocoloEmissao(): string | undefined {
+    return this._protocoloEmissao;
+  }
+
+  get chaveAcesso(): string | undefined {
+    return this._chaveAcesso;
+  }
+
+  get xmlAutorizado(): string | undefined {
+    return this._xmlAutorizado;
+  }
+
+  get dataAutorizacao(): Date | undefined {
+    return this._dataAutorizacao;
+  }
+
+  get mensagemErroFiscal(): string | undefined {
+    return this._mensagemErroFiscal;
   }
 
   get ambienteFiscal(): AmbienteFiscal {
@@ -333,8 +379,45 @@ export class NotaServico {
     this._dataEmissao = props.dataEmissao ?? new Date();
     this._linkPdf = props.linkPdf;
     this._xmlUrl = props.xmlUrl;
+    this._protocoloEmissao = undefined;
+    this._chaveAcesso = undefined;
+    this._xmlAutorizado = undefined;
+    this._dataAutorizacao = undefined;
     this._mensagemErro = undefined;
+    this._mensagemErroFiscal = undefined;
     this._status = StatusNota.EMITIDA;
+    this.atualizarDataDeAlteracao();
+  }
+
+  registrarSucessoFiscal(props: RegistrarSucessoFiscalProps): void {
+    const protocoloEmissao = NotaServico.normalizarTextoOpcional(
+      props.protocoloEmissao,
+    );
+    const chaveAcesso = NotaServico.normalizarTextoOpcional(props.chaveAcesso);
+    const xmlAutorizado = NotaServico.normalizarTextoOpcional(
+      props.xmlAutorizado,
+    );
+
+    if (!protocoloEmissao && !chaveAcesso) {
+      throw new Error(
+        'Retorno fiscal deve informar protocolo ou chave de acesso.',
+      );
+    }
+
+    if (
+      props.dataAutorizacao !== undefined &&
+      Number.isNaN(props.dataAutorizacao.getTime())
+    ) {
+      throw new Error('Data de autorizacao invalida.');
+    }
+
+    this.emitir(props);
+
+    this._protocoloEmissao = protocoloEmissao;
+    this._chaveAcesso = chaveAcesso;
+    this._xmlAutorizado = xmlAutorizado;
+    this._dataAutorizacao = props.dataAutorizacao ?? this._dataEmissao;
+    this._mensagemErroFiscal = undefined;
     this.atualizarDataDeAlteracao();
   }
 
@@ -346,7 +429,17 @@ export class NotaServico {
     NotaServico.validarTextoObrigatorio(mensagem, 'Mensagem de erro');
 
     this._mensagemErro = mensagem;
+    this._protocoloEmissao = undefined;
+    this._chaveAcesso = undefined;
+    this._xmlAutorizado = undefined;
+    this._dataAutorizacao = undefined;
     this._status = StatusNota.ERRO;
+    this.atualizarDataDeAlteracao();
+  }
+
+  registrarErroFiscal(mensagemErroFiscal: string): void {
+    this.registrarErro(mensagemErroFiscal);
+    this._mensagemErroFiscal = this._mensagemErro;
     this.atualizarDataDeAlteracao();
   }
 
@@ -356,6 +449,7 @@ export class NotaServico {
     }
 
     this._mensagemErro = undefined;
+    this._mensagemErroFiscal = undefined;
     this._status = StatusNota.RASCUNHO;
     this.atualizarDataDeAlteracao();
   }
@@ -474,6 +568,18 @@ export class NotaServico {
       throw new Error(
         'Informacoes complementares devem conter no maximo 2000 caracteres.',
       );
+    }
+  }
+
+  private static normalizarTextoOpcional(valor?: string): string | undefined {
+    const texto = valor?.trim();
+
+    return texto ? texto : undefined;
+  }
+
+  private static validarDataOpcional(data: Date | undefined, campo: string): void {
+    if (data !== undefined && Number.isNaN(data.getTime())) {
+      throw new Error(`${campo} invalida.`);
     }
   }
 

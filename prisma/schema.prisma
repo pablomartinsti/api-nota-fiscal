@@ -171,6 +171,11 @@ model NotaServico {
 
   numeroNfse        String?
   codigoVerificacao String?
+  protocoloEmissao  String?
+  chaveAcesso       String?
+  xmlAutorizado     String?
+  dataAutorizacao   DateTime?
+  mensagemErroFiscal String?
   ambienteFiscal    AmbienteFiscal       @default(HOMOLOGACAO)
   serieDps          String?
   numeroDps         String?

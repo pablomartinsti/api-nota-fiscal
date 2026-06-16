@@ -179,6 +179,40 @@ describe('NotaServico', () => {
     expect(nota.xmlUrl).toBe('https://exemplo.com/nota.xml');
   });
 
+  it('deve registrar sucesso fiscal da emissao', () => {
+    const nota = criarNota();
+    const dataAutorizacao = new Date('2026-06-09T12:30:00.000Z');
+
+    nota.registrarSucessoFiscal({
+      numeroNfse: '100',
+      codigoVerificacao: 'ABC123',
+      protocoloEmissao: 'PROTOCOLO-123',
+      chaveAcesso: 'CHAVE-456',
+      xmlAutorizado: '<NFS-e>autorizada</NFS-e>',
+      dataAutorizacao,
+    });
+
+    expect(nota.status).toBe(StatusNota.EMITIDA);
+    expect(nota.numeroNfse).toBe('100');
+    expect(nota.codigoVerificacao).toBe('ABC123');
+    expect(nota.protocoloEmissao).toBe('PROTOCOLO-123');
+    expect(nota.chaveAcesso).toBe('CHAVE-456');
+    expect(nota.xmlAutorizado).toBe('<NFS-e>autorizada</NFS-e>');
+    expect(nota.dataAutorizacao).toBe(dataAutorizacao);
+    expect(nota.mensagemErroFiscal).toBeUndefined();
+  });
+
+  it('deve exigir protocolo ou chave para registrar sucesso fiscal', () => {
+    const nota = criarNota();
+
+    expect(() =>
+      nota.registrarSucessoFiscal({
+        numeroNfse: '100',
+        codigoVerificacao: 'ABC123',
+      }),
+    ).toThrow('Retorno fiscal deve informar protocolo ou chave de acesso.');
+  });
+
   it('deve exigir número e código de verificação para emitir', () => {
     const nota = criarNota();
 
@@ -223,6 +257,22 @@ describe('NotaServico', () => {
     expect(nota.mensagemErro).toBeUndefined();
   });
 
+  it('deve registrar erro fiscal e limpar ao retornar para rascunho', () => {
+    const nota = criarNota();
+
+    nota.registrarErroFiscal('Rejeicao fiscal da SEFIN');
+
+    expect(nota.status).toBe(StatusNota.ERRO);
+    expect(nota.mensagemErro).toBe('Rejeicao fiscal da SEFIN');
+    expect(nota.mensagemErroFiscal).toBe('Rejeicao fiscal da SEFIN');
+
+    nota.retornarParaRascunho();
+
+    expect(nota.status).toBe(StatusNota.RASCUNHO);
+    expect(nota.mensagemErro).toBeUndefined();
+    expect(nota.mensagemErroFiscal).toBeUndefined();
+  });
+
   it('deve permitir cancelar somente uma nota emitida', () => {
     const nota = criarNota();
 
@@ -249,16 +299,25 @@ describe('NotaServico', () => {
 
   it('deve reconstruir uma nota emitida com dados fiscais', () => {
     const dataEmissao = new Date('2026-06-09T12:00:00.000Z');
+    const dataAutorizacao = new Date('2026-06-09T12:30:00.000Z');
     const nota = new NotaServico({
       ...dadosBase,
       status: StatusNota.EMITIDA,
       numeroNfse: '100',
       codigoVerificacao: 'ABC123',
+      protocoloEmissao: 'PROTOCOLO-123',
+      chaveAcesso: 'CHAVE-456',
+      xmlAutorizado: '<NFS-e>autorizada</NFS-e>',
       dataEmissao,
+      dataAutorizacao,
     });
 
     expect(nota.status).toBe(StatusNota.EMITIDA);
     expect(nota.dataEmissao).toBe(dataEmissao);
+    expect(nota.protocoloEmissao).toBe('PROTOCOLO-123');
+    expect(nota.chaveAcesso).toBe('CHAVE-456');
+    expect(nota.xmlAutorizado).toBe('<NFS-e>autorizada</NFS-e>');
+    expect(nota.dataAutorizacao).toBe(dataAutorizacao);
   });
 
   it('deve reconstruir uma nota cancelada com dados fiscais', () => {
