@@ -8,7 +8,9 @@ import { ClienteInativoError } from '../errors/ClienteInativoError';
 import { CertificadoA1CnpjDivergenteError } from '../errors/CertificadoA1CnpjDivergenteError';
 import { CertificadoA1InvalidoError } from '../errors/CertificadoA1InvalidoError';
 import { CnpjJaCadastradoError } from '../errors/CnpjJaCadastradoError';
+import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
 import { ConfiguracaoFiscalAusenteError } from '../errors/ConfiguracaoFiscalAusenteError';
+import { ConfiguracaoSefinNacionalAusenteError } from '../errors/ConfiguracaoSefinNacionalAusenteError';
 import { CpfCnpjJaCadastradoError } from '../errors/CpfCnpjJaCadastradoError';
 import { CredenciaisInvalidasError } from '../errors/CredenciaisInvalidasError';
 import { EmailJaCadastradoError } from '../errors/EmailJaCadastradoError';
@@ -86,7 +88,10 @@ export const errorHandler: ErrorRequestHandler = (
     return;
   }
 
-  if (error instanceof ConfiguracaoFiscalAusenteError) {
+  if (
+    error instanceof ConfiguracaoFiscalAusenteError ||
+    error instanceof ConfiguracaoSefinNacionalAusenteError
+  ) {
     response.status(503).json({
       message: error.message,
     });
@@ -99,6 +104,13 @@ export const errorHandler: ErrorRequestHandler = (
     error instanceof XmlDpsInvalidoError
   ) {
     response.status(422).json({
+      message: error.message,
+    });
+    return;
+  }
+
+  if (error instanceof ComunicacaoNfseError) {
+    response.status(502).json({
       message: error.message,
     });
     return;

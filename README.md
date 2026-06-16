@@ -166,6 +166,23 @@ Authorization: Bearer <token>
 
 A API gera o XML basico nao assinado da DPS Nacional para notas fiscalmente
 prontas e pode validar e assinar esse XML usando um certificado A1 configurado
-por variaveis de ambiente. A API ainda nao transmite documentos para o governo.
-Antes da integracao real, sera necessario armazenar certificados digitais por
-empresa com seguranca e integrar com a SEFIN Nacional em Producao Restrita.
+por variaveis de ambiente.
+
+Tambem existe um cliente HTTP inicial para comunicacao com a SEFIN Nacional em
+Producao Restrita. Ele fica isolado na camada fiscal e ainda nao substitui o
+emissor simulado nem altera o status da NotaServico.
+
+Variaveis fiscais:
+
+```env
+NFSE_CERTIFICADO_PATH=""
+NFSE_CERTIFICADO_SENHA=""
+NFSE_XSD_DPS_PATH=""
+NFSE_SEFIN_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/API/SefinNacional"
+NFSE_SEFIN_ENVIO_DPS_PATH="/DPS"
+NFSE_SEFIN_TIMEOUT_MS=15000
+```
+
+Antes da emissao real completa, sera necessario armazenar certificados digitais
+por empresa com seguranca, confirmar o endpoint de envio no Swagger oficial da
+SEFIN Nacional e persistir os retornos fiscais relevantes.
