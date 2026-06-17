@@ -555,7 +555,7 @@ function transportarComHttpsMutuo(
         hostname: url.hostname,
         port: url.port || undefined,
         path: `${url.pathname}${url.search}`,
-        method: 'POST',
+        method: requisicao.method,
         headers: requisicao.headers,
         key: requisicao.chavePrivadaPem,
         cert: requisicao.certificadoPem,
