@@ -604,14 +604,22 @@ export class NotaServico {
       this._status === StatusNota.EMITIDA ||
       this._status === StatusNota.CANCELADA
     ) {
-      NotaServico.validarTextoObrigatorio(
-        this._numeroNfse?.trim() ?? '',
-        'Número da NFS-e',
+      const numeroNfse = this._numeroNfse?.trim() ?? '';
+      const codigoVerificacao = this._codigoVerificacao?.trim() ?? '';
+      const temIdentificacaoTradicional = Boolean(
+        numeroNfse && codigoVerificacao,
       );
-      NotaServico.validarTextoObrigatorio(
-        this._codigoVerificacao?.trim() ?? '',
-        'Código de verificação',
+      const temIdentificacaoNacional = Boolean(
+        this._protocoloEmissao?.trim() || this._chaveAcesso?.trim(),
       );
+
+      if (!temIdentificacaoTradicional && !temIdentificacaoNacional) {
+        NotaServico.validarTextoObrigatorio(numeroNfse, 'Número da NFS-e');
+        NotaServico.validarTextoObrigatorio(
+          codigoVerificacao,
+          'Código de verificação',
+        );
+      }
 
       if (!this._dataEmissao) {
         throw new Error('Data de emissão é obrigatória para nota emitida.');

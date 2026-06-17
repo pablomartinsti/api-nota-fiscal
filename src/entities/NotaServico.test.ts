@@ -202,6 +202,22 @@ describe('NotaServico', () => {
     expect(nota.mensagemErroFiscal).toBeUndefined();
   });
 
+  it('deve registrar sucesso fiscal sem codigo de verificacao quando houver chave nacional', () => {
+    const nota = criarNota();
+
+    nota.registrarSucessoFiscal({
+      numeroNfse: '1',
+      protocoloEmissao: 'PROTOCOLO-123',
+      chaveAcesso: 'CHAVE-456',
+    });
+
+    expect(nota.status).toBe(StatusNota.EMITIDA);
+    expect(nota.numeroNfse).toBe('1');
+    expect(nota.codigoVerificacao).toBeUndefined();
+    expect(nota.protocoloEmissao).toBe('PROTOCOLO-123');
+    expect(nota.chaveAcesso).toBe('CHAVE-456');
+  });
+
   it('deve exigir protocolo ou chave para registrar sucesso fiscal', () => {
     const nota = criarNota();
 
@@ -318,6 +334,24 @@ describe('NotaServico', () => {
     expect(nota.chaveAcesso).toBe('CHAVE-456');
     expect(nota.xmlAutorizado).toBe('<NFS-e>autorizada</NFS-e>');
     expect(nota.dataAutorizacao).toBe(dataAutorizacao);
+  });
+
+  it('deve reconstruir uma nota emitida pela NFS-e Nacional sem codigo de verificacao', () => {
+    const dataEmissao = new Date('2026-06-09T12:00:00.000Z');
+    const nota = new NotaServico({
+      ...dadosBase,
+      status: StatusNota.EMITIDA,
+      numeroNfse: '1',
+      protocoloEmissao: 'PROTOCOLO-123',
+      chaveAcesso: 'CHAVE-456',
+      dataEmissao,
+    });
+
+    expect(nota.status).toBe(StatusNota.EMITIDA);
+    expect(nota.numeroNfse).toBe('1');
+    expect(nota.codigoVerificacao).toBeUndefined();
+    expect(nota.protocoloEmissao).toBe('PROTOCOLO-123');
+    expect(nota.chaveAcesso).toBe('CHAVE-456');
   });
 
   it('deve reconstruir uma nota cancelada com dados fiscais', () => {
