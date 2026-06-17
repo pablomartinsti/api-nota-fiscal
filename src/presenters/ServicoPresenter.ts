@@ -11,7 +11,6 @@ export class ServicoPresenter {
       codigoTributacaoMunicipal: servico.codigoTributacaoMunicipal,
       codigoNbs: servico.codigoNbs,
       aliquotaIss: servico.aliquotaIss,
-      valorPadrao: servico.valorPadrao,
       ativo: servico.ativo,
       createdAt: servico.createdAt,
       updatedAt: servico.updatedAt,

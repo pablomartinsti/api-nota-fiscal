@@ -15,7 +15,6 @@ export class PrismaServicoMapper {
         registro.codigoTributacaoMunicipal ?? undefined,
       codigoNbs: registro.codigoNbs ?? undefined,
       aliquotaIss: registro.aliquotaIss.toNumber(),
-      valorPadrao: registro.valorPadrao?.toNumber(),
       ativo: registro.ativo,
       createdAt: registro.createdAt,
       updatedAt: registro.updatedAt,
@@ -31,7 +30,6 @@ export class PrismaServicoMapper {
       codigoTributacaoMunicipal: servico.codigoTributacaoMunicipal ?? null,
       codigoNbs: servico.codigoNbs ?? null,
       aliquotaIss: servico.aliquotaIss,
-      valorPadrao: servico.valorPadrao ?? null,
       ativo: servico.ativo,
     };
   }

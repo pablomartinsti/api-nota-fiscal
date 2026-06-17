@@ -7,7 +7,6 @@ const camposEditaveisServico = {
   codigoTributacaoMunicipal: z.string().optional(),
   codigoNbs: z.string().regex(/^\d{9}$/).optional(),
   aliquotaIss: z.number().finite().min(0).max(100),
-  valorPadrao: z.number().finite().positive().optional(),
 };
 
 export const cadastrarServicoSchema = z.object(camposEditaveisServico);

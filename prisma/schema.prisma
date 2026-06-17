@@ -148,7 +148,6 @@ model Servico {
   codigoTributacaoMunicipal String?
   codigoNbs                 String?
   aliquotaIss              Decimal       @db.Decimal(5, 2)
-  valorPadrao              Decimal?      @db.Decimal(10, 2)
   ativo                    Boolean       @default(true)
 
   empresa                  Empresa       @relation(fields: [empresaId], references: [id])

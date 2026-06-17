@@ -8,11 +8,10 @@ const criarServico = () =>
     descricao: 'Consultoria',
     codigoServico: '01.01',
     aliquotaIss: 5,
-    valorPadrao: 150,
   });
 
 describe('Servico', () => {
-  it('deve criar um serviço válido e ativo por padrão', () => {
+  it('deve criar um servico valido e ativo por padrao', () => {
     const servico = criarServico();
 
     expect(servico.empresaId).toBe('empresa-1');
@@ -22,7 +21,7 @@ describe('Servico', () => {
     expect(servico.updatedAt).toBeInstanceOf(Date);
   });
 
-  it('deve normalizar empresa, descrição e código do serviço', () => {
+  it('deve normalizar empresa, descricao e codigo do servico', () => {
     const servico = new Servico({
       empresaId: ' empresa-1 ',
       descricao: ' Consultoria ',
@@ -35,16 +34,31 @@ describe('Servico', () => {
     expect(servico.codigoServico).toBe('01.01');
   });
 
-  it('deve permitir alíquota zero e valor padrão ausente', () => {
+  it('deve permitir aliquota zero', () => {
     const servico = new Servico({
       empresaId: 'empresa-1',
-      descricao: 'Serviço isento',
+      descricao: 'Servico isento',
       codigoServico: '01.02',
       aliquotaIss: 0,
     });
 
     expect(servico.aliquotaIss).toBe(0);
-    expect(servico.valorPadrao).toBeUndefined();
+  });
+
+  it('deve validar codigos fiscais opcionais', () => {
+    const servico = new Servico({
+      empresaId: 'empresa-1',
+      descricao: 'Consultoria',
+      codigoServico: '01.01',
+      codigoTributacaoNacional: '171901',
+      codigoTributacaoMunicipal: '1001',
+      codigoNbs: '123456789',
+      aliquotaIss: 5,
+    });
+
+    expect(servico.codigoTributacaoNacional).toBe('171901');
+    expect(servico.codigoTributacaoMunicipal).toBe('1001');
+    expect(servico.codigoNbs).toBe('123456789');
   });
 
   it('deve rejeitar empresa vazia', () => {
@@ -59,7 +73,7 @@ describe('Servico', () => {
     ).toThrow('Empresa é obrigatória.');
   });
 
-  it('deve rejeitar descrição vazia', () => {
+  it('deve rejeitar descricao vazia', () => {
     expect(
       () =>
         new Servico({
@@ -71,7 +85,7 @@ describe('Servico', () => {
     ).toThrow('Descrição é obrigatória.');
   });
 
-  it('deve rejeitar código do serviço vazio', () => {
+  it('deve rejeitar codigo do servico vazio', () => {
     expect(
       () =>
         new Servico({
@@ -83,7 +97,7 @@ describe('Servico', () => {
     ).toThrow('Código do serviço é obrigatório.');
   });
 
-  it('deve rejeitar alíquota de ISS menor que zero', () => {
+  it('deve rejeitar aliquota de ISS menor que zero', () => {
     expect(
       () =>
         new Servico({
@@ -95,7 +109,7 @@ describe('Servico', () => {
     ).toThrow('Alíquota de ISS deve estar entre 0 e 100.');
   });
 
-  it('deve rejeitar alíquota de ISS maior que cem', () => {
+  it('deve rejeitar aliquota de ISS maior que cem', () => {
     expect(
       () =>
         new Servico({
@@ -107,7 +121,7 @@ describe('Servico', () => {
     ).toThrow('Alíquota de ISS deve estar entre 0 e 100.');
   });
 
-  it('deve rejeitar alíquota de ISS não finita', () => {
+  it('deve rejeitar aliquota de ISS nao finita', () => {
     expect(
       () =>
         new Servico({
@@ -119,59 +133,49 @@ describe('Servico', () => {
     ).toThrow('Alíquota de ISS deve ser um número válido.');
   });
 
-  it('deve rejeitar valor padrão igual ou menor que zero', () => {
+  it('deve rejeitar codigo de tributacao nacional invalido', () => {
     expect(
       () =>
         new Servico({
           empresaId: 'empresa-1',
           descricao: 'Consultoria',
           codigoServico: '01.01',
+          codigoTributacaoNacional: '1719',
           aliquotaIss: 5,
-          valorPadrao: 0,
         }),
-    ).toThrow('Valor padrão deve ser maior que zero.');
+    ).toThrow('Codigo de tributacao nacional deve conter 6 digitos.');
   });
 
-  it('deve rejeitar valor padrão não finito', () => {
+  it('deve rejeitar codigo NBS invalido', () => {
     expect(
       () =>
         new Servico({
           empresaId: 'empresa-1',
           descricao: 'Consultoria',
           codigoServico: '01.01',
+          codigoNbs: '123',
           aliquotaIss: 5,
-          valorPadrao: Number.POSITIVE_INFINITY,
         }),
-    ).toThrow('Valor padrão deve ser um número válido.');
+    ).toThrow('Codigo NBS deve conter 9 digitos.');
   });
 
-  it('deve alterar dados, alíquota e valor padrão', () => {
+  it('deve alterar dados e aliquota', () => {
     const servico = criarServico();
 
     servico.alterarDados({
-      descricao: 'Consultoria técnica',
+      descricao: 'Consultoria tecnica',
       codigoServico: '01.02',
       codigoTributacaoMunicipal: '1001',
     });
     servico.alterarAliquotaIss(2.5);
-    servico.alterarValorPadrao(250);
 
-    expect(servico.descricao).toBe('Consultoria técnica');
+    expect(servico.descricao).toBe('Consultoria tecnica');
     expect(servico.codigoServico).toBe('01.02');
     expect(servico.codigoTributacaoMunicipal).toBe('1001');
     expect(servico.aliquotaIss).toBe(2.5);
-    expect(servico.valorPadrao).toBe(250);
   });
 
-  it('deve permitir remover o valor padrão', () => {
-    const servico = criarServico();
-
-    servico.alterarValorPadrao(undefined);
-
-    expect(servico.valorPadrao).toBeUndefined();
-  });
-
-  it('deve manter empresaId após alterações', () => {
+  it('deve manter empresaId apos alteracoes', () => {
     const servico = criarServico();
     const empresaIdOriginal = servico.empresaId;
 
@@ -180,12 +184,11 @@ describe('Servico', () => {
       codigoServico: '01.03',
     });
     servico.alterarAliquotaIss(3);
-    servico.alterarValorPadrao(300);
 
     expect(servico.empresaId).toBe(empresaIdOriginal);
   });
 
-  it('deve ativar e desativar o serviço', () => {
+  it('deve ativar e desativar o servico', () => {
     const servico = criarServico();
 
     servico.desativar();

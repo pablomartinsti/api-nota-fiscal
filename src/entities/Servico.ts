@@ -7,7 +7,6 @@ export interface ServicoProps {
   codigoTributacaoMunicipal?: string;
   codigoNbs?: string;
   aliquotaIss: number;
-  valorPadrao?: number;
   ativo?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -30,7 +29,6 @@ export class Servico {
   private _codigoTributacaoMunicipal?: string;
   private _codigoNbs?: string;
   private _aliquotaIss: number;
-  private _valorPadrao?: number;
   private _ativo: boolean;
   private readonly _createdAt: Date;
   private _updatedAt: Date;
@@ -46,7 +44,6 @@ export class Servico {
     Servico.validarCodigoTributacaoNacional(props.codigoTributacaoNacional);
     Servico.validarCodigoNbs(props.codigoNbs);
     Servico.validarAliquotaIss(props.aliquotaIss);
-    Servico.validarValorPadrao(props.valorPadrao);
 
     this._id = props.id;
     this._empresaId = empresaId;
@@ -56,7 +53,6 @@ export class Servico {
     this._codigoTributacaoMunicipal = props.codigoTributacaoMunicipal;
     this._codigoNbs = props.codigoNbs;
     this._aliquotaIss = props.aliquotaIss;
-    this._valorPadrao = props.valorPadrao;
     this._ativo = props.ativo ?? true;
     this._createdAt = props.createdAt ?? new Date();
     this._updatedAt = props.updatedAt ?? new Date();
@@ -94,10 +90,6 @@ export class Servico {
     return this._aliquotaIss;
   }
 
-  get valorPadrao(): number | undefined {
-    return this._valorPadrao;
-  }
-
   get ativo(): boolean {
     return this._ativo;
   }
@@ -131,13 +123,6 @@ export class Servico {
     Servico.validarAliquotaIss(aliquotaIss);
 
     this._aliquotaIss = aliquotaIss;
-    this.atualizarDataDeAlteracao();
-  }
-
-  alterarValorPadrao(valorPadrao?: number): void {
-    Servico.validarValorPadrao(valorPadrao);
-
-    this._valorPadrao = valorPadrao;
     this.atualizarDataDeAlteracao();
   }
 
@@ -188,20 +173,6 @@ export class Servico {
   private static validarCodigoNbs(codigo?: string): void {
     if (codigo !== undefined && !/^\d{9}$/.test(codigo)) {
       throw new Error('Codigo NBS deve conter 9 digitos.');
-    }
-  }
-
-  private static validarValorPadrao(valorPadrao?: number): void {
-    if (valorPadrao === undefined) {
-      return;
-    }
-
-    if (!Number.isFinite(valorPadrao)) {
-      throw new Error('Valor padrão deve ser um número válido.');
-    }
-
-    if (valorPadrao <= 0) {
-      throw new Error('Valor padrão deve ser maior que zero.');
     }
   }
 

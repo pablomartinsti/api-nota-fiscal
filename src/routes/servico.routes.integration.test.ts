@@ -58,7 +58,6 @@ function dadosServico() {
     codigoServico: '01.01',
     codigoTributacaoMunicipal: '1001',
     aliquotaIss: 5,
-    valorPadrao: 150,
   };
 }
 
@@ -113,7 +112,6 @@ describe('Gestao de servicos HTTP', () => {
         empresaId: outraEmpresa.empresa.id,
         descricao: 'Consultoria atualizada',
         aliquotaIss: 2.5,
-        valorPadrao: 250,
       });
     const status = await request(app)
       .patch(`/servicos/${cadastro.body.id}/status`)
@@ -124,7 +122,6 @@ describe('Gestao de servicos HTTP', () => {
     expect(atualizacao.body.empresaId).toBe(contexto.empresa.id);
     expect(atualizacao.body.descricao).toBe('Consultoria atualizada');
     expect(atualizacao.body.aliquotaIss).toBe(2.5);
-    expect(atualizacao.body.valorPadrao).toBe(250);
     expect(status.status).toBe(200);
     expect(status.body.ativo).toBe(false);
   });
@@ -140,14 +137,14 @@ describe('Gestao de servicos HTTP', () => {
       .post('/servicos')
       .set('Authorization', `Bearer ${contexto.token}`)
       .send({ ...dadosServico(), aliquotaIss: 101 });
-    const valorInvalido = await request(app)
+    const codigoTributacaoNacionalInvalido = await request(app)
       .post('/servicos')
       .set('Authorization', `Bearer ${contexto.token}`)
-      .send({ ...dadosServico(), valorPadrao: 0 });
+      .send({ ...dadosServico(), codigoTributacaoNacional: '123' });
 
     expect(descricaoVazia.status).toBe(400);
     expect(aliquotaInvalida.status).toBe(400);
-    expect(valorInvalido.status).toBe(400);
+    expect(codigoTributacaoNacionalInvalido.status).toBe(400);
   });
 
   it('deve ocultar servicos pertencentes a outra Empresa', async () => {
