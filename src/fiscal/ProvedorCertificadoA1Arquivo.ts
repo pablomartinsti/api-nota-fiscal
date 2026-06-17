@@ -101,6 +101,12 @@ export class ProvedorCertificadoA1Arquivo implements ProvedorCertificadoA1 {
   }
 
   private extrairCnpj(certificado: forge.pki.Certificate): string | undefined {
+    const cnpjDoNomeComum = this.extrairCnpjDoNomeComum(certificado);
+
+    if (cnpjDoNomeComum) {
+      return cnpjDoNomeComum;
+    }
+
     const candidatos: string[] = certificado.subject.attributes.map(
       (atributo) => String(atributo.value),
     );
@@ -121,6 +127,24 @@ export class ProvedorCertificadoA1Arquivo implements ProvedorCertificadoA1 {
 
       if (correspondencia) {
         return correspondencia[0];
+      }
+    }
+
+    return undefined;
+  }
+
+  private extrairCnpjDoNomeComum(
+    certificado: forge.pki.Certificate,
+  ): string | undefined {
+    const nomesComuns = certificado.subject.attributes
+      .filter((atributo) => atributo.name === 'commonName')
+      .map((atributo) => String(atributo.value));
+
+    for (const nomeComum of nomesComuns) {
+      const correspondencia = nomeComum.match(/:(\d{14})(?:\D|$)/);
+
+      if (correspondencia) {
+        return correspondencia[1];
       }
     }
 

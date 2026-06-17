@@ -15,6 +15,20 @@ const pastasTemporarias: string[] = [];
 async function criarPfxTeste(cnpj: string): Promise<{
   caminho: string;
   senha: string;
+}>;
+async function criarPfxTeste(
+  cnpj: string,
+  subjectAttributes: Array<{ name: string; value: string }>,
+): Promise<{
+  caminho: string;
+  senha: string;
+}>;
+async function criarPfxTeste(
+  cnpj: string,
+  subjectAttributes?: Array<{ name: string; value: string }>,
+): Promise<{
+  caminho: string;
+  senha: string;
 }> {
   const pasta = await mkdtemp(join(tmpdir(), 'nfse-certificado-teste-'));
   const caminho = join(pasta, 'certificado-teste.pfx');
@@ -26,10 +40,12 @@ async function criarPfxTeste(cnpj: string): Promise<{
   certificado.serialNumber = '01';
   certificado.validity.notBefore = new Date(Date.now() - 60_000);
   certificado.validity.notAfter = new Date(Date.now() + 86_400_000);
-  certificado.setSubject([
-    { name: 'commonName', value: 'Empresa Teste Ltda' },
-    { name: 'serialNumber', value: cnpj },
-  ]);
+  certificado.setSubject(
+    subjectAttributes ?? [
+      { name: 'commonName', value: 'Empresa Teste Ltda' },
+      { name: 'serialNumber', value: cnpj },
+    ],
+  );
   certificado.setIssuer(certificado.subject.attributes);
   certificado.sign(chaves.privateKey, forge.md.sha256.create());
 
@@ -84,6 +100,25 @@ describe('Seguranca do XML da DPS', () => {
       'URI="#DPS350950221234567800019900001000000000000100"',
     );
     expect(xmlAssinado).toContain('<X509Certificate>');
+  });
+
+  it('deve priorizar CNPJ do commonName em certificados ICP-Brasil', async () => {
+    const cnpjEmpresa = '58504778000118';
+    const outroCnpj = '11882165000150';
+    const configuracao = await criarPfxTeste(cnpjEmpresa, [
+      { name: 'organizationalUnitName', value: outroCnpj },
+      {
+        name: 'commonName',
+        value: `MARTIR ASSESSORIA CONTABIL:${cnpjEmpresa}`,
+      },
+      { name: 'serialNumber', value: outroCnpj },
+    ]);
+
+    const certificado = await new ProvedorCertificadoA1Arquivo(
+      () => configuracao,
+    ).obter();
+
+    expect(certificado.cnpj).toBe(cnpjEmpresa);
   });
 
   it('deve validar XML usando o XSD configurado', async () => {
