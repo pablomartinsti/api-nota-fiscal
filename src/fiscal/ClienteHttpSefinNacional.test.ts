@@ -114,6 +114,44 @@ describe('ClienteHttpSefinNacional', () => {
     }
   });
 
+  it('deve normalizar erros da SEFIN com descricao e complemento', async () => {
+    const certificado = criarCertificadoTeste();
+    const transportador = vi.fn<TransportadorHttpSefinNacional>().mockResolvedValue({
+      status: 400,
+      body: JSON.stringify({
+        Erros: [
+          {
+            Codigo: 'E999',
+            Descricao: 'DPS invalida.',
+            Complemento: 'Campo cTribNac nao foi informado.',
+          },
+        ],
+      }),
+    });
+    const cliente = criarClienteTeste(transportador, {
+      certificadoPath: certificado.caminho,
+      certificadoSenha: 'senha-teste',
+    });
+
+    try {
+      const resultado = await cliente.enviarDpsAssinada({ xmlAssinado });
+
+      expect(resultado).toEqual({
+        sucesso: false,
+        statusHttp: 400,
+        erros: [
+          {
+            codigo: 'E999',
+            mensagem: 'DPS invalida. Campo cTribNac nao foi informado.',
+            campo: undefined,
+          },
+        ],
+      });
+    } finally {
+      certificado.limpar();
+    }
+  });
+
   it('deve exigir URL base HTTPS da SEFIN Nacional', async () => {
     const transportador = vi.fn<TransportadorHttpSefinNacional>();
     const cliente = new ClienteHttpSefinNacional(

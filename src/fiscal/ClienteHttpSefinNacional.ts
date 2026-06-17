@@ -218,15 +218,33 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
 
   private extrairErros(corpo: unknown, statusHttp: number): ErroEnvioDpsNfse[] {
     const objeto = this.comoObjeto(corpo);
-    const erros = objeto ? objeto.erros ?? objeto.errors : undefined;
+    const erros = objeto
+      ? this.buscarValor(objeto, [
+          'erros',
+          'errors',
+          'mensagens',
+          'mensagensProcessamento',
+          'Mensagens',
+          'Erros',
+        ])
+      : undefined;
 
     if (Array.isArray(erros)) {
       return erros.map((erro) => this.normalizarErro(erro));
     }
 
-    const erro = objeto ? objeto.erro ?? objeto.error : undefined;
+    const erro = objeto
+      ? this.buscarValor(objeto, [
+          'erro',
+          'error',
+          'mensagemProcessamento',
+          'MensagemProcessamento',
+          'mensagem',
+          'Mensagem',
+        ])
+      : undefined;
 
-    if (erro) {
+    if (erro && typeof erro === 'object') {
       return [this.normalizarErro(erro)];
     }
 
@@ -253,13 +271,7 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
 
     return {
       codigo: this.buscarTexto(objeto, ['codigo', 'code', 'id']),
-      mensagem:
-        this.buscarTexto(objeto, [
-          'mensagem',
-          'message',
-          'detail',
-          'descricao',
-        ]) ?? 'Erro retornado pela SEFIN Nacional.',
+      mensagem: this.montarMensagemErro(objeto),
       campo: this.buscarTexto(objeto, ['campo', 'field', 'path']),
     };
   }
@@ -293,6 +305,51 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
     }
   }
 
+  private montarMensagemErro(objeto: Record<string, unknown>): string {
+    const mensagem =
+      this.buscarTexto(objeto, [
+        'mensagem',
+        'message',
+        'detail',
+        'descricao',
+        'description',
+        'erro',
+      ]) ?? 'Erro retornado pela SEFIN Nacional.';
+    const complemento = this.buscarTexto(objeto, [
+      'complemento',
+      'complement',
+      'detalhe',
+      'observacao',
+    ]);
+
+    return complemento ? `${mensagem} ${complemento}` : mensagem;
+  }
+
+  private buscarValor(
+    objeto: Record<string, unknown>,
+    chaves: string[],
+  ): unknown {
+    for (const chave of chaves) {
+      if (chave in objeto) {
+        return objeto[chave];
+      }
+    }
+
+    const entradas = Object.entries(objeto);
+
+    for (const chave of chaves) {
+      const entrada = entradas.find(
+        ([chaveObjeto]) => chaveObjeto.toLowerCase() === chave.toLowerCase(),
+      );
+
+      if (entrada) {
+        return entrada[1];
+      }
+    }
+
+    return undefined;
+  }
+
   private buscarTexto(corpo: unknown, chaves: string[]): string | undefined {
     const valor = this.buscarString(corpo, chaves);
 
@@ -307,7 +364,7 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
     }
 
     for (const chave of chaves) {
-      const valor = objeto[chave];
+      const valor = this.buscarValor(objeto, [chave]);
 
       if (typeof valor === 'string' && valor.trim()) {
         return valor.trim();
