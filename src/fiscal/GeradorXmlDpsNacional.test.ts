@@ -66,12 +66,13 @@ describe('GeradorXmlDpsNacional', () => {
       descricao: 'Consultoria & desenvolvimento',
     });
 
+    const dataHoraEmissao = new Date('2026-06-15T18:30:00.000Z');
     const xml = new GeradorXmlDpsNacional().gerar({
       empresa,
       cliente,
       servico,
       nota,
-      dataHoraEmissao: new Date('2026-06-15T18:30:00.000Z'),
+      dataHoraEmissao,
     });
 
     expect(xml).toContain(
@@ -81,7 +82,7 @@ describe('GeradorXmlDpsNacional', () => {
       'Id="DPS350950221234567800019900001000000000000100"',
     );
     expect(xml).toContain('<tpAmb>2</tpAmb>');
-    expect(xml).toContain('<dhEmi>2026-06-15T18:30:00+00:00</dhEmi>');
+    expect(xml).toContain(`<dhEmi>${formatarDataHoraLocal(dataHoraEmissao)}</dhEmi>`);
     expect(xml).toContain('<dCompet>2026-06-15</dCompet>');
     expect(xml).toContain('<CNPJ>12345678000199</CNPJ>');
     expect(xml).toContain('<CPF>12345678901</CPF>');
@@ -100,3 +101,23 @@ describe('GeradorXmlDpsNacional', () => {
     expect(nota.status).toBe(StatusNota.RASCUNHO);
   });
 });
+
+function formatarDataHoraLocal(data: Date): string {
+  const ano = data.getFullYear();
+  const mes = formatarNumeroData(data.getMonth() + 1);
+  const dia = formatarNumeroData(data.getDate());
+  const hora = formatarNumeroData(data.getHours());
+  const minuto = formatarNumeroData(data.getMinutes());
+  const segundo = formatarNumeroData(data.getSeconds());
+  const offsetEmMinutos = -data.getTimezoneOffset();
+  const sinal = offsetEmMinutos >= 0 ? '+' : '-';
+  const absoluto = Math.abs(offsetEmMinutos);
+  const horasOffset = formatarNumeroData(Math.floor(absoluto / 60));
+  const minutosOffset = formatarNumeroData(absoluto % 60);
+
+  return `${ano}-${mes}-${dia}T${hora}:${minuto}:${segundo}${sinal}${horasOffset}:${minutosOffset}`;
+}
+
+function formatarNumeroData(valor: number): string {
+  return String(valor).padStart(2, '0');
+}

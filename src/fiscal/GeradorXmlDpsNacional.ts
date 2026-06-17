@@ -214,11 +214,33 @@ export class GeradorXmlDpsNacional implements GeradorXmlDps {
   }
 
   private formatarDataHoraUtc(data: Date): string {
-    return `${data.toISOString().slice(0, 19)}+00:00`;
+    const ano = data.getFullYear();
+    const mes = this.formatarNumeroData(data.getMonth() + 1);
+    const dia = this.formatarNumeroData(data.getDate());
+    const hora = this.formatarNumeroData(data.getHours());
+    const minuto = this.formatarNumeroData(data.getMinutes());
+    const segundo = this.formatarNumeroData(data.getSeconds());
+    const offset = this.formatarOffset(data);
+
+    return `${ano}-${mes}-${dia}T${hora}:${minuto}:${segundo}${offset}`;
   }
 
   private formatarDecimal(valor: number): string {
     return valor.toFixed(2);
+  }
+
+  private formatarNumeroData(valor: number): string {
+    return String(valor).padStart(2, '0');
+  }
+
+  private formatarOffset(data: Date): string {
+    const offsetEmMinutos = -data.getTimezoneOffset();
+    const sinal = offsetEmMinutos >= 0 ? '+' : '-';
+    const absoluto = Math.abs(offsetEmMinutos);
+    const horas = this.formatarNumeroData(Math.floor(absoluto / 60));
+    const minutos = this.formatarNumeroData(absoluto % 60);
+
+    return `${sinal}${horas}:${minutos}`;
   }
 
   private mapearAmbiente(ambiente: AmbienteFiscal): string {
