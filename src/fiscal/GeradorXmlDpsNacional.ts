@@ -90,7 +90,6 @@ export class GeradorXmlDpsNacional implements GeradorXmlDps {
 
     this.adicionarTexto(prestador, 'CNPJ', empresa.cnpj);
     this.adicionarTextoOpcional(prestador, 'IM', empresa.inscricaoMunicipal);
-    this.adicionarTexto(prestador, 'xNome', empresa.razaoSocial);
 
     const regime = prestador.ele('regTrib');
     this.adicionarTexto(
@@ -187,13 +186,44 @@ export class GeradorXmlDpsNacional implements GeradorXmlDps {
       'tpRetISSQN',
       this.mapearRetencaoIssqn(nota.tipoRetencaoIssqn),
     );
-    this.adicionarTexto(
-      tributacaoMunicipal,
-      'pAliq',
-      this.formatarDecimal(nota.aliquotaIss),
-    );
+    if (this.deveInformarAliquotaIss(input)) {
+      this.adicionarTexto(
+        tributacaoMunicipal,
+        'pAliq',
+        this.formatarDecimal(nota.aliquotaIss),
+      );
+    }
 
+    this.adicionarTotalTributos(tributacao, input);
+  }
+
+  private deveInformarAliquotaIss(input: GerarXmlDpsInput): boolean {
+    const { empresa, nota } = input;
+    const apuraIssPeloSimples =
+      empresa.regimeTributario === RegimeTributario.SIMPLES_NACIONAL &&
+      empresa.regimeApuracaoSimplesNacional ===
+        RegimeApuracaoSimplesNacional.TRIBUTOS_FEDERAIS_E_MUNICIPAL_PELO_SN;
+    const semRetencao =
+      nota.tipoRetencaoIssqn === TipoRetencaoIssqn.NAO_RETIDO;
+
+    return !(apuraIssPeloSimples && semRetencao);
+  }
+
+  private adicionarTotalTributos(
+    tributacao: ElementoXml,
+    input: GerarXmlDpsInput,
+  ): void {
     const totalTributos = tributacao.ele('totTrib');
+
+    if (input.empresa.regimeTributario === RegimeTributario.SIMPLES_NACIONAL) {
+      this.adicionarTexto(
+        totalTributos,
+        'pTotTribSN',
+        this.formatarDecimal(input.nota.aliquotaIss),
+      );
+      return;
+    }
+
     this.adicionarTexto(totalTributos, 'indTotTrib', '0');
   }
 

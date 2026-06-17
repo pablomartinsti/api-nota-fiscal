@@ -48,7 +48,7 @@ export interface EmpresaProps {
 export interface AlterarDadosCadastraisProps {
   razaoSocial: string;
   nomeFantasia?: string;
-  inscricaoMunicipal?: string;
+  inscricaoMunicipal?: string | null;
   codigoMunicipioIbge?: string;
   email?: string;
   telefone?: string;
@@ -257,7 +257,7 @@ export class Empresa {
 
     this._razaoSocial = razaoSocial;
     this._nomeFantasia = props.nomeFantasia;
-    this._inscricaoMunicipal = props.inscricaoMunicipal;
+    this._inscricaoMunicipal = props.inscricaoMunicipal ?? undefined;
     this._codigoMunicipioIbge = codigoMunicipioIbge;
     this._email = email;
     this._telefone = props.telefone;

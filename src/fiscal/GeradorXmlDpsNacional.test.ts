@@ -86,6 +86,8 @@ describe('GeradorXmlDpsNacional', () => {
     expect(xml).toContain('<dCompet>2026-06-15</dCompet>');
     expect(xml).toContain('<CNPJ>12345678000199</CNPJ>');
     expect(xml).toContain('<CPF>12345678901</CPF>');
+    expect(xml).not.toContain('<xNome>Empresa &amp; Tecnologia Ltda</xNome>');
+    expect(xml).toContain('<xNome>Cliente &amp; Parceiro</xNome>');
     expect(xml).toContain('<opSimpNac>3</opSimpNac>');
     expect(xml).toContain('<regApTribSN>1</regApTribSN>');
     expect(xml).toContain('<regEspTrib>6</regEspTrib>');
@@ -95,10 +97,71 @@ describe('GeradorXmlDpsNacional', () => {
     );
     expect(xml).toContain('<vServ>500.00</vServ>');
     expect(xml).toContain('<tpRetISSQN>2</tpRetISSQN>');
-    expect(xml).toContain('<indTotTrib>0</indTotTrib>');
+    expect(xml).toContain('<pAliq>5.00</pAliq>');
+    expect(xml).toContain('<pTotTribSN>5.00</pTotTribSN>');
+    expect(xml).not.toContain('<indTotTrib>');
     expect(xml).toContain('<xInfComp>Contrato 10 &amp; aditivo 2</xInfComp>');
     expect(xml).not.toContain('<Signature');
     expect(nota.status).toBe(StatusNota.RASCUNHO);
+  });
+
+  it('nao deve informar aliquota para simples nacional sem retencao de ISS', () => {
+    const empresa = new Empresa({
+      id: 'empresa-1',
+      razaoSocial: 'Empresa Simples Ltda',
+      cnpj: '12345678000199',
+      regimeTributario: RegimeTributario.SIMPLES_NACIONAL,
+      regimeApuracaoSimplesNacional:
+        RegimeApuracaoSimplesNacional.TRIBUTOS_FEDERAIS_E_MUNICIPAL_PELO_SN,
+      codigoMunicipioIbge: '3509502',
+      cidade: 'Campinas',
+      uf: 'SP',
+    });
+    const cliente = new Cliente({
+      id: 'cliente-1',
+      empresaId: 'empresa-1',
+      nomeRazaoSocial: 'Cliente Teste',
+      cpfCnpj: '12345678901',
+      cidade: 'Campinas',
+      uf: 'SP',
+    });
+    const servico = new Servico({
+      id: 'servico-1',
+      empresaId: 'empresa-1',
+      descricao: 'Consultoria',
+      codigoServico: '01.01',
+      codigoTributacaoNacional: '010101',
+      aliquotaIss: 2,
+    });
+    const nota = new NotaServico({
+      id: 'nota-1',
+      empresaId: 'empresa-1',
+      usuarioId: 'usuario-1',
+      clienteId: 'cliente-1',
+      servicoId: 'servico-1',
+      serieDps: '1',
+      numeroDps: '100',
+      dataCompetencia: new Date('2026-06-15T00:00:00.000Z'),
+      codigoMunicipioPrestacao: '3509502',
+      valorServico: 500,
+      aliquotaIss: 2,
+      descricao: 'Consultoria contabil',
+    });
+
+    const xml = new GeradorXmlDpsNacional().gerar({
+      empresa,
+      cliente,
+      servico,
+      nota,
+      dataHoraEmissao: new Date('2026-06-15T18:30:00.000Z'),
+    });
+
+    expect(xml).toContain('<opSimpNac>3</opSimpNac>');
+    expect(xml).toContain('<regApTribSN>1</regApTribSN>');
+    expect(xml).toContain('<tpRetISSQN>1</tpRetISSQN>');
+    expect(xml).not.toContain('<pAliq>');
+    expect(xml).toContain('<pTotTribSN>2.00</pTotTribSN>');
+    expect(xml).not.toContain('<indTotTrib>');
   });
 });
 

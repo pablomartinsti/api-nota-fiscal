@@ -9,7 +9,7 @@ import {
 export const atualizarEmpresaSchema = z.object({
   razaoSocial: z.string().trim().min(1),
   nomeFantasia: z.string().trim().min(1).optional(),
-  inscricaoMunicipal: z.string().trim().min(1).optional(),
+  inscricaoMunicipal: z.string().trim().min(1).nullable().optional(),
   regimeTributario: z.enum(RegimeTributario),
   regimeEspecialTributacao: z
     .enum(RegimeEspecialTributacao)

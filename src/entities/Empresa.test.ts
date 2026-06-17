@@ -126,6 +126,25 @@ describe('Empresa', () => {
     expect(empresa.cnpj).toBe(cnpjOriginal);
   });
 
+  it('deve permitir limpar inscricao municipal', () => {
+    const empresa = criarEmpresa();
+
+    empresa.alterarDadosCadastrais({
+      razaoSocial: 'Nova Razao Social',
+      inscricaoMunicipal: '12345',
+      cidade: 'Curitiba',
+      uf: 'PR',
+    });
+    empresa.alterarDadosCadastrais({
+      razaoSocial: 'Nova Razao Social',
+      inscricaoMunicipal: null,
+      cidade: 'Curitiba',
+      uf: 'PR',
+    });
+
+    expect(empresa.inscricaoMunicipal).toBeUndefined();
+  });
+
   it('deve alterar o regime tributário', () => {
     const empresa = criarEmpresa();
 
