@@ -1,8 +1,8 @@
-import { readFile } from 'node:fs/promises';
 import { request as httpsRequest } from 'node:https';
 import { URL } from 'node:url';
 import { gzipSync, gunzipSync } from 'node:zlib';
 
+import { CertificadoA1InvalidoError } from '../errors/CertificadoA1InvalidoError';
 import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
 import { ConfiguracaoFiscalAusenteError } from '../errors/ConfiguracaoFiscalAusenteError';
 import { ConfiguracaoSefinNacionalAusenteError } from '../errors/ConfiguracaoSefinNacionalAusenteError';
@@ -12,6 +12,8 @@ import {
   ErroEnvioDpsNfse,
   ResultadoEnvioDpsNfse,
 } from './ClienteNfseNacional';
+import { CertificadoA1 } from './CertificadoA1';
+import { ProvedorCertificadoA1Arquivo } from './ProvedorCertificadoA1Arquivo';
 
 export interface ConfiguracaoClienteHttpSefinNacional {
   baseUrl?: string;
@@ -27,8 +29,8 @@ export interface RequisicaoHttpSefinNacional {
   headers: Record<string, string>;
   body: string;
   timeoutMs: number;
-  certificadoPfx: Buffer;
-  certificadoSenha: string;
+  chavePrivadaPem: string;
+  certificadoPem: string;
 }
 
 export interface RespostaHttpSefinNacional {
@@ -107,7 +109,8 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
     } catch (error) {
       if (
         error instanceof ConfiguracaoSefinNacionalAusenteError ||
-        error instanceof ConfiguracaoFiscalAusenteError
+        error instanceof ConfiguracaoFiscalAusenteError ||
+        error instanceof CertificadoA1InvalidoError
       ) {
         throw error;
       }
@@ -128,9 +131,11 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
     timeoutMs: number,
   ): Promise<RequisicaoHttpSefinNacional> {
     const body = this.criarCorpoEnvioDps(xmlAssinado);
+    const url = this.criarUrlEnvioDps(configuracao);
+    const certificado = await this.carregarCertificadoCliente(configuracao);
 
     return {
-      url: this.criarUrlEnvioDps(configuracao),
+      url,
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -139,35 +144,24 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
       },
       body,
       timeoutMs,
-      certificadoPfx: await this.carregarCertificadoCliente(configuracao),
-      certificadoSenha: this.obterSenhaCertificado(configuracao),
+      chavePrivadaPem: certificado.chavePrivadaPem,
+      certificadoPem: certificado.certificadoPem,
     };
   }
 
   private async carregarCertificadoCliente(
     configuracao: ConfiguracaoClienteHttpSefinNacional,
-  ): Promise<Buffer> {
+  ): Promise<CertificadoA1> {
     const caminho = configuracao.certificadoPath?.trim();
 
     if (!caminho || configuracao.certificadoSenha === undefined) {
       throw new ConfiguracaoFiscalAusenteError();
     }
 
-    try {
-      return await readFile(caminho);
-    } catch {
-      throw new ConfiguracaoFiscalAusenteError();
-    }
-  }
-
-  private obterSenhaCertificado(
-    configuracao: ConfiguracaoClienteHttpSefinNacional,
-  ): string {
-    if (configuracao.certificadoSenha === undefined) {
-      throw new ConfiguracaoFiscalAusenteError();
-    }
-
-    return configuracao.certificadoSenha;
+    return new ProvedorCertificadoA1Arquivo(() => ({
+      caminho,
+      senha: configuracao.certificadoSenha,
+    })).obter();
   }
 
   private criarUrlEnvioDps(
@@ -381,8 +375,8 @@ function transportarComHttpsMutuo(
         path: `${url.pathname}${url.search}`,
         method: 'POST',
         headers: requisicao.headers,
-        pfx: requisicao.certificadoPfx,
-        passphrase: requisicao.certificadoSenha,
+        key: requisicao.chavePrivadaPem,
+        cert: requisicao.certificadoPem,
       },
       (resposta) => {
         const partes: Buffer[] = [];

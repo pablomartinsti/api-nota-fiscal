@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gzipSync, gunzipSync } from 'node:zlib';
 
+import forge from 'node-forge';
 import { describe, expect, it, vi } from 'vitest';
 
 import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
@@ -48,8 +49,8 @@ describe('ClienteHttpSefinNacional', () => {
       );
       expect(requisicao.method).toBe('POST');
       expect(requisicao.timeoutMs).toBe(1000);
-      expect(requisicao.certificadoPfx).toEqual(certificado.conteudo);
-      expect(requisicao.certificadoSenha).toBe('senha-teste');
+      expect(requisicao.chavePrivadaPem).toContain('BEGIN RSA PRIVATE KEY');
+      expect(requisicao.certificadoPem).toContain('BEGIN CERTIFICATE');
       expect(requisicao.headers).toEqual(
         expect.objectContaining({
           Accept: 'application/json',
@@ -212,18 +213,36 @@ function criarClienteTeste(
 
 function criarCertificadoTeste(): {
   caminho: string;
-  conteudo: Buffer;
   limpar: () => void;
 } {
   const pasta = mkdtempSync(join(tmpdir(), 'nfse-certificado-'));
   const caminho = join(pasta, 'certificado.pfx');
-  const conteudo = Buffer.from('conteudo-pfx-falso');
+  const senha = 'senha-teste';
+  const chaves = forge.pki.rsa.generateKeyPair(1024);
+  const certificado = forge.pki.createCertificate();
 
-  writeFileSync(caminho, conteudo);
+  certificado.publicKey = chaves.publicKey;
+  certificado.serialNumber = '01';
+  certificado.validity.notBefore = new Date(Date.now() - 60_000);
+  certificado.validity.notAfter = new Date(Date.now() + 86_400_000);
+  certificado.setSubject([
+    { name: 'commonName', value: 'Empresa Teste Ltda:12345678000199' },
+  ]);
+  certificado.setIssuer(certificado.subject.attributes);
+  certificado.sign(chaves.privateKey, forge.md.sha256.create());
+
+  const pfx = forge.pkcs12.toPkcs12Asn1(
+    chaves.privateKey,
+    certificado,
+    senha,
+    { algorithm: '3des' },
+  );
+  const bytes = forge.asn1.toDer(pfx).getBytes();
+
+  writeFileSync(caminho, Buffer.from(bytes, 'binary'));
 
   return {
     caminho,
-    conteudo,
     limpar: () => rmSync(pasta, { recursive: true, force: true }),
   };
 }
