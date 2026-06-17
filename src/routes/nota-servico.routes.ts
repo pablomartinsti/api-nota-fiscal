@@ -38,6 +38,10 @@ notaServicoRoutes.get(
   '/notas-servico/:notaId/consulta-nfse',
   (request, response) => controller.consultarNfseEmitida(request, response),
 );
+notaServicoRoutes.post(
+  '/notas-servico/:notaId/cancelar-nfse',
+  (request, response) => controller.cancelarNfse(request, response),
+);
 notaServicoRoutes.put('/notas-servico/:notaId', (request, response) =>
   controller.atualizar(request, response),
 );

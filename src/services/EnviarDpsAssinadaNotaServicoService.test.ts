@@ -168,6 +168,7 @@ function criarService(nota: NotaServico | null): {
       codigoVerificacao: 'ABC123',
     }),
     consultarNfsePorChave: vi.fn(),
+    registrarEventoCancelamento: vi.fn(),
   };
 
   return {

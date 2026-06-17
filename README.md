@@ -153,6 +153,8 @@ npm run prisma:studio
 - `GET /notas-servico/:notaId/xml-dps`
 - `GET /notas-servico/:notaId/xml-dps-assinado`
 - `POST /notas-servico/:notaId/enviar-dps`
+- `GET /notas-servico/:notaId/consulta-nfse`
+- `POST /notas-servico/:notaId/cancelar-nfse`
 - `PUT /notas-servico/:notaId`
 - `POST /notas-servico/:notaId/emitir`
 - `POST /notas-servico/:notaId/retornar-rascunho`
@@ -176,7 +178,9 @@ SEFIN Nacional informa `basePath` `/SefinNacional` e envio sincrono em
 `POST /nfse`, recebendo JSON com o campo `dpsXmlGZipB64`. Por isso, a
 `NFSE_SEFIN_BASE_URL` deve ficar sem `/API`. O endpoint interno
 `POST /notas-servico/:notaId/enviar-dps` registra sucesso ou erro fiscal na
-NotaServico conforme o retorno recebido. A rota antiga
+NotaServico conforme o retorno recebido. A rota
+`POST /notas-servico/:notaId/cancelar-nfse` registra o evento oficial de
+cancelamento e so muda a nota para `CANCELADA` se a SEFIN aceitar. A rota antiga
 `POST /notas-servico/:notaId/emitir` ainda usa o emissor simulado.
 
 Variaveis fiscais:
@@ -185,6 +189,7 @@ Variaveis fiscais:
 NFSE_CERTIFICADO_PATH=""
 NFSE_CERTIFICADO_SENHA=""
 NFSE_XSD_DPS_PATH=""
+NFSE_XSD_EVENTO_PATH=""
 NFSE_SEFIN_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/SefinNacional"
 NFSE_SEFIN_ENVIO_DPS_PATH="/nfse"
 NFSE_SEFIN_TIMEOUT_MS=15000

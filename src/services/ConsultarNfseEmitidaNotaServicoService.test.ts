@@ -157,6 +157,7 @@ function criarService(nota: NotaServico | null): {
       chaveAcesso: '12345678901234567890123456789012345678901234567890',
       xmlAutorizado: '<NFSe>autorizada</NFSe>',
     }),
+    registrarEventoCancelamento: vi.fn(),
   };
 
   return {

@@ -6,6 +6,11 @@ export interface ConsultarNfsePorChaveInput {
   chaveAcesso: string;
 }
 
+export interface RegistrarEventoCancelamentoNfseInput {
+  chaveAcesso: string;
+  xmlPedidoEventoAssinado: string;
+}
+
 export interface ErroEnvioDpsNfse {
   codigo?: string;
   mensagem: string;
@@ -34,6 +39,16 @@ export interface ResultadoConsultaNfseNacional {
   erros?: ErroEnvioDpsNfse[];
 }
 
+export interface ResultadoRegistroEventoNfse {
+  sucesso: boolean;
+  statusHttp: number;
+  tipoAmbiente?: number;
+  versaoAplicativo?: string;
+  dataHoraProcessamento?: string;
+  xmlEvento?: string;
+  erros?: ErroEnvioDpsNfse[];
+}
+
 export interface ClienteNfseNacional {
   enviarDpsAssinada(
     input: EnviarDpsAssinadaInput,
@@ -42,4 +57,8 @@ export interface ClienteNfseNacional {
   consultarNfsePorChave(
     input: ConsultarNfsePorChaveInput,
   ): Promise<ResultadoConsultaNfseNacional>;
+
+  registrarEventoCancelamento(
+    input: RegistrarEventoCancelamentoNfseInput,
+  ): Promise<ResultadoRegistroEventoNfse>;
 }

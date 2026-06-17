@@ -8,11 +8,14 @@ import { ClienteHttpSefinNacional } from '../fiscal/ClienteHttpSefinNacional';
 import { EmissorNotaServicoSimulado } from '../fiscal/EmissorNotaServicoSimulado';
 import { GeradorXmlDpsNacional } from '../fiscal/GeradorXmlDpsNacional';
 import { AssinadorXmlDpsXmlDsig } from '../fiscal/AssinadorXmlDpsXmlDsig';
+import { AssinadorXmlPedRegEventoXmlDsig } from '../fiscal/AssinadorXmlPedRegEventoXmlDsig';
+import { GeradorXmlPedidoCancelamentoNfseNacional } from '../fiscal/GeradorXmlPedidoCancelamentoNfseNacional';
 import { ProvedorCertificadoA1Arquivo } from '../fiscal/ProvedorCertificadoA1Arquivo';
 import { ValidadorXmlDpsXsd } from '../fiscal/ValidadorXmlDpsXsd';
 import { AtualizarRascunhoNotaServicoService } from '../services/AtualizarRascunhoNotaServicoService';
 import { BuscarNotaServicoService } from '../services/BuscarNotaServicoService';
 import { CancelarNotaServicoService } from '../services/CancelarNotaServicoService';
+import { CancelarNfseNotaServicoService } from '../services/CancelarNfseNotaServicoService';
 import { CadastrarRascunhoNotaServicoService } from '../services/CadastrarRascunhoNotaServicoService';
 import { ConsultarNfseEmitidaNotaServicoService } from '../services/ConsultarNfseEmitidaNotaServicoService';
 import { EmitirNotaServicoService } from '../services/EmitirNotaServicoService';
@@ -57,6 +60,10 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     certificadoPath: env.NFSE_CERTIFICADO_PATH,
     certificadoSenha: env.NFSE_CERTIFICADO_SENHA,
   }));
+  const provedorCertificado = new ProvedorCertificadoA1Arquivo(() => ({
+    caminho: env.NFSE_CERTIFICADO_PATH,
+    senha: env.NFSE_CERTIFICADO_SENHA,
+  }));
 
   return new GestaoNotaServicoController(
     new CadastrarRascunhoNotaServicoService(
@@ -89,5 +96,14 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       clienteNfse,
     ),
     new ConsultarNfseEmitidaNotaServicoService(notaRepository, clienteNfse),
+    new CancelarNfseNotaServicoService(
+      notaRepository,
+      empresaRepository,
+      new GeradorXmlPedidoCancelamentoNfseNacional(),
+      new ValidadorXmlDpsXsd(() => env.NFSE_XSD_EVENTO_PATH),
+      provedorCertificado,
+      new AssinadorXmlPedRegEventoXmlDsig(),
+      clienteNfse,
+    ),
   );
 }

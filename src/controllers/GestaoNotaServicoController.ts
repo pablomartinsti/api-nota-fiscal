@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 
 import {
   atualizarRascunhoNotaServicoSchema,
+  cancelarNfseNotaServicoSchema,
   cadastrarRascunhoNotaServicoSchema,
   emitirNotaServicoSchema,
   notaServicoParamsSchema,
@@ -10,6 +11,7 @@ import { NotaServicoPresenter } from '../presenters/NotaServicoPresenter';
 import { AtualizarRascunhoNotaServicoService } from '../services/AtualizarRascunhoNotaServicoService';
 import { BuscarNotaServicoService } from '../services/BuscarNotaServicoService';
 import { CancelarNotaServicoService } from '../services/CancelarNotaServicoService';
+import { CancelarNfseNotaServicoService } from '../services/CancelarNfseNotaServicoService';
 import { CadastrarRascunhoNotaServicoService } from '../services/CadastrarRascunhoNotaServicoService';
 import { ConsultarNfseEmitidaNotaServicoService } from '../services/ConsultarNfseEmitidaNotaServicoService';
 import { EmitirNotaServicoService } from '../services/EmitirNotaServicoService';
@@ -34,6 +36,7 @@ export class GestaoNotaServicoController {
     private readonly gerarXmlDpsAssinadoService: GerarXmlDpsAssinadoNotaServicoService,
     private readonly enviarDpsAssinadaService: EnviarDpsAssinadaNotaServicoService,
     private readonly consultarNfseEmitidaService: ConsultarNfseEmitidaNotaServicoService,
+    private readonly cancelarNfseService: CancelarNfseNotaServicoService,
   ) {}
 
   async cadastrar(request: Request, response: Response): Promise<Response> {
@@ -169,5 +172,26 @@ export class GestaoNotaServicoController {
     );
 
     return response.status(200).json(resultado);
+  }
+
+  async cancelarNfse(request: Request, response: Response): Promise<Response> {
+    const { notaId } = notaServicoParamsSchema.parse(request.params);
+    const input = cancelarNfseNotaServicoSchema.parse(request.body);
+    const resultado = await this.cancelarNfseService.executar(
+      request.autenticacao,
+      notaId,
+      input,
+    );
+
+    return response.status(200).json({
+      nota: NotaServicoPresenter.paraHttp(resultado.nota),
+      sucesso: resultado.sucesso,
+      statusHttp: resultado.statusHttp,
+      tipoAmbiente: resultado.tipoAmbiente,
+      versaoAplicativo: resultado.versaoAplicativo,
+      dataHoraProcessamento: resultado.dataHoraProcessamento,
+      xmlEvento: resultado.xmlEvento,
+      erros: resultado.erros,
+    });
   }
 }

@@ -11,8 +11,10 @@ import {
   ConsultarNfsePorChaveInput,
   EnviarDpsAssinadaInput,
   ErroEnvioDpsNfse,
+  RegistrarEventoCancelamentoNfseInput,
   ResultadoConsultaNfseNacional,
   ResultadoEnvioDpsNfse,
+  ResultadoRegistroEventoNfse,
 } from './ClienteNfseNacional';
 import { CertificadoA1 } from './CertificadoA1';
 import { ProvedorCertificadoA1Arquivo } from './ProvedorCertificadoA1Arquivo';
@@ -180,6 +182,59 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
     }
   }
 
+  async registrarEventoCancelamento(
+    input: RegistrarEventoCancelamentoNfseInput,
+  ): Promise<ResultadoRegistroEventoNfse> {
+    const configuracao = this.obterConfiguracao();
+    const timeoutMs = configuracao.timeoutMs ?? TIMEOUT_PADRAO_MS;
+
+    try {
+      const requisicao = await this.criarRequisicaoRegistroEventoCancelamento(
+        configuracao,
+        input.chaveAcesso,
+        input.xmlPedidoEventoAssinado,
+        timeoutMs,
+      );
+      const resposta = await this.transportador(requisicao);
+      const corpo = this.parsearResposta(resposta.body);
+
+      if (resposta.status < 200 || resposta.status >= 300) {
+        return {
+          sucesso: false,
+          statusHttp: resposta.status,
+          erros: this.extrairErros(corpo, resposta.status),
+        };
+      }
+
+      return {
+        sucesso: true,
+        statusHttp: resposta.status,
+        tipoAmbiente: this.buscarNumero(corpo, ['tipoAmbiente']),
+        versaoAplicativo: this.buscarTexto(corpo, ['versaoAplicativo']),
+        dataHoraProcessamento: this.buscarTexto(corpo, [
+          'dataHoraProcessamento',
+        ]),
+        xmlEvento: this.extrairXmlEvento(corpo),
+      };
+    } catch (error) {
+      if (
+        error instanceof ConfiguracaoSefinNacionalAusenteError ||
+        error instanceof ConfiguracaoFiscalAusenteError ||
+        error instanceof CertificadoA1InvalidoError
+      ) {
+        throw error;
+      }
+
+      if (this.isAbortError(error)) {
+        throw new ComunicacaoNfseError(
+          'Tempo limite excedido ao comunicar com a SEFIN Nacional.',
+        );
+      }
+
+      throw new ComunicacaoNfseError();
+    }
+  }
+
   private async criarRequisicaoEnvioDps(
     configuracao: ConfiguracaoClienteHttpSefinNacional,
     xmlAssinado: string,
@@ -218,6 +273,31 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
       headers: {
         Accept: 'application/json',
       },
+      timeoutMs,
+      chavePrivadaPem: certificado.chavePrivadaPem,
+      certificadoPem: certificado.certificadoPem,
+    };
+  }
+
+  private async criarRequisicaoRegistroEventoCancelamento(
+    configuracao: ConfiguracaoClienteHttpSefinNacional,
+    chaveAcesso: string,
+    xmlPedidoEventoAssinado: string,
+    timeoutMs: number,
+  ): Promise<RequisicaoHttpSefinNacional> {
+    const body = this.criarCorpoRegistroEvento(xmlPedidoEventoAssinado);
+    const url = this.criarUrlRegistroEvento(configuracao, chaveAcesso);
+    const certificado = await this.carregarCertificadoCliente(configuracao);
+
+    return {
+      url,
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Length': Buffer.byteLength(body, 'utf8').toString(),
+      },
+      body,
       timeoutMs,
       chavePrivadaPem: certificado.chavePrivadaPem,
       certificadoPem: certificado.certificadoPem,
@@ -293,9 +373,24 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
     return `${baseUrl.replace(/\/+$/, '')}/nfse/${encodeURIComponent(chave)}`;
   }
 
+  private criarUrlRegistroEvento(
+    configuracao: ConfiguracaoClienteHttpSefinNacional,
+    chaveAcesso: string,
+  ): string {
+    return `${this.criarUrlConsultaNfse(configuracao, chaveAcesso)}/eventos`;
+  }
+
   private criarCorpoEnvioDps(xmlAssinado: string): string {
     return JSON.stringify({
       dpsXmlGZipB64: this.compactarXmlGzipBase64(xmlAssinado),
+    });
+  }
+
+  private criarCorpoRegistroEvento(xmlPedidoEventoAssinado: string): string {
+    return JSON.stringify({
+      pedidoRegistroEventoXmlGZipB64: this.compactarXmlGzipBase64(
+        xmlPedidoEventoAssinado,
+      ),
     });
   }
 
@@ -391,6 +486,33 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
       'nfseXmlGZipB64',
       'xmlAutorizadoGZipB64',
       'xmlNfseGZipB64',
+    ]);
+
+    if (!xmlCompactado) {
+      return undefined;
+    }
+
+    try {
+      return gunzipSync(Buffer.from(xmlCompactado, 'base64')).toString('utf8');
+    } catch {
+      return undefined;
+    }
+  }
+
+  private extrairXmlEvento(corpo: unknown): string | undefined {
+    const xmlDireto = this.buscarString(corpo, [
+      'xmlEvento',
+      'eventoXml',
+      'xml',
+    ]);
+
+    if (xmlDireto) {
+      return xmlDireto;
+    }
+
+    const xmlCompactado = this.buscarString(corpo, [
+      'eventoXmlGZipB64',
+      'xmlEventoGZipB64',
     ]);
 
     if (!xmlCompactado) {

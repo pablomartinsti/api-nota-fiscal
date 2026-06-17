@@ -129,6 +129,66 @@ describe('ClienteHttpSefinNacional', () => {
     }
   });
 
+  it('deve registrar evento de cancelamento com XML assinado e certificado cliente', async () => {
+    const certificado = criarCertificadoTeste();
+    const xmlEvento = '<evento><infEvento>cancelado</infEvento></evento>';
+    const eventoXmlGZipB64 = gzipSync(
+      Buffer.from(xmlEvento, 'utf8'),
+    ).toString('base64');
+    const transportador = vi.fn<TransportadorHttpSefinNacional>().mockResolvedValue({
+      status: 201,
+      body: JSON.stringify({
+        tipoAmbiente: 2,
+        versaoAplicativo: 'SefinNacional_1.0',
+        dataHoraProcessamento: '2026-06-16T17:22:48.5541738-03:00',
+        eventoXmlGZipB64,
+      }),
+    });
+    const cliente = criarClienteTeste(transportador, {
+      certificadoPath: certificado.caminho,
+      certificadoSenha: 'senha-teste',
+      timeoutMs: 1000,
+    });
+
+    try {
+      const resultado = await cliente.registrarEventoCancelamento({
+        chaveAcesso: '12345678901234567890123456789012345678901234567890',
+        xmlPedidoEventoAssinado: '<pedRegEvento>assinado</pedRegEvento>',
+      });
+
+      expect(transportador).toHaveBeenCalledOnce();
+      const requisicao = transportador.mock.calls[0][0];
+      expect(requisicao.url).toBe(
+        'https://sefin.producaorestrita.nfse.gov.br/SefinNacional/nfse/12345678901234567890123456789012345678901234567890/eventos',
+      );
+      expect(requisicao.method).toBe('POST');
+      expect(requisicao.headers).toEqual(
+        expect.objectContaining({
+          Accept: 'application/json',
+          'Content-Type': 'application/json; charset=utf-8',
+        }),
+      );
+      const body = JSON.parse(requisicao.body!) as {
+        pedidoRegistroEventoXmlGZipB64: string;
+      };
+      expect(
+        gunzipSync(
+          Buffer.from(body.pedidoRegistroEventoXmlGZipB64, 'base64'),
+        ).toString('utf8'),
+      ).toBe('<pedRegEvento>assinado</pedRegEvento>');
+      expect(resultado).toEqual({
+        sucesso: true,
+        statusHttp: 201,
+        tipoAmbiente: 2,
+        versaoAplicativo: 'SefinNacional_1.0',
+        dataHoraProcessamento: '2026-06-16T17:22:48.5541738-03:00',
+        xmlEvento,
+      });
+    } finally {
+      certificado.limpar();
+    }
+  });
+
   it('deve retornar erros estruturados quando a SEFIN recusar a DPS', async () => {
     const certificado = criarCertificadoTeste();
     const transportador = vi.fn<TransportadorHttpSefinNacional>().mockResolvedValue({
@@ -233,6 +293,46 @@ describe('ClienteHttpSefinNacional', () => {
           {
             codigo: 'E404',
             mensagem: 'Chave de acesso nao encontrada.',
+            campo: undefined,
+          },
+        ],
+      });
+    } finally {
+      certificado.limpar();
+    }
+  });
+
+  it('deve retornar erros estruturados quando o cancelamento for recusado', async () => {
+    const certificado = criarCertificadoTeste();
+    const transportador = vi.fn<TransportadorHttpSefinNacional>().mockResolvedValue({
+      status: 400,
+      body: JSON.stringify({
+        erros: [
+          {
+            codigo: 'E101',
+            mensagem: 'Evento rejeitado.',
+          },
+        ],
+      }),
+    });
+    const cliente = criarClienteTeste(transportador, {
+      certificadoPath: certificado.caminho,
+      certificadoSenha: 'senha-teste',
+    });
+
+    try {
+      const resultado = await cliente.registrarEventoCancelamento({
+        chaveAcesso: '12345678901234567890123456789012345678901234567890',
+        xmlPedidoEventoAssinado: '<pedRegEvento>assinado</pedRegEvento>',
+      });
+
+      expect(resultado).toEqual({
+        sucesso: false,
+        statusHttp: 400,
+        erros: [
+          {
+            codigo: 'E101',
+            mensagem: 'Evento rejeitado.',
             campo: undefined,
           },
         ],

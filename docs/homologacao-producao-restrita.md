@@ -38,6 +38,7 @@ Configure no `.env`:
 NFSE_CERTIFICADO_PATH="C:\caminho\certificados\empresa.pfx"
 NFSE_CERTIFICADO_SENHA="senha-do-certificado"
 NFSE_XSD_DPS_PATH="C:\caminho\nfse-xsd\Schemas\1.01\DPS_v1.01.xsd"
+NFSE_XSD_EVENTO_PATH="C:\caminho\nfse-xsd\Schemas\1.01\pedRegEvento_v1.01.xsd"
 NFSE_SEFIN_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/SefinNacional"
 NFSE_SEFIN_ENVIO_DPS_PATH="/nfse"
 NFSE_SEFIN_TIMEOUT_MS=15000
@@ -67,6 +68,7 @@ Esse comando valida somente configuracao local:
 
 - existencia do certificado A1;
 - existencia do XSD da DPS;
+- existencia do XSD do pedido de evento;
 - leitura do certificado;
 - validade do certificado;
 - CNPJ encontrado no certificado;
@@ -235,6 +237,29 @@ curl "http://localhost:3333/notas-servico/NOTA_ID/consulta-nfse" \
 
 4. mantenha a nota como evidencia de homologacao;
 5. nao use a rota simulada `POST /notas-servico/:notaId/emitir` para essa nota.
+
+Para cancelar uma NFS-e emitida na SEFIN Nacional:
+
+```http
+POST /notas-servico/:notaId/cancelar-nfse
+```
+
+Body:
+
+```json
+{
+  "codigoMotivo": "1",
+  "motivo": "Erro na emissao em ambiente de homologacao"
+}
+```
+
+Codigos de motivo aceitos pelo layout:
+
+- `1`: erro na emissao;
+- `2`: servico nao prestado;
+- `9`: outros.
+
+O sistema so muda a nota para `CANCELADA` quando a SEFIN aceita o evento.
 
 Se a nota ficar com erro:
 

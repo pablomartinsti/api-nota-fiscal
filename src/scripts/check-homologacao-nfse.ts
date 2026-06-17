@@ -17,6 +17,9 @@ async function main(): Promise<void> {
 
   resultados.push(await verificarArquivo('Certificado A1', env.NFSE_CERTIFICADO_PATH));
   resultados.push(await verificarArquivo('XSD da DPS', env.NFSE_XSD_DPS_PATH));
+  resultados.push(
+    await verificarArquivo('XSD do pedido de evento', env.NFSE_XSD_EVENTO_PATH),
+  );
   resultados.push(verificarValor('Senha do certificado', env.NFSE_CERTIFICADO_SENHA));
   resultados.push(verificarValor('URL base da SEFIN', env.NFSE_SEFIN_BASE_URL));
   resultados.push(
