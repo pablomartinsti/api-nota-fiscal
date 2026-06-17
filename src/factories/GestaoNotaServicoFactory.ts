@@ -14,6 +14,7 @@ import { AtualizarRascunhoNotaServicoService } from '../services/AtualizarRascun
 import { BuscarNotaServicoService } from '../services/BuscarNotaServicoService';
 import { CancelarNotaServicoService } from '../services/CancelarNotaServicoService';
 import { CadastrarRascunhoNotaServicoService } from '../services/CadastrarRascunhoNotaServicoService';
+import { ConsultarNfseEmitidaNotaServicoService } from '../services/ConsultarNfseEmitidaNotaServicoService';
 import { EmitirNotaServicoService } from '../services/EmitirNotaServicoService';
 import { EnviarDpsAssinadaNotaServicoService } from '../services/EnviarDpsAssinadaNotaServicoService';
 import { GerarXmlDpsNotaServicoService } from '../services/GerarXmlDpsNotaServicoService';
@@ -87,5 +88,6 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       gerarXmlDpsAssinadoService,
       clienteNfse,
     ),
+    new ConsultarNfseEmitidaNotaServicoService(notaRepository, clienteNfse),
   );
 }

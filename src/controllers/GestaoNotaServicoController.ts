@@ -11,6 +11,7 @@ import { AtualizarRascunhoNotaServicoService } from '../services/AtualizarRascun
 import { BuscarNotaServicoService } from '../services/BuscarNotaServicoService';
 import { CancelarNotaServicoService } from '../services/CancelarNotaServicoService';
 import { CadastrarRascunhoNotaServicoService } from '../services/CadastrarRascunhoNotaServicoService';
+import { ConsultarNfseEmitidaNotaServicoService } from '../services/ConsultarNfseEmitidaNotaServicoService';
 import { EmitirNotaServicoService } from '../services/EmitirNotaServicoService';
 import { EnviarDpsAssinadaNotaServicoService } from '../services/EnviarDpsAssinadaNotaServicoService';
 import { GerarXmlDpsNotaServicoService } from '../services/GerarXmlDpsNotaServicoService';
@@ -32,6 +33,7 @@ export class GestaoNotaServicoController {
     private readonly gerarXmlDpsService: GerarXmlDpsNotaServicoService,
     private readonly gerarXmlDpsAssinadoService: GerarXmlDpsAssinadoNotaServicoService,
     private readonly enviarDpsAssinadaService: EnviarDpsAssinadaNotaServicoService,
+    private readonly consultarNfseEmitidaService: ConsultarNfseEmitidaNotaServicoService,
   ) {}
 
   async cadastrar(request: Request, response: Response): Promise<Response> {
@@ -154,5 +156,18 @@ export class GestaoNotaServicoController {
     );
 
     return response.status(200).json(NotaServicoPresenter.paraHttp(nota));
+  }
+
+  async consultarNfseEmitida(
+    request: Request,
+    response: Response,
+  ): Promise<Response> {
+    const { notaId } = notaServicoParamsSchema.parse(request.params);
+    const resultado = await this.consultarNfseEmitidaService.executar(
+      request.autenticacao,
+      notaId,
+    );
+
+    return response.status(200).json(resultado);
   }
 }

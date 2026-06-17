@@ -58,7 +58,8 @@ describe('ClienteHttpSefinNacional', () => {
         }),
       );
 
-      const body = JSON.parse(requisicao.body) as { dpsXmlGZipB64: string };
+      expect(requisicao.body).toBeDefined();
+      const body = JSON.parse(requisicao.body!) as { dpsXmlGZipB64: string };
       expect(
         gunzipSync(Buffer.from(body.dpsXmlGZipB64, 'base64')).toString('utf8'),
       ).toBe(xmlAssinado);
@@ -69,6 +70,58 @@ describe('ClienteHttpSefinNacional', () => {
         chaveAcesso: 'CHAVE-456',
         numeroNfse: '789',
         codigoVerificacao: undefined,
+        xmlAutorizado: xmlNfseAutorizada,
+      });
+    } finally {
+      certificado.limpar();
+    }
+  });
+
+  it('deve consultar NFS-e pela chave de acesso usando certificado cliente', async () => {
+    const certificado = criarCertificadoTeste();
+    const nfseXmlGZipB64 = gzipSync(
+      Buffer.from(xmlNfseAutorizada, 'utf8'),
+    ).toString('base64');
+    const transportador = vi.fn<TransportadorHttpSefinNacional>().mockResolvedValue({
+      status: 200,
+      body: JSON.stringify({
+        tipoAmbiente: 2,
+        versaoAplicativo: 'SefinNacional_1.0',
+        dataHoraProcessamento: '2026-06-16T17:22:48.5541738-03:00',
+        chaveAcesso: '12345678901234567890123456789012345678901234567890',
+        nfseXmlGZipB64,
+      }),
+    });
+    const cliente = criarClienteTeste(transportador, {
+      certificadoPath: certificado.caminho,
+      certificadoSenha: 'senha-teste',
+      timeoutMs: 1000,
+    });
+
+    try {
+      const resultado = await cliente.consultarNfsePorChave({
+        chaveAcesso: '12345678901234567890123456789012345678901234567890',
+      });
+
+      expect(transportador).toHaveBeenCalledOnce();
+      const requisicao = transportador.mock.calls[0][0];
+      expect(requisicao.url).toBe(
+        'https://sefin.producaorestrita.nfse.gov.br/SefinNacional/nfse/12345678901234567890123456789012345678901234567890',
+      );
+      expect(requisicao.method).toBe('GET');
+      expect(requisicao.body).toBeUndefined();
+      expect(requisicao.headers).toEqual({
+        Accept: 'application/json',
+      });
+      expect(requisicao.chavePrivadaPem).toContain('BEGIN RSA PRIVATE KEY');
+      expect(requisicao.certificadoPem).toContain('BEGIN CERTIFICATE');
+      expect(resultado).toEqual({
+        sucesso: true,
+        statusHttp: 200,
+        tipoAmbiente: 2,
+        versaoAplicativo: 'SefinNacional_1.0',
+        dataHoraProcessamento: '2026-06-16T17:22:48.5541738-03:00',
+        chaveAcesso: '12345678901234567890123456789012345678901234567890',
         xmlAutorizado: xmlNfseAutorizada,
       });
     } finally {
@@ -143,6 +196,43 @@ describe('ClienteHttpSefinNacional', () => {
           {
             codigo: 'E999',
             mensagem: 'DPS invalida. Campo cTribNac nao foi informado.',
+            campo: undefined,
+          },
+        ],
+      });
+    } finally {
+      certificado.limpar();
+    }
+  });
+
+  it('deve retornar erros estruturados quando a consulta de NFS-e falhar', async () => {
+    const certificado = criarCertificadoTeste();
+    const transportador = vi.fn<TransportadorHttpSefinNacional>().mockResolvedValue({
+      status: 404,
+      body: JSON.stringify({
+        erro: {
+          codigo: 'E404',
+          descricao: 'Chave de acesso nao encontrada.',
+        },
+      }),
+    });
+    const cliente = criarClienteTeste(transportador, {
+      certificadoPath: certificado.caminho,
+      certificadoSenha: 'senha-teste',
+    });
+
+    try {
+      const resultado = await cliente.consultarNfsePorChave({
+        chaveAcesso: '12345678901234567890123456789012345678901234567890',
+      });
+
+      expect(resultado).toEqual({
+        sucesso: false,
+        statusHttp: 404,
+        erros: [
+          {
+            codigo: 'E404',
+            mensagem: 'Chave de acesso nao encontrada.',
             campo: undefined,
           },
         ],

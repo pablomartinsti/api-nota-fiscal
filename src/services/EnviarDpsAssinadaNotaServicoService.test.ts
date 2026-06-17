@@ -167,6 +167,7 @@ function criarService(nota: NotaServico | null): {
       numeroNfse: '100',
       codigoVerificacao: 'ABC123',
     }),
+    consultarNfsePorChave: vi.fn(),
   };
 
   return {

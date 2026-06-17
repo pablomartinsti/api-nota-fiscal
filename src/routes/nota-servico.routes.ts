@@ -34,6 +34,10 @@ notaServicoRoutes.post(
   '/notas-servico/:notaId/enviar-dps',
   (request, response) => controller.enviarDpsAssinada(request, response),
 );
+notaServicoRoutes.get(
+  '/notas-servico/:notaId/consulta-nfse',
+  (request, response) => controller.consultarNfseEmitida(request, response),
+);
 notaServicoRoutes.put('/notas-servico/:notaId', (request, response) =>
   controller.atualizar(request, response),
 );

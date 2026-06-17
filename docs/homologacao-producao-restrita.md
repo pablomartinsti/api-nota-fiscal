@@ -220,8 +220,21 @@ Se a nota for emitida:
 
 1. copie a `chaveAcesso` para controle local;
 2. confira se `xmlAutorizado` foi persistido;
-3. mantenha a nota como evidencia de homologacao;
-4. nao use a rota simulada `POST /notas-servico/:notaId/emitir` para essa nota.
+3. consulte a NFS-e emitida na SEFIN Nacional:
+
+```http
+GET /notas-servico/:notaId/consulta-nfse
+```
+
+Exemplo com `curl`:
+
+```bash
+curl "http://localhost:3333/notas-servico/NOTA_ID/consulta-nfse" \
+  -H "Authorization: Bearer SEU_TOKEN"
+```
+
+4. mantenha a nota como evidencia de homologacao;
+5. nao use a rota simulada `POST /notas-servico/:notaId/emitir` para essa nota.
 
 Se a nota ficar com erro:
 

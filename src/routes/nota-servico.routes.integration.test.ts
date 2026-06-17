@@ -496,6 +496,46 @@ describe('Gestao de rascunhos de notas de servico HTTP', () => {
     });
   });
 
+  it('deve exigir configuracao fiscal para consultar NFS-e emitida na SEFIN', async () => {
+    const contexto = await criarContexto(PerfilUsuario.OPERADOR, '3509502');
+    const cliente = await criarCliente(contexto.empresa.id!);
+    const servico = await criarServico(
+      contexto.empresa.id!,
+      5,
+      true,
+      '010101',
+    );
+    const cadastro = await request(app)
+      .post('/notas-servico')
+      .set('Authorization', `Bearer ${contexto.token}`)
+      .send({
+        ...dadosRascunho(cliente.id!, servico.id!),
+        serieDps: '1',
+        numeroDps: '100',
+        dataCompetencia: '2026-06-15',
+        codigoMunicipioPrestacao: '3509502',
+      });
+
+    await prisma.notaServico.update({
+      where: { id: cadastro.body.id },
+      data: {
+        status: 'EMITIDA',
+        numeroNfse: '100',
+        chaveAcesso: '12345678901234567890123456789012345678901234567890',
+        dataEmissao: new Date(),
+      },
+    });
+
+    const consulta = await request(app)
+      .get(`/notas-servico/${cadastro.body.id}/consulta-nfse`)
+      .set('Authorization', `Bearer ${contexto.token}`);
+
+    expect(consulta.status).toBe(503);
+    expect(consulta.body).toEqual({
+      message: 'Configuracao fiscal para assinatura da DPS nao foi informada.',
+    });
+  });
+
   it('deve registrar falha, retornar para rascunho e manter isolamento', async () => {
     const contexto = await criarContexto();
     const outraEmpresa = await criarContexto();

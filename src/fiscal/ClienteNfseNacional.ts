@@ -2,6 +2,10 @@ export interface EnviarDpsAssinadaInput {
   xmlAssinado: string;
 }
 
+export interface ConsultarNfsePorChaveInput {
+  chaveAcesso: string;
+}
+
 export interface ErroEnvioDpsNfse {
   codigo?: string;
   mensagem: string;
@@ -19,8 +23,23 @@ export interface ResultadoEnvioDpsNfse {
   erros?: ErroEnvioDpsNfse[];
 }
 
+export interface ResultadoConsultaNfseNacional {
+  sucesso: boolean;
+  statusHttp: number;
+  tipoAmbiente?: number;
+  versaoAplicativo?: string;
+  dataHoraProcessamento?: string;
+  chaveAcesso?: string;
+  xmlAutorizado?: string;
+  erros?: ErroEnvioDpsNfse[];
+}
+
 export interface ClienteNfseNacional {
   enviarDpsAssinada(
     input: EnviarDpsAssinadaInput,
   ): Promise<ResultadoEnvioDpsNfse>;
+
+  consultarNfsePorChave(
+    input: ConsultarNfsePorChaveInput,
+  ): Promise<ResultadoConsultaNfseNacional>;
 }
