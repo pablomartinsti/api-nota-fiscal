@@ -223,7 +223,7 @@ describe('EnviarDpsAssinadaNotaServicoService', () => {
     expect(clienteNfse.enviarDpsAssinada).not.toHaveBeenCalled();
   });
 
-  it('deve propagar falha de comunicacao sem salvar a nota', async () => {
+  it('deve registrar erro fiscal quando houver falha de comunicacao', async () => {
     const nota = criarNota();
     const { service, clienteNfse, salvar } = criarService(nota);
 
@@ -231,10 +231,24 @@ describe('EnviarDpsAssinadaNotaServicoService', () => {
       .fn()
       .mockRejectedValue(new ComunicacaoNfseError());
 
+    const resultado = await service.executar(autenticacao, 'nota-1');
+
+    expect(salvar).toHaveBeenCalledOnce();
+    expect(resultado.status).toBe(StatusNota.ERRO);
+    expect(resultado.mensagemErroFiscal).toBe(
+      'Nao foi possivel comunicar com a SEFIN Nacional.',
+    );
+  });
+
+  it('deve bloquear novo envio quando a nota ja estiver em processamento', async () => {
+    const nota = criarNota(StatusNota.PROCESSANDO);
+    const { service, clienteNfse, gerarXml } = criarService(nota);
+
     await expect(
       service.executar(autenticacao, 'nota-1'),
-    ).rejects.toBeInstanceOf(ComunicacaoNfseError);
-    expect(salvar).not.toHaveBeenCalled();
+    ).rejects.toBeInstanceOf(TransicaoStatusNotaInvalidaError);
+    expect(gerarXml.executar).not.toHaveBeenCalled();
+    expect(clienteNfse.enviarDpsAssinada).not.toHaveBeenCalled();
   });
 
   it('deve bloquear envio de DPS em producao real sem permissao explicita', async () => {
@@ -303,8 +317,22 @@ function criarService(
 } {
   const salvar = vi.fn(async (notaParaSalvar: NotaServico) => notaParaSalvar);
   const buscarPorIdEEmpresaId = vi.fn().mockResolvedValue(nota);
+  const iniciarProcessamentoEnvio = vi.fn(
+    async (id: string, empresaId: string) => {
+      const notaAtual = await buscarPorIdEEmpresaId(id, empresaId);
+
+      if (!notaAtual || notaAtual.status !== StatusNota.RASCUNHO) {
+        return null;
+      }
+
+      notaAtual.iniciarProcessamentoFiscal();
+
+      return notaAtual;
+    },
+  );
   const notaRepository: NotaServicoRepository = {
     salvar,
+    iniciarProcessamentoEnvio,
     buscarPorIdEEmpresaId,
     listarPorEmpresaId: vi.fn(),
     buscarMaiorNumeroDpsPorEmpresaAmbienteESerie: vi.fn(),

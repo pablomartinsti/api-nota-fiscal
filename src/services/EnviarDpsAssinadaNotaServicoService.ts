@@ -8,6 +8,7 @@ import {
   ErroEnvioDpsNfse,
   ResultadoEnvioDpsNfse,
 } from '../fiscal/ClienteNfseNacional';
+import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
 import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
@@ -58,29 +59,55 @@ export class EnviarDpsAssinadaNotaServicoService {
       autenticacao,
       notaId,
     );
-    const resultado = await this.clienteNfse.enviarDpsAssinada(
-      await this.criarInputEnvioDps(
-        autenticacao.empresaId,
-        nota.ambienteFiscal,
-        xmlAssinado,
-      ),
+    const inputEnvio = await this.criarInputEnvioDps(
+      autenticacao.empresaId,
+      nota.ambienteFiscal,
+      xmlAssinado,
     );
 
-    if (!resultado.sucesso) {
-      nota.registrarErroFiscal(this.criarMensagemErroFiscal(resultado.erros));
+    const notaEmProcessamento =
+      await this.notaRepository.iniciarProcessamentoEnvio(
+        notaId,
+        autenticacao.empresaId,
+      );
 
-      return this.notaRepository.salvar(nota);
+    if (!notaEmProcessamento) {
+      throw new TransicaoStatusNotaInvalidaError(
+        'A nota ja esta em processamento fiscal ou nao pode mais ser enviada.',
+      );
+    }
+
+    let resultado: ResultadoEnvioDpsNfse;
+
+    try {
+      resultado = await this.clienteNfse.enviarDpsAssinada(inputEnvio);
+    } catch (error) {
+      if (error instanceof ComunicacaoNfseError) {
+        notaEmProcessamento.registrarErroFiscal(error.message);
+
+        return this.notaRepository.salvar(notaEmProcessamento);
+      }
+
+      throw error;
+    }
+
+    if (!resultado.sucesso) {
+      notaEmProcessamento.registrarErroFiscal(
+        this.criarMensagemErroFiscal(resultado.erros),
+      );
+
+      return this.notaRepository.salvar(notaEmProcessamento);
     }
 
     if (!resultado.protocolo && !resultado.chaveAcesso) {
-      nota.registrarErroFiscal(
+      notaEmProcessamento.registrarErroFiscal(
         'Retorno fiscal da SEFIN nao informou protocolo ou chave de acesso.',
       );
 
-      return this.notaRepository.salvar(nota);
+      return this.notaRepository.salvar(notaEmProcessamento);
     }
 
-    nota.registrarSucessoFiscal({
+    notaEmProcessamento.registrarSucessoFiscal({
       numeroNfse: resultado.numeroNfse,
       codigoVerificacao: resultado.codigoVerificacao,
       protocoloEmissao: resultado.protocolo,
@@ -88,7 +115,7 @@ export class EnviarDpsAssinadaNotaServicoService {
       xmlAutorizado: resultado.xmlAutorizado,
     });
 
-    const notaEmitida = await this.notaRepository.salvar(nota);
+    const notaEmitida = await this.notaRepository.salvar(notaEmProcessamento);
 
     if (notaSubstituida) {
       notaSubstituida.marcarComoSubstituida();

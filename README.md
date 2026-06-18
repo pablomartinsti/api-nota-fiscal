@@ -181,7 +181,11 @@ SEFIN Nacional informa `basePath` `/SefinNacional` e envio sincrono em
 `POST /nfse`, recebendo JSON com o campo `dpsXmlGZipB64`. Por isso, a
 `NFSE_SEFIN_BASE_URL` deve ficar sem `/API`. O endpoint interno
 `POST /notas-servico/:notaId/enviar-dps` registra sucesso ou erro fiscal na
-NotaServico conforme o retorno recebido. A rota
+NotaServico conforme o retorno recebido. Antes da chamada externa, a nota sai
+de `RASCUNHO` para `PROCESSANDO`, evitando novo envio concorrente da mesma
+DPS. Em caso de rejeicao fiscal, retorno inconsistente ou falha de comunicacao,
+a nota fica como `ERRO` com mensagem rastreavel; para reenviar, e necessario
+retornar manualmente para rascunho. A rota
 `POST /notas-servico/:notaId/cancelar-nfse` registra o evento oficial de
 cancelamento e so muda a nota para `CANCELADA` se a SEFIN aceitar. A rota
 `POST /notas-servico/:notaId/substituir` cria um novo rascunho com vinculo para

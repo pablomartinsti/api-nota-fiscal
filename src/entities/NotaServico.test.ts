@@ -250,6 +250,41 @@ describe('NotaServico', () => {
     expect(nota.mensagemErroFiscal).toBeUndefined();
   });
 
+  it('deve controlar processamento fiscal antes do retorno da SEFIN', () => {
+    const nota = criarNota();
+
+    nota.iniciarProcessamentoFiscal();
+
+    expect(nota.status).toBe(StatusNota.PROCESSANDO);
+    expect(() =>
+      nota.alterarRascunho({
+        clienteId: 'cliente-2',
+        servicoId: 'servico-2',
+        valorServico: 200,
+        aliquotaIss: 5,
+        descricao: 'Nova descricao',
+      }),
+    ).toThrow('A operação só pode ser realizada em uma nota rascunho.');
+
+    nota.registrarSucessoFiscal({
+      numeroNfse: '1',
+      protocoloEmissao: 'PROTOCOLO-123',
+      chaveAcesso: 'CHAVE-456',
+    });
+
+    expect(nota.status).toBe(StatusNota.EMITIDA);
+  });
+
+  it('deve registrar erro fiscal durante processamento', () => {
+    const nota = criarNota();
+
+    nota.iniciarProcessamentoFiscal();
+    nota.registrarErroFiscal('Falha de comunicacao com a SEFIN');
+
+    expect(nota.status).toBe(StatusNota.ERRO);
+    expect(nota.mensagemErroFiscal).toBe('Falha de comunicacao com a SEFIN');
+  });
+
   it('deve registrar sucesso fiscal sem codigo de verificacao quando houver chave nacional', () => {
     const nota = criarNota();
 

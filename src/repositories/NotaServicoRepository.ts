@@ -3,6 +3,10 @@ import { AmbienteFiscal } from '../entities/NotaServico';
 
 export interface NotaServicoRepository {
   salvar(nota: NotaServico): Promise<NotaServico>;
+  iniciarProcessamentoEnvio(
+    id: string,
+    empresaId: string,
+  ): Promise<NotaServico | null>;
   buscarPorIdEEmpresaId(
     id: string,
     empresaId: string,

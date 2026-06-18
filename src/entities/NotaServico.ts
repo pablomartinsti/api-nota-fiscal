@@ -1,5 +1,6 @@
 export enum StatusNota {
   RASCUNHO = 'RASCUNHO',
+  PROCESSANDO = 'PROCESSANDO',
   EMITIDA = 'EMITIDA',
   SUBSTITUIDA = 'SUBSTITUIDA',
   CANCELADA = 'CANCELADA',
@@ -449,8 +450,17 @@ export class NotaServico {
     this.atualizarDataDeAlteracao();
   }
 
-  registrarSucessoFiscal(props: RegistrarSucessoFiscalProps): void {
+  iniciarProcessamentoFiscal(): void {
     this.garantirRascunho();
+
+    this._mensagemErro = undefined;
+    this._mensagemErroFiscal = undefined;
+    this._status = StatusNota.PROCESSANDO;
+    this.atualizarDataDeAlteracao();
+  }
+
+  registrarSucessoFiscal(props: RegistrarSucessoFiscalProps): void {
+    this.garantirRascunhoOuProcessando();
 
     const numeroNfse = NotaServico.normalizarTextoOpcional(props.numeroNfse);
     const codigoVerificacao = NotaServico.normalizarTextoOpcional(
@@ -493,7 +503,7 @@ export class NotaServico {
   }
 
   registrarErro(mensagemErro: string): void {
-    this.garantirRascunho();
+    this.garantirRascunhoOuProcessando();
 
     const mensagem = mensagemErro.trim();
 
@@ -764,6 +774,17 @@ export class NotaServico {
   private garantirRascunho(): void {
     if (this._status !== StatusNota.RASCUNHO) {
       throw new Error('A operação só pode ser realizada em uma nota rascunho.');
+    }
+  }
+
+  private garantirRascunhoOuProcessando(): void {
+    if (
+      this._status !== StatusNota.RASCUNHO &&
+      this._status !== StatusNota.PROCESSANDO
+    ) {
+      throw new Error(
+        'A operação só pode ser realizada em uma nota rascunho ou em processamento.',
+      );
     }
   }
 

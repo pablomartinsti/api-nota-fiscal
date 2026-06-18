@@ -249,6 +249,13 @@ curl -X POST "http://localhost:3333/notas-servico/NOTA_ID/enviar-dps" \
 
 Nao cole certificado, senha, `.env` ou XML real em issue, chat ou commit.
 
+Durante o envio, a nota passa de `RASCUNHO` para `PROCESSANDO` antes da chamada
+externa para a SEFIN. Isso evita duplo envio por clique repetido ou requisicoes
+concorrentes. Se a SEFIN rejeitar a DPS, se o retorno vier incompleto ou se
+houver falha de comunicacao, a nota passa para `ERRO` com mensagem registrada.
+Para tentar novamente, corrija a causa e use a rota de retorno para rascunho de
+forma consciente.
+
 ## 7. Como interpretar o resultado
 
 Se a resposta vier como `EMITIDA`, confira:

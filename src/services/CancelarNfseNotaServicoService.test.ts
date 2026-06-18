@@ -179,6 +179,7 @@ function criarService(props?: {
   const salvar = vi.fn(async (notaParaSalvar: NotaServico) => notaParaSalvar);
   const notaRepository: NotaServicoRepository = {
     salvar,
+    iniciarProcessamentoEnvio: vi.fn(),
     buscarPorIdEEmpresaId: vi.fn().mockResolvedValue(nota),
     listarPorEmpresaId: vi.fn(),
     buscarMaiorNumeroDpsPorEmpresaAmbienteESerie: vi.fn(),

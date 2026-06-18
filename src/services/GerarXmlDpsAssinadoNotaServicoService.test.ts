@@ -132,6 +132,7 @@ function criarService(
     props?.ambienteFiscal
       ? {
           salvar: vi.fn(),
+          iniciarProcessamentoEnvio: vi.fn(),
           listarPorEmpresaId: vi.fn(),
           buscarMaiorNumeroDpsPorEmpresaAmbienteESerie: vi.fn(),
           buscarPorIdEEmpresaId: vi.fn().mockResolvedValue(

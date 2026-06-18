@@ -1,4 +1,8 @@
-import { AmbienteFiscal, NotaServico } from '../../entities/NotaServico';
+import {
+  AmbienteFiscal,
+  NotaServico,
+  StatusNota,
+} from '../../entities/NotaServico';
 import { NotaServicoRepository } from '../../repositories/NotaServicoRepository';
 import { PrismaNotaServicoMapper } from '../mappers/PrismaNotaServicoMapper';
 import { prisma } from '../prisma.client';
@@ -15,6 +19,30 @@ export class PrismaNotaServicoRepository implements NotaServicoRepository {
       : await prisma.notaServico.create({ data: dados });
 
     return PrismaNotaServicoMapper.paraDominio(registro);
+  }
+
+  async iniciarProcessamentoEnvio(
+    id: string,
+    empresaId: string,
+  ): Promise<NotaServico | null> {
+    const resultado = await prisma.notaServico.updateMany({
+      where: {
+        id,
+        empresaId,
+        status: StatusNota.RASCUNHO,
+      },
+      data: {
+        status: StatusNota.PROCESSANDO,
+        mensagemErro: null,
+        mensagemErroFiscal: null,
+      },
+    });
+
+    if (resultado.count !== 1) {
+      return null;
+    }
+
+    return this.buscarPorIdEEmpresaId(id, empresaId);
   }
 
   async buscarPorIdEEmpresaId(
