@@ -37,11 +37,18 @@ Configure no `.env`:
 ```env
 NFSE_CERTIFICADO_PATH="C:\caminho\certificados\empresa.pfx"
 NFSE_CERTIFICADO_SENHA="senha-do-certificado"
+NFSE_CERTIFICADO_CRYPTO_KEY="chave-base64-com-32-bytes"
 NFSE_XSD_DPS_PATH="C:\caminho\nfse-xsd\Schemas\1.01\DPS_v1.01.xsd"
 NFSE_XSD_EVENTO_PATH="C:\caminho\nfse-xsd\Schemas\1.01\pedRegEvento_v1.01.xsd"
 NFSE_SEFIN_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/SefinNacional"
 NFSE_SEFIN_ENVIO_DPS_PATH="/nfse"
 NFSE_SEFIN_TIMEOUT_MS=15000
+```
+
+Gere `NFSE_CERTIFICADO_CRYPTO_KEY` com:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
 A documentacao oficial da SEFIN Nacional abre pelo caminho com `/API`, mas os
@@ -90,7 +97,8 @@ A senha do certificado nao e retornada pela API.
 Quando `certificadoA1Path` e `certificadoA1Senha` forem enviados, a API tenta
 abrir o arquivo A1, valida a senha, confere a validade do certificado e compara
 o CNPJ do certificado com o CNPJ da empresa autenticada. Se houver erro, a
-configuracao fiscal nao e salva.
+configuracao fiscal nao e salva. Se estiver tudo correto, a senha do
+certificado e criptografada antes de ser gravada no banco.
 
 ## 3. Checagem local
 

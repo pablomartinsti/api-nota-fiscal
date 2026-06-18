@@ -199,11 +199,18 @@ Variaveis fiscais:
 ```env
 NFSE_CERTIFICADO_PATH=""
 NFSE_CERTIFICADO_SENHA=""
+NFSE_CERTIFICADO_CRYPTO_KEY=""
 NFSE_XSD_DPS_PATH=""
 NFSE_XSD_EVENTO_PATH=""
 NFSE_SEFIN_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/SefinNacional"
 NFSE_SEFIN_ENVIO_DPS_PATH="/nfse"
 NFSE_SEFIN_TIMEOUT_MS=15000
+```
+
+Gere `NFSE_CERTIFICADO_CRYPTO_KEY` com 32 bytes em Base64:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
 O modelo `ConfiguracaoFiscalEmpresa` ja existe para preparar o SaaS
@@ -229,7 +236,9 @@ A resposta nunca retorna `certificadoA1Senha`; ela informa apenas
 `certificadoA1SenhaConfigurada`. Quando `certificadoA1Path` e
 `certificadoA1Senha` forem informados, a API valida o arquivo A1, a senha, a
 validade do certificado e se o CNPJ do certificado pertence a empresa
-autenticada antes de salvar a configuracao.
+autenticada antes de salvar a configuracao. A senha do certificado e
+criptografada com `NFSE_CERTIFICADO_CRYPTO_KEY` antes de ser persistida no
+banco.
 
 Antes da emissao real completa, sera necessario armazenar certificados digitais
 por empresa com seguranca e evoluir os demais endpoints fiscais, como consulta

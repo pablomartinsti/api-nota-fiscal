@@ -1,5 +1,6 @@
 import { AmbienteFiscal } from '../entities/NotaServico';
 import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
+import { CifradorTexto } from '../security/CifradorTexto';
 
 export interface ConfiguracaoFiscalEmpresaResolvida {
   ambienteFiscalPadrao: AmbienteFiscal;
@@ -16,6 +17,7 @@ export interface ConfiguracaoCertificadoA1EmpresaResolvida {
 export class ResolverConfiguracaoFiscalEmpresaService {
   constructor(
     private readonly configuracaoFiscalRepository: ConfiguracaoFiscalEmpresaRepository,
+    private readonly cifradorTexto?: CifradorTexto,
   ) {}
 
   async executar(
@@ -47,8 +49,16 @@ export class ResolverConfiguracaoFiscalEmpresaService {
 
     return {
       caminho: configuracao.certificadoA1Path,
-      senha: configuracao.certificadoA1Senha,
+      senha: this.obterSenhaEmTexto(configuracao.certificadoA1Senha),
     };
+  }
+
+  private obterSenhaEmTexto(senha: string): string {
+    if (!this.cifradorTexto?.estaCriptografado(senha)) {
+      return senha;
+    }
+
+    return this.cifradorTexto.descriptografar(senha);
   }
 
   private criarConfiguracaoPadrao(): ConfiguracaoFiscalEmpresaResolvida {

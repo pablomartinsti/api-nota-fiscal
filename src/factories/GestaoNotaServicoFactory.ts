@@ -13,6 +13,7 @@ import { AssinadorXmlPedRegEventoXmlDsig } from '../fiscal/AssinadorXmlPedRegEve
 import { GeradorXmlPedidoCancelamentoNfseNacional } from '../fiscal/GeradorXmlPedidoCancelamentoNfseNacional';
 import { ProvedorCertificadoA1Arquivo } from '../fiscal/ProvedorCertificadoA1Arquivo';
 import { ValidadorXmlDpsXsd } from '../fiscal/ValidadorXmlDpsXsd';
+import { AesGcmCifradorTexto } from '../security/AesGcmCifradorTexto';
 import { AtualizarRascunhoNotaServicoService } from '../services/AtualizarRascunhoNotaServicoService';
 import { BuscarNotaServicoService } from '../services/BuscarNotaServicoService';
 import { CancelarNotaServicoService } from '../services/CancelarNotaServicoService';
@@ -38,9 +39,13 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
   const servicoRepository = new PrismaServicoRepository();
   const configuracaoFiscalRepository =
     new PrismaConfiguracaoFiscalEmpresaRepository();
+  const cifradorTexto = new AesGcmCifradorTexto(
+    env.NFSE_CERTIFICADO_CRYPTO_KEY,
+  );
   const resolverConfiguracaoFiscal =
     new ResolverConfiguracaoFiscalEmpresaService(
       configuracaoFiscalRepository,
+      cifradorTexto,
     );
   const validarReferencias = new ValidarReferenciasNotaServicoService(
     clienteRepository,

@@ -11,6 +11,7 @@ import {
 } from '../fiscal/ProvedorCertificadoA1Arquivo';
 import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
 import { EmpresaRepository } from '../repositories/EmpresaRepository';
+import { CifradorTexto } from '../security/CifradorTexto';
 import { TokenPayload } from '../security/GerenciadorToken';
 
 export interface AtualizarConfiguracaoFiscalEmpresaAutenticadaInput {
@@ -28,6 +29,7 @@ export class AtualizarConfiguracaoFiscalEmpresaAutenticadaService {
   constructor(
     private readonly configuracaoFiscalRepository: ConfiguracaoFiscalEmpresaRepository,
     private readonly empresaRepository: EmpresaRepository,
+    private readonly cifradorTexto: CifradorTexto,
     private readonly criarProvedorCertificado: CriarProvedorCertificadoA1 = (
       configuracao,
     ) => new ProvedorCertificadoA1Arquivo(() => configuracao),
@@ -53,13 +55,17 @@ export class AtualizarConfiguracaoFiscalEmpresaAutenticadaService {
       );
     }
 
+    const dadosPersistencia = this.criptografarSenhaParaPersistencia(
+      dadosAlteracao,
+      dados,
+    );
     const configuracao =
       configuracaoExistente ??
       new ConfiguracaoFiscalEmpresa({
         empresaId: autenticacao.empresaId,
       });
 
-    configuracao.alterarDados(dadosAlteracao);
+    configuracao.alterarDados(dadosPersistencia);
     configuracao.ativar();
 
     return this.configuracaoFiscalRepository.salvar(configuracao);
@@ -90,12 +96,40 @@ export class AtualizarConfiguracaoFiscalEmpresaAutenticadaService {
 
     const certificado = await this.criarProvedorCertificado({
       caminho: dados.certificadoA1Path,
-      senha: dados.certificadoA1Senha,
+      senha: this.obterSenhaEmTexto(dados.certificadoA1Senha),
     }).obter();
 
     if (certificado.cnpj !== empresa.cnpj) {
       throw new CertificadoA1CnpjDivergenteError();
     }
+  }
+
+  private criptografarSenhaParaPersistencia(
+    dados: AlterarConfiguracaoFiscalEmpresaProps,
+    input: AtualizarConfiguracaoFiscalEmpresaAutenticadaInput,
+  ): AlterarConfiguracaoFiscalEmpresaProps {
+    if (!dados.certificadoA1Senha || input.certificadoA1Senha === undefined) {
+      return dados;
+    }
+
+    if (this.cifradorTexto.estaCriptografado(dados.certificadoA1Senha)) {
+      return dados;
+    }
+
+    return {
+      ...dados,
+      certificadoA1Senha: this.cifradorTexto.criptografar(
+        dados.certificadoA1Senha,
+      ),
+    };
+  }
+
+  private obterSenhaEmTexto(senha: string): string {
+    if (!this.cifradorTexto.estaCriptografado(senha)) {
+      return senha;
+    }
+
+    return this.cifradorTexto.descriptografar(senha);
   }
 
   private criarDadosAlteracao(

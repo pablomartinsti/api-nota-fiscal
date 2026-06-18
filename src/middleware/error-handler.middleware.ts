@@ -7,6 +7,7 @@ import { ClienteNaoEncontradoError } from '../errors/ClienteNaoEncontradoError';
 import { ClienteInativoError } from '../errors/ClienteInativoError';
 import { CertificadoA1CnpjDivergenteError } from '../errors/CertificadoA1CnpjDivergenteError';
 import { CertificadoA1InvalidoError } from '../errors/CertificadoA1InvalidoError';
+import { ChaveCriptografiaAusenteError } from '../errors/ChaveCriptografiaAusenteError';
 import { CnpjJaCadastradoError } from '../errors/CnpjJaCadastradoError';
 import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
 import { ConfiguracaoFiscalAusenteError } from '../errors/ConfiguracaoFiscalAusenteError';
@@ -89,6 +90,7 @@ export const errorHandler: ErrorRequestHandler = (
   }
 
   if (
+    error instanceof ChaveCriptografiaAusenteError ||
     error instanceof ConfiguracaoFiscalAusenteError ||
     error instanceof ConfiguracaoSefinNacionalAusenteError
   ) {

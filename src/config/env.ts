@@ -12,6 +12,7 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().trim().min(1).default('*'),
   NFSE_CERTIFICADO_PATH: z.string().trim().min(1).optional(),
   NFSE_CERTIFICADO_SENHA: z.string().optional(),
+  NFSE_CERTIFICADO_CRYPTO_KEY: z.string().trim().min(1).optional(),
   NFSE_XSD_DPS_PATH: z.string().trim().min(1).optional(),
   NFSE_XSD_EVENTO_PATH: z.string().trim().min(1).optional(),
   NFSE_SEFIN_BASE_URL: z.string().trim().url().optional(),

@@ -9,6 +9,7 @@ import { CertificadoA1InvalidoError } from '../errors/CertificadoA1InvalidoError
 import { ProvedorCertificadoA1 } from '../fiscal/CertificadoA1';
 import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
 import { EmpresaRepository } from '../repositories/EmpresaRepository';
+import { CifradorTexto } from '../security/CifradorTexto';
 import { AtualizarConfiguracaoFiscalEmpresaAutenticadaService } from './AtualizarConfiguracaoFiscalEmpresaAutenticadaService';
 
 const autenticacao = {
@@ -37,7 +38,7 @@ describe('AtualizarConfiguracaoFiscalEmpresaAutenticadaService', () => {
     expect(configuracao.certificadoA1Path).toBe(
       'C:/certificados/empresa.pfx',
     );
-    expect(configuracao.certificadoA1Senha).toBe('senha');
+    expect(configuracao.certificadoA1Senha).toBe('criptografado:senha');
     expect(configuracao.ativo).toBe(true);
     expect(criarProvedorCertificado).toHaveBeenCalledWith({
       caminho: 'C:/certificados/empresa.pfx',
@@ -154,11 +155,21 @@ function criarService(
         }),
   };
   const criarProvedorCertificado = vi.fn(() => provedorCertificado);
+  const cifradorTexto: CifradorTexto = {
+    criptografar: vi.fn((texto: string) => `criptografado:${texto}`),
+    descriptografar: vi.fn((texto: string) =>
+      texto.replace(/^criptografado:/, ''),
+    ),
+    estaCriptografado: vi.fn((texto: string) =>
+      texto.startsWith('criptografado:'),
+    ),
+  };
 
   return {
     service: new AtualizarConfiguracaoFiscalEmpresaAutenticadaService(
       repository,
       empresaRepository,
+      cifradorTexto,
       criarProvedorCertificado,
     ),
     salvar,
