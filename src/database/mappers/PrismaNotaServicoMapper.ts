@@ -8,6 +8,7 @@ import {
 
 import {
   AmbienteFiscal,
+  CodigoMotivoSubstituicaoNfse,
   NotaServico,
   StatusNota,
   TipoRetencaoIssqn,
@@ -39,6 +40,13 @@ export class PrismaNotaServicoMapper {
       tipoRetencaoIssqn: registro.tipoRetencaoIssqn as TipoRetencaoIssqn,
       informacoesComplementares:
         registro.informacoesComplementares ?? undefined,
+      notaSubstituidaId: registro.notaSubstituidaId ?? undefined,
+      chaveAcessoSubstituida:
+        registro.chaveAcessoSubstituida ?? undefined,
+      codigoMotivoSubstituicao: registro.codigoMotivoSubstituicao
+        ? (registro.codigoMotivoSubstituicao as CodigoMotivoSubstituicaoNfse)
+        : undefined,
+      motivoSubstituicao: registro.motivoSubstituicao ?? undefined,
       valorServico: registro.valorServico.toNumber(),
       valorIss: registro.valorIss.toNumber(),
       aliquotaIss: registro.aliquotaIss.toNumber(),
@@ -74,6 +82,10 @@ export class PrismaNotaServicoMapper {
       tributacaoIssqn: nota.tributacaoIssqn as PrismaTributacaoIssqn,
       tipoRetencaoIssqn: nota.tipoRetencaoIssqn as PrismaTipoRetencaoIssqn,
       informacoesComplementares: nota.informacoesComplementares ?? null,
+      notaSubstituidaId: nota.notaSubstituidaId ?? null,
+      chaveAcessoSubstituida: nota.chaveAcessoSubstituida ?? null,
+      codigoMotivoSubstituicao: nota.codigoMotivoSubstituicao ?? null,
+      motivoSubstituicao: nota.motivoSubstituicao ?? null,
       valorServico: nota.valorServico,
       valorIss: nota.valorIss,
       aliquotaIss: nota.aliquotaIss,

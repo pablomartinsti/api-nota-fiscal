@@ -6,6 +6,7 @@ import {
   cadastrarRascunhoNotaServicoSchema,
   emitirNotaServicoSchema,
   notaServicoParamsSchema,
+  substituirNfseNotaServicoSchema,
 } from '../dtos/GestaoNotaServicoDto';
 import { NotaServicoPresenter } from '../presenters/NotaServicoPresenter';
 import { AtualizarRascunhoNotaServicoService } from '../services/AtualizarRascunhoNotaServicoService';
@@ -14,6 +15,7 @@ import { CancelarNotaServicoService } from '../services/CancelarNotaServicoServi
 import { CancelarNfseNotaServicoService } from '../services/CancelarNfseNotaServicoService';
 import { CadastrarRascunhoNotaServicoService } from '../services/CadastrarRascunhoNotaServicoService';
 import { ConsultarNfseEmitidaNotaServicoService } from '../services/ConsultarNfseEmitidaNotaServicoService';
+import { CriarRascunhoSubstituicaoNotaServicoService } from '../services/CriarRascunhoSubstituicaoNotaServicoService';
 import { EmitirNotaServicoService } from '../services/EmitirNotaServicoService';
 import { EnviarDpsAssinadaNotaServicoService } from '../services/EnviarDpsAssinadaNotaServicoService';
 import { GerarXmlDpsNotaServicoService } from '../services/GerarXmlDpsNotaServicoService';
@@ -37,6 +39,7 @@ export class GestaoNotaServicoController {
     private readonly enviarDpsAssinadaService: EnviarDpsAssinadaNotaServicoService,
     private readonly consultarNfseEmitidaService: ConsultarNfseEmitidaNotaServicoService,
     private readonly cancelarNfseService: CancelarNfseNotaServicoService,
+    private readonly criarRascunhoSubstituicaoService: CriarRascunhoSubstituicaoNotaServicoService,
   ) {}
 
   async cadastrar(request: Request, response: Response): Promise<Response> {
@@ -193,5 +196,20 @@ export class GestaoNotaServicoController {
       xmlEvento: resultado.xmlEvento,
       erros: resultado.erros,
     });
+  }
+
+  async substituirNfse(
+    request: Request,
+    response: Response,
+  ): Promise<Response> {
+    const { notaId } = notaServicoParamsSchema.parse(request.params);
+    const input = substituirNfseNotaServicoSchema.parse(request.body);
+    const nota = await this.criarRascunhoSubstituicaoService.executar(
+      request.autenticacao,
+      notaId,
+      input,
+    );
+
+    return response.status(201).json(NotaServicoPresenter.paraHttp(nota));
   }
 }

@@ -42,6 +42,10 @@ notaServicoRoutes.post(
   '/notas-servico/:notaId/cancelar-nfse',
   (request, response) => controller.cancelarNfse(request, response),
 );
+notaServicoRoutes.post(
+  '/notas-servico/:notaId/substituir',
+  (request, response) => controller.substituirNfse(request, response),
+);
 notaServicoRoutes.put('/notas-servico/:notaId', (request, response) =>
   controller.atualizar(request, response),
 );

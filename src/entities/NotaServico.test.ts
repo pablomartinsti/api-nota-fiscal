@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   AmbienteFiscal,
+  CodigoMotivoSubstituicaoNfse,
   NotaServico,
   StatusNota,
   TipoRetencaoIssqn,
@@ -52,6 +53,53 @@ describe('NotaServico', () => {
     expect(nota.codigoMunicipioPrestacao).toBe('3509502');
     expect(nota.tipoRetencaoIssqn).toBe(
       TipoRetencaoIssqn.RETIDO_PELO_TOMADOR,
+    );
+  });
+
+  it('deve armazenar dados de substituicao de NFS-e', () => {
+    const nota = new NotaServico({
+      ...dadosBase,
+      notaSubstituidaId: 'nota-original-1',
+      chaveAcessoSubstituida:
+        '12345678901234567890123456789012345678901234567890',
+      codigoMotivoSubstituicao: CodigoMotivoSubstituicaoNfse.OUTROS,
+      motivoSubstituicao: 'Correcao de dados da NFS-e em homologacao',
+    });
+
+    expect(nota.notaSubstituidaId).toBe('nota-original-1');
+    expect(nota.chaveAcessoSubstituida).toBe(
+      '12345678901234567890123456789012345678901234567890',
+    );
+    expect(nota.codigoMotivoSubstituicao).toBe('99');
+    expect(nota.motivoSubstituicao).toBe(
+      'Correcao de dados da NFS-e em homologacao',
+    );
+  });
+
+  it('deve rejeitar dados invalidos de substituicao', () => {
+    expect(
+      () =>
+        new NotaServico({
+          ...dadosBase,
+          notaSubstituidaId: 'nota-original-1',
+          chaveAcessoSubstituida: '123',
+          codigoMotivoSubstituicao: CodigoMotivoSubstituicaoNfse.OUTROS,
+          motivoSubstituicao: 'Correcao de dados da NFS-e em homologacao',
+        }),
+    ).toThrow('Chave de acesso substituida deve conter 50 digitos.');
+
+    expect(
+      () =>
+        new NotaServico({
+          ...dadosBase,
+          notaSubstituidaId: 'nota-original-1',
+          chaveAcessoSubstituida:
+            '12345678901234567890123456789012345678901234567890',
+          codigoMotivoSubstituicao: CodigoMotivoSubstituicaoNfse.OUTROS,
+          motivoSubstituicao: 'curto',
+        }),
+    ).toThrow(
+      'Motivo da substituicao deve conter entre 15 e 255 caracteres.',
     );
   });
 

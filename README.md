@@ -155,6 +155,7 @@ npm run prisma:studio
 - `POST /notas-servico/:notaId/enviar-dps`
 - `GET /notas-servico/:notaId/consulta-nfse`
 - `POST /notas-servico/:notaId/cancelar-nfse`
+- `POST /notas-servico/:notaId/substituir`
 - `PUT /notas-servico/:notaId`
 - `POST /notas-servico/:notaId/emitir`
 - `POST /notas-servico/:notaId/retornar-rascunho`
@@ -180,8 +181,10 @@ SEFIN Nacional informa `basePath` `/SefinNacional` e envio sincrono em
 `POST /notas-servico/:notaId/enviar-dps` registra sucesso ou erro fiscal na
 NotaServico conforme o retorno recebido. A rota
 `POST /notas-servico/:notaId/cancelar-nfse` registra o evento oficial de
-cancelamento e so muda a nota para `CANCELADA` se a SEFIN aceitar. A rota antiga
-`POST /notas-servico/:notaId/emitir` ainda usa o emissor simulado.
+cancelamento e so muda a nota para `CANCELADA` se a SEFIN aceitar. A rota
+`POST /notas-servico/:notaId/substituir` cria um novo rascunho com vinculo para
+a NFS-e substituida; depois esse rascunho usa o envio fiscal normal. A rota
+antiga `POST /notas-servico/:notaId/emitir` ainda usa o emissor simulado.
 
 Variaveis fiscais:
 

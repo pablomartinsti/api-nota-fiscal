@@ -183,6 +183,10 @@ model NotaServico {
   tributacaoIssqn   TributacaoIssqn      @default(TRIBUTAVEL)
   tipoRetencaoIssqn TipoRetencaoIssqn    @default(NAO_RETIDO)
   informacoesComplementares String?
+  notaSubstituidaId String?
+  chaveAcessoSubstituida String?
+  codigoMotivoSubstituicao String?
+  motivoSubstituicao String?
 
   valorServico      Decimal     @db.Decimal(10, 2)
   valorIss          Decimal     @db.Decimal(10, 2)
@@ -200,6 +204,8 @@ model NotaServico {
   usuario           Usuario     @relation(fields: [usuarioId], references: [id])
   cliente           Cliente     @relation(fields: [clienteId], references: [id])
   servico           Servico     @relation(fields: [servicoId], references: [id])
+  notaSubstituida   NotaServico? @relation("SubstituicaoNotaServico", fields: [notaSubstituidaId], references: [id])
+  notasSubstitutas  NotaServico[] @relation("SubstituicaoNotaServico")
 
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
@@ -208,6 +214,7 @@ model NotaServico {
   @@index([clienteId])
   @@index([servicoId])
   @@index([usuarioId])
+  @@index([notaSubstituidaId])
   @@index([status])
   @@map("notas_servico")
 }

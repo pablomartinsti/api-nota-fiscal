@@ -18,6 +18,7 @@ import { CancelarNotaServicoService } from '../services/CancelarNotaServicoServi
 import { CancelarNfseNotaServicoService } from '../services/CancelarNfseNotaServicoService';
 import { CadastrarRascunhoNotaServicoService } from '../services/CadastrarRascunhoNotaServicoService';
 import { ConsultarNfseEmitidaNotaServicoService } from '../services/ConsultarNfseEmitidaNotaServicoService';
+import { CriarRascunhoSubstituicaoNotaServicoService } from '../services/CriarRascunhoSubstituicaoNotaServicoService';
 import { EmitirNotaServicoService } from '../services/EmitirNotaServicoService';
 import { EnviarDpsAssinadaNotaServicoService } from '../services/EnviarDpsAssinadaNotaServicoService';
 import { GerarXmlDpsNotaServicoService } from '../services/GerarXmlDpsNotaServicoService';
@@ -104,6 +105,10 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       provedorCertificado,
       new AssinadorXmlPedRegEventoXmlDsig(),
       clienteNfse,
+    ),
+    new CriarRascunhoSubstituicaoNotaServicoService(
+      notaRepository,
+      validarReferencias,
     ),
   );
 }

@@ -73,12 +73,41 @@ export class GeradorXmlDpsNacional implements GeradorXmlDps {
     this.adicionarTexto(infDps, 'tpEmit', '1');
     this.adicionarTexto(infDps, 'cLocEmi', codigoMunicipioEmpresa);
 
+    this.adicionarSubstituicao(infDps, input);
     this.adicionarPrestador(infDps, input);
     this.adicionarTomador(infDps, input);
     this.adicionarServico(infDps, input);
     this.adicionarValores(infDps, input);
 
     return documento.end({ prettyPrint: true });
+  }
+
+  private adicionarSubstituicao(
+    infDps: ElementoXml,
+    input: GerarXmlDpsInput,
+  ): void {
+    const { nota } = input;
+
+    if (!nota.chaveAcessoSubstituida || !nota.codigoMotivoSubstituicao) {
+      return;
+    }
+
+    const substituicao = infDps.ele('subst');
+    this.adicionarTexto(
+      substituicao,
+      'chSubstda',
+      nota.chaveAcessoSubstituida,
+    );
+    this.adicionarTexto(
+      substituicao,
+      'cMotivo',
+      nota.codigoMotivoSubstituicao,
+    );
+    this.adicionarTextoOpcional(
+      substituicao,
+      'xMotivo',
+      nota.motivoSubstituicao,
+    );
   }
 
   private adicionarPrestador(

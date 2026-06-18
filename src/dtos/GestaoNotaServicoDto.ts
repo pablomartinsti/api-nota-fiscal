@@ -1,6 +1,10 @@
 import { z } from 'zod';
 
-import { TipoRetencaoIssqn, TributacaoIssqn } from '../entities/NotaServico';
+import {
+  CodigoMotivoSubstituicaoNfse,
+  TipoRetencaoIssqn,
+  TributacaoIssqn,
+} from '../entities/NotaServico';
 
 const camposRascunhoNotaServico = {
   clienteId: z.string().trim().min(1),
@@ -35,4 +39,10 @@ export const emitirNotaServicoSchema = z.object({
 export const cancelarNfseNotaServicoSchema = z.object({
   codigoMotivo: z.enum(['1', '2', '9']),
   motivo: z.string().trim().min(15).max(255),
+});
+
+export const substituirNfseNotaServicoSchema = z.object({
+  ...camposRascunhoNotaServico,
+  codigoMotivoSubstituicao: z.enum(CodigoMotivoSubstituicaoNfse),
+  motivoSubstituicao: z.string().trim().min(15).max(255),
 });

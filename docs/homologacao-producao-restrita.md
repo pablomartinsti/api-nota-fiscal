@@ -261,6 +261,47 @@ Codigos de motivo aceitos pelo layout:
 
 O sistema so muda a nota para `CANCELADA` quando a SEFIN aceita o evento.
 
+Para substituir uma NFS-e emitida na SEFIN Nacional, primeiro crie uma nova nota
+rascunho vinculada a nota original:
+
+```http
+POST /notas-servico/:notaId/substituir
+```
+
+Body:
+
+```json
+{
+  "clienteId": "CLIENTE_ID",
+  "servicoId": "SERVICO_ID",
+  "valorServico": 700,
+  "descricao": "Servicos contabeis corrigidos",
+  "serieDps": "1",
+  "numeroDps": "3",
+  "dataCompetencia": "2026-06-17",
+  "codigoMunicipioPrestacao": "3170206",
+  "tributacaoIssqn": "TRIBUTAVEL",
+  "tipoRetencaoIssqn": "NAO_RETIDO",
+  "codigoMotivoSubstituicao": "99",
+  "motivoSubstituicao": "Correcao de dados da NFS-e em homologacao"
+}
+```
+
+Depois envie a DPS da nota substituta normalmente:
+
+```http
+POST /notas-servico/:notaSubstitutaId/enviar-dps
+```
+
+Codigos de motivo aceitos para substituicao:
+
+- `01`: desenquadramento do Simples Nacional;
+- `02`: enquadramento no Simples Nacional;
+- `03`: inclusao retroativa de imunidade/isencao;
+- `04`: exclusao retroativa de imunidade/isencao;
+- `05`: rejeicao pelo tomador/intermediario;
+- `99`: outros.
+
 Se a nota ficar com erro:
 
 1. leia `mensagemErroFiscal`;

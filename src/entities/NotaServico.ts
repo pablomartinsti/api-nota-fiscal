@@ -23,6 +23,15 @@ export enum TipoRetencaoIssqn {
   RETIDO_PELO_INTERMEDIARIO = 'RETIDO_PELO_INTERMEDIARIO',
 }
 
+export enum CodigoMotivoSubstituicaoNfse {
+  DESENQUADRAMENTO_SIMPLES_NACIONAL = '01',
+  ENQUADRAMENTO_SIMPLES_NACIONAL = '02',
+  INCLUSAO_RETROATIVA_IMUNIDADE_ISENCAO = '03',
+  EXCLUSAO_RETROATIVA_IMUNIDADE_ISENCAO = '04',
+  REJEICAO_TOMADOR_INTERMEDIARIO = '05',
+  OUTROS = '99',
+}
+
 export interface NotaServicoProps {
   id?: string;
   empresaId: string;
@@ -44,6 +53,10 @@ export interface NotaServicoProps {
   tributacaoIssqn?: TributacaoIssqn;
   tipoRetencaoIssqn?: TipoRetencaoIssqn;
   informacoesComplementares?: string;
+  notaSubstituidaId?: string;
+  chaveAcessoSubstituida?: string;
+  codigoMotivoSubstituicao?: CodigoMotivoSubstituicaoNfse;
+  motivoSubstituicao?: string;
   valorServico: number;
   valorIss?: number;
   aliquotaIss: number;
@@ -113,6 +126,10 @@ export class NotaServico {
   private _tributacaoIssqn: TributacaoIssqn;
   private _tipoRetencaoIssqn: TipoRetencaoIssqn;
   private _informacoesComplementares?: string;
+  private readonly _notaSubstituidaId?: string;
+  private readonly _chaveAcessoSubstituida?: string;
+  private readonly _codigoMotivoSubstituicao?: CodigoMotivoSubstituicaoNfse;
+  private readonly _motivoSubstituicao?: string;
   private _valorServico: number;
   private _valorIss: number;
   private _aliquotaIss: number;
@@ -137,6 +154,15 @@ export class NotaServico {
       props.tributacaoIssqn ?? TributacaoIssqn.TRIBUTAVEL;
     const tipoRetencaoIssqn =
       props.tipoRetencaoIssqn ?? TipoRetencaoIssqn.NAO_RETIDO;
+    const notaSubstituidaId = NotaServico.normalizarTextoOpcional(
+      props.notaSubstituidaId,
+    );
+    const chaveAcessoSubstituida =
+      NotaServico.normalizarChaveAcessoNfse(props.chaveAcessoSubstituida);
+    const codigoMotivoSubstituicao = props.codigoMotivoSubstituicao;
+    const motivoSubstituicao = NotaServico.normalizarTextoOpcional(
+      props.motivoSubstituicao,
+    );
 
     NotaServico.validarIdentificador(empresaId, 'Empresa');
     NotaServico.validarIdentificador(usuarioId, 'Usuário');
@@ -155,6 +181,12 @@ export class NotaServico {
       tributacaoIssqn,
       tipoRetencaoIssqn,
       informacoesComplementares: props.informacoesComplementares,
+    });
+    NotaServico.validarDadosSubstituicao({
+      notaSubstituidaId,
+      chaveAcessoSubstituida,
+      codigoMotivoSubstituicao,
+      motivoSubstituicao,
     });
     NotaServico.validarDataOpcional(
       props.dataAutorizacao,
@@ -181,6 +213,10 @@ export class NotaServico {
     this._tributacaoIssqn = tributacaoIssqn;
     this._tipoRetencaoIssqn = tipoRetencaoIssqn;
     this._informacoesComplementares = props.informacoesComplementares;
+    this._notaSubstituidaId = notaSubstituidaId;
+    this._chaveAcessoSubstituida = chaveAcessoSubstituida;
+    this._codigoMotivoSubstituicao = codigoMotivoSubstituicao;
+    this._motivoSubstituicao = motivoSubstituicao;
     this._valorServico = props.valorServico;
     this._valorIss = NotaServico.calcularIss(
       props.valorServico,
@@ -277,6 +313,24 @@ export class NotaServico {
 
   get informacoesComplementares(): string | undefined {
     return this._informacoesComplementares;
+  }
+
+  get notaSubstituidaId(): string | undefined {
+    return this._notaSubstituidaId;
+  }
+
+  get chaveAcessoSubstituida(): string | undefined {
+    return this._chaveAcessoSubstituida;
+  }
+
+  get codigoMotivoSubstituicao():
+    | CodigoMotivoSubstituicaoNfse
+    | undefined {
+    return this._codigoMotivoSubstituicao;
+  }
+
+  get motivoSubstituicao(): string | undefined {
+    return this._motivoSubstituicao;
   }
 
   get valorServico(): number {
@@ -591,6 +645,66 @@ export class NotaServico {
     const texto = valor?.trim();
 
     return texto ? texto : undefined;
+  }
+
+  private static normalizarChaveAcessoNfse(
+    valor?: string,
+  ): string | undefined {
+    const texto = valor?.replace(/\D/g, '');
+
+    return texto || undefined;
+  }
+
+  private static validarDadosSubstituicao(dados: {
+    notaSubstituidaId?: string;
+    chaveAcessoSubstituida?: string;
+    codigoMotivoSubstituicao?: CodigoMotivoSubstituicaoNfse;
+    motivoSubstituicao?: string;
+  }): void {
+    const possuiSubstituicao = Boolean(
+      dados.notaSubstituidaId ||
+        dados.chaveAcessoSubstituida ||
+        dados.codigoMotivoSubstituicao ||
+        dados.motivoSubstituicao,
+    );
+
+    if (!possuiSubstituicao) {
+      return;
+    }
+
+    NotaServico.validarTextoObrigatorio(
+      dados.notaSubstituidaId ?? '',
+      'Nota substituida',
+    );
+    NotaServico.validarTextoObrigatorio(
+      dados.chaveAcessoSubstituida ?? '',
+      'Chave de acesso substituida',
+    );
+    NotaServico.validarTextoObrigatorio(
+      dados.motivoSubstituicao ?? '',
+      'Motivo da substituicao',
+    );
+
+    if (!/^\d{50}$/.test(dados.chaveAcessoSubstituida ?? '')) {
+      throw new Error('Chave de acesso substituida deve conter 50 digitos.');
+    }
+
+    if (
+      !dados.codigoMotivoSubstituicao ||
+      !Object.values(CodigoMotivoSubstituicaoNfse).includes(
+        dados.codigoMotivoSubstituicao,
+      )
+    ) {
+      throw new Error('Codigo do motivo de substituicao invalido.');
+    }
+
+    const tamanhoMotivo = dados.motivoSubstituicao?.length ?? 0;
+
+    if (tamanhoMotivo < 15 || tamanhoMotivo > 255) {
+      throw new Error(
+        'Motivo da substituicao deve conter entre 15 e 255 caracteres.',
+      );
+    }
   }
 
   private static validarDataOpcional(data: Date | undefined, campo: string): void {

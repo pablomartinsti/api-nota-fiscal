@@ -536,6 +536,69 @@ describe('Gestao de rascunhos de notas de servico HTTP', () => {
     });
   });
 
+  it('deve criar rascunho de substituicao para uma NFS-e emitida', async () => {
+    const contexto = await criarContexto(PerfilUsuario.OPERADOR, '3509502');
+    const cliente = await criarCliente(contexto.empresa.id!);
+    const servico = await criarServico(
+      contexto.empresa.id!,
+      2,
+      true,
+      '010101',
+    );
+    const cadastro = await request(app)
+      .post('/notas-servico')
+      .set('Authorization', `Bearer ${contexto.token}`)
+      .send({
+        ...dadosRascunho(cliente.id!, servico.id!),
+        serieDps: '1',
+        numeroDps: '1',
+        dataCompetencia: '2026-06-17',
+        codigoMunicipioPrestacao: '3509502',
+      });
+
+    await prisma.notaServico.update({
+      where: { id: cadastro.body.id },
+      data: {
+        status: 'EMITIDA',
+        numeroNfse: '1',
+        protocoloEmissao:
+          'NFS35095022123456789012340000000000001234567890123456',
+        chaveAcesso: '12345678901234567890123456789012345678901234567890',
+        dataEmissao: new Date(),
+      },
+    });
+
+    const substituicao = await request(app)
+      .post(`/notas-servico/${cadastro.body.id}/substituir`)
+      .set('Authorization', `Bearer ${contexto.token}`)
+      .send({
+        clienteId: cliente.id,
+        servicoId: servico.id,
+        valorServico: 700,
+        descricao: 'Consultoria corrigida',
+        serieDps: '1',
+        numeroDps: '2',
+        dataCompetencia: '2026-06-17',
+        codigoMunicipioPrestacao: '3509502',
+        codigoMotivoSubstituicao: '99',
+        motivoSubstituicao: 'Correcao de dados da NFS-e em homologacao',
+      });
+    const original = await prisma.notaServico.findUnique({
+      where: { id: cadastro.body.id },
+    });
+
+    expect(substituicao.status).toBe(201);
+    expect(substituicao.body.id).not.toBe(cadastro.body.id);
+    expect(substituicao.body.status).toBe('RASCUNHO');
+    expect(substituicao.body.notaSubstituidaId).toBe(cadastro.body.id);
+    expect(substituicao.body.chaveAcessoSubstituida).toBe(
+      '12345678901234567890123456789012345678901234567890',
+    );
+    expect(substituicao.body.codigoMotivoSubstituicao).toBe('99');
+    expect(substituicao.body.valorServico).toBe(700);
+    expect(original?.status).toBe('EMITIDA');
+  });
+
   it('deve registrar falha, retornar para rascunho e manter isolamento', async () => {
     const contexto = await criarContexto();
     const outraEmpresa = await criarContexto();
