@@ -57,6 +57,7 @@ enum TipoRetencaoIssqn {
 enum StatusNota {
   RASCUNHO
   EMITIDA
+  SUBSTITUIDA
   CANCELADA
   ERRO
 }

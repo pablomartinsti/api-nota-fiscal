@@ -353,6 +353,23 @@ describe('NotaServico', () => {
     expect(nota.status).toBe(StatusNota.CANCELADA);
   });
 
+  it('deve marcar nota emitida como substituida', () => {
+    const nota = criarNota();
+
+    expect(() => nota.marcarComoSubstituida()).toThrow(
+      'Somente uma nota emitida pode ser marcada como substituida.',
+    );
+
+    nota.registrarSucessoFiscal({
+      numeroNfse: '1',
+      protocoloEmissao: 'PROTOCOLO-123',
+      chaveAcesso: '12345678901234567890123456789012345678901234567890',
+    });
+    nota.marcarComoSubstituida();
+
+    expect(nota.status).toBe(StatusNota.SUBSTITUIDA);
+  });
+
   it('deve permitir retornar para rascunho somente uma nota com erro', () => {
     const nota = criarNota();
 
@@ -414,7 +431,19 @@ describe('NotaServico', () => {
     expect(nota.status).toBe(StatusNota.CANCELADA);
   });
 
-  it.each([StatusNota.EMITIDA, StatusNota.CANCELADA])(
+  it('deve reconstruir uma nota substituida com dados fiscais', () => {
+    const nota = new NotaServico({
+      ...dadosBase,
+      status: StatusNota.SUBSTITUIDA,
+      numeroNfse: '100',
+      codigoVerificacao: 'ABC123',
+      dataEmissao: new Date(),
+    });
+
+    expect(nota.status).toBe(StatusNota.SUBSTITUIDA);
+  });
+
+  it.each([StatusNota.EMITIDA, StatusNota.SUBSTITUIDA, StatusNota.CANCELADA])(
     'deve rejeitar nota %s sem dados fiscais',
     (status) => {
       expect(

@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { NotaServico, StatusNota } from '../entities/NotaServico';
+import {
+  CodigoMotivoSubstituicaoNfse,
+  NotaServico,
+  NotaServicoProps,
+  StatusNota,
+} from '../entities/NotaServico';
 import { PerfilUsuario } from '../entities/Usuario';
 import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
@@ -16,7 +21,16 @@ const autenticacao = {
   perfil: PerfilUsuario.DONO,
 };
 
-function criarNota(status = StatusNota.RASCUNHO): NotaServico {
+function criarNota(
+  status = StatusNota.RASCUNHO,
+  props: Partial<NotaServicoProps> = {},
+): NotaServico {
+  const deveTerDadosFiscais = [
+    StatusNota.EMITIDA,
+    StatusNota.SUBSTITUIDA,
+    StatusNota.CANCELADA,
+  ].includes(status);
+
   return new NotaServico({
     id: 'nota-1',
     empresaId: 'empresa-1',
@@ -27,13 +41,14 @@ function criarNota(status = StatusNota.RASCUNHO): NotaServico {
     aliquotaIss: 5,
     descricao: 'Consultoria',
     status,
-    ...(status === StatusNota.EMITIDA
+    ...(deveTerDadosFiscais
       ? {
           numeroNfse: '100',
           codigoVerificacao: 'ABC123',
           dataEmissao: new Date('2026-06-16T10:00:00.000Z'),
         }
       : {}),
+    ...props,
   });
 }
 
@@ -110,6 +125,81 @@ describe('EnviarDpsAssinadaNotaServicoService', () => {
     );
   });
 
+  it('deve marcar nota original como substituida ao emitir substituta', async () => {
+    const notaOriginal = criarNota(StatusNota.EMITIDA, {
+      id: 'nota-original-1',
+      chaveAcesso: '12345678901234567890123456789012345678901234567890',
+    });
+    const notaSubstituta = criarNota(StatusNota.RASCUNHO, {
+      id: 'nota-substituta-1',
+      notaSubstituidaId: 'nota-original-1',
+      chaveAcessoSubstituida:
+        '12345678901234567890123456789012345678901234567890',
+      codigoMotivoSubstituicao: CodigoMotivoSubstituicaoNfse.OUTROS,
+      motivoSubstituicao: 'Correcao de dados da NFS-e em homologacao',
+    });
+    const { service, buscarPorIdEEmpresaId, salvar } =
+      criarService(notaSubstituta);
+
+    buscarPorIdEEmpresaId.mockImplementation(async (id: string) => {
+      if (id === 'nota-substituta-1') {
+        return notaSubstituta;
+      }
+
+      if (id === 'nota-original-1') {
+        return notaOriginal;
+      }
+
+      return null;
+    });
+
+    const resultado = await service.executar(
+      autenticacao,
+      'nota-substituta-1',
+    );
+
+    expect(resultado.status).toBe(StatusNota.EMITIDA);
+    expect(salvar).toHaveBeenCalledTimes(2);
+    expect(salvar.mock.calls[0][0].status).toBe(StatusNota.EMITIDA);
+    expect(salvar.mock.calls[1][0].status).toBe(StatusNota.SUBSTITUIDA);
+    expect(notaOriginal.status).toBe(StatusNota.SUBSTITUIDA);
+  });
+
+  it('nao deve enviar substituta quando nota original nao esta emitida', async () => {
+    const notaOriginal = criarNota(StatusNota.CANCELADA, {
+      id: 'nota-original-1',
+      chaveAcesso: '12345678901234567890123456789012345678901234567890',
+    });
+    const notaSubstituta = criarNota(StatusNota.RASCUNHO, {
+      id: 'nota-substituta-1',
+      notaSubstituidaId: 'nota-original-1',
+      chaveAcessoSubstituida:
+        '12345678901234567890123456789012345678901234567890',
+      codigoMotivoSubstituicao: CodigoMotivoSubstituicaoNfse.OUTROS,
+      motivoSubstituicao: 'Correcao de dados da NFS-e em homologacao',
+    });
+    const { service, buscarPorIdEEmpresaId, clienteNfse, salvar } =
+      criarService(notaSubstituta);
+
+    buscarPorIdEEmpresaId.mockImplementation(async (id: string) => {
+      if (id === 'nota-substituta-1') {
+        return notaSubstituta;
+      }
+
+      if (id === 'nota-original-1') {
+        return notaOriginal;
+      }
+
+      return null;
+    });
+
+    await expect(
+      service.executar(autenticacao, 'nota-substituta-1'),
+    ).rejects.toBeInstanceOf(TransicaoStatusNotaInvalidaError);
+    expect(clienteNfse.enviarDpsAssinada).not.toHaveBeenCalled();
+    expect(salvar).not.toHaveBeenCalled();
+  });
+
   it('nao deve enviar nota inexistente ou de outra empresa', async () => {
     const { service, clienteNfse } = criarService(null);
 
@@ -148,11 +238,13 @@ function criarService(nota: NotaServico | null): {
   gerarXml: GerarXmlDpsAssinadoNotaServicoService;
   clienteNfse: ClienteNfseNacional;
   salvar: ReturnType<typeof vi.fn>;
+  buscarPorIdEEmpresaId: ReturnType<typeof vi.fn>;
 } {
   const salvar = vi.fn(async (notaParaSalvar: NotaServico) => notaParaSalvar);
+  const buscarPorIdEEmpresaId = vi.fn().mockResolvedValue(nota);
   const notaRepository: NotaServicoRepository = {
     salvar,
-    buscarPorIdEEmpresaId: vi.fn().mockResolvedValue(nota),
+    buscarPorIdEEmpresaId,
     listarPorEmpresaId: vi.fn(),
   };
   const gerarXml = {
@@ -180,5 +272,6 @@ function criarService(nota: NotaServico | null): {
     gerarXml,
     clienteNfse,
     salvar,
+    buscarPorIdEEmpresaId,
   };
 }

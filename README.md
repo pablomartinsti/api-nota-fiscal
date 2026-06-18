@@ -183,8 +183,10 @@ NotaServico conforme o retorno recebido. A rota
 `POST /notas-servico/:notaId/cancelar-nfse` registra o evento oficial de
 cancelamento e so muda a nota para `CANCELADA` se a SEFIN aceitar. A rota
 `POST /notas-servico/:notaId/substituir` cria um novo rascunho com vinculo para
-a NFS-e substituida; depois esse rascunho usa o envio fiscal normal. A rota
-antiga `POST /notas-servico/:notaId/emitir` ainda usa o emissor simulado.
+a NFS-e substituida; depois esse rascunho usa o envio fiscal normal. Quando a
+SEFIN aceita a DPS substituidora, a nota original passa para `SUBSTITUIDA` no
+sistema. A rota antiga `POST /notas-servico/:notaId/emitir` ainda usa o emissor
+simulado.
 
 Variaveis fiscais:
 

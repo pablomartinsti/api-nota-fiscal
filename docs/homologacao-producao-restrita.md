@@ -293,6 +293,10 @@ Depois envie a DPS da nota substituta normalmente:
 POST /notas-servico/:notaSubstitutaId/enviar-dps
 ```
 
+Ao criar o rascunho de substituicao, a nota original continua `EMITIDA`.
+Quando a SEFIN aceita a DPS substituidora, a nota substituta fica `EMITIDA` e
+a nota original passa para `SUBSTITUIDA` no sistema.
+
 Codigos de motivo aceitos para substituicao:
 
 - `01`: desenquadramento do Simples Nacional;

@@ -1,6 +1,7 @@
 export enum StatusNota {
   RASCUNHO = 'RASCUNHO',
   EMITIDA = 'EMITIDA',
+  SUBSTITUIDA = 'SUBSTITUIDA',
   CANCELADA = 'CANCELADA',
   ERRO = 'ERRO',
 }
@@ -533,6 +534,17 @@ export class NotaServico {
     this.atualizarDataDeAlteracao();
   }
 
+  marcarComoSubstituida(): void {
+    if (this._status !== StatusNota.EMITIDA) {
+      throw new Error(
+        'Somente uma nota emitida pode ser marcada como substituida.',
+      );
+    }
+
+    this._status = StatusNota.SUBSTITUIDA;
+    this.atualizarDataDeAlteracao();
+  }
+
   private static calcularIss(valorServico: number, aliquotaIss: number): number {
     const valorIss = valorServico * (aliquotaIss / 100);
 
@@ -716,6 +728,7 @@ export class NotaServico {
   private validarDadosDoStatus(): void {
     if (
       this._status === StatusNota.EMITIDA ||
+      this._status === StatusNota.SUBSTITUIDA ||
       this._status === StatusNota.CANCELADA
     ) {
       const numeroNfse = this._numeroNfse?.trim() ?? '';

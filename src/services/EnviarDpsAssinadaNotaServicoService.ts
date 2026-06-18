@@ -36,6 +36,9 @@ export class EnviarDpsAssinadaNotaServicoService {
       );
     }
 
+    const notaSubstituida =
+      await this.buscarNotaSubstituidaParaEmissao(autenticacao, nota);
+
     const xmlAssinado = await this.gerarXmlDpsAssinadoService.executar(
       autenticacao,
       notaId,
@@ -66,7 +69,41 @@ export class EnviarDpsAssinadaNotaServicoService {
       xmlAutorizado: resultado.xmlAutorizado,
     });
 
-    return this.notaRepository.salvar(nota);
+    const notaEmitida = await this.notaRepository.salvar(nota);
+
+    if (notaSubstituida) {
+      notaSubstituida.marcarComoSubstituida();
+      await this.notaRepository.salvar(notaSubstituida);
+    }
+
+    return notaEmitida;
+  }
+
+  private async buscarNotaSubstituidaParaEmissao(
+    autenticacao: TokenPayload,
+    nota: NotaServico,
+  ): Promise<NotaServico | null> {
+    if (!nota.notaSubstituidaId) {
+      return null;
+    }
+
+    const notaSubstituida =
+      await this.notaRepository.buscarPorIdEEmpresaId(
+        nota.notaSubstituidaId,
+        autenticacao.empresaId,
+      );
+
+    if (!notaSubstituida) {
+      throw new NotaServicoNaoEncontradaError();
+    }
+
+    if (notaSubstituida.status !== StatusNota.EMITIDA) {
+      throw new TransicaoStatusNotaInvalidaError(
+        'Somente uma nota emitida pode ser substituida.',
+      );
+    }
+
+    return notaSubstituida;
   }
 
   private criarMensagemErroFiscal(erros?: ErroEnvioDpsNfse[]): string {
