@@ -87,6 +87,11 @@ GET /empresa/configuracao-fiscal
 
 A senha do certificado nao e retornada pela API.
 
+Quando `certificadoA1Path` e `certificadoA1Senha` forem enviados, a API tenta
+abrir o arquivo A1, valida a senha, confere a validade do certificado e compara
+o CNPJ do certificado com o CNPJ da empresa autenticada. Se houver erro, a
+configuracao fiscal nao e salva.
+
 ## 3. Checagem local
 
 Antes de enviar qualquer DPS, rode:

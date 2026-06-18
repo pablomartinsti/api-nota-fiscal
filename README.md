@@ -226,7 +226,10 @@ Exemplo para atualizar a configuracao fiscal da empresa autenticada:
 ```
 
 A resposta nunca retorna `certificadoA1Senha`; ela informa apenas
-`certificadoA1SenhaConfigurada`.
+`certificadoA1SenhaConfigurada`. Quando `certificadoA1Path` e
+`certificadoA1Senha` forem informados, a API valida o arquivo A1, a senha, a
+validade do certificado e se o CNPJ do certificado pertence a empresa
+autenticada antes de salvar a configuracao.
 
 Antes da emissao real completa, sera necessario armazenar certificados digitais
 por empresa com seguranca e evoluir os demais endpoints fiscais, como consulta

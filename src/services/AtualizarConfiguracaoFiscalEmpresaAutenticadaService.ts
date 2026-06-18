@@ -2,7 +2,15 @@ import {
   AlterarConfiguracaoFiscalEmpresaProps,
   ConfiguracaoFiscalEmpresa,
 } from '../entities/ConfiguracaoFiscalEmpresa';
+import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
+import { CertificadoA1CnpjDivergenteError } from '../errors/CertificadoA1CnpjDivergenteError';
+import { ProvedorCertificadoA1 } from '../fiscal/CertificadoA1';
+import {
+  ConfiguracaoCertificadoA1,
+  ProvedorCertificadoA1Arquivo,
+} from '../fiscal/ProvedorCertificadoA1Arquivo';
 import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
+import { EmpresaRepository } from '../repositories/EmpresaRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
 
 export interface AtualizarConfiguracaoFiscalEmpresaAutenticadaInput {
@@ -12,9 +20,17 @@ export interface AtualizarConfiguracaoFiscalEmpresaAutenticadaInput {
   certificadoA1Senha?: string | null;
 }
 
+export type CriarProvedorCertificadoA1 = (
+  configuracao: ConfiguracaoCertificadoA1,
+) => ProvedorCertificadoA1;
+
 export class AtualizarConfiguracaoFiscalEmpresaAutenticadaService {
   constructor(
     private readonly configuracaoFiscalRepository: ConfiguracaoFiscalEmpresaRepository,
+    private readonly empresaRepository: EmpresaRepository,
+    private readonly criarProvedorCertificado: CriarProvedorCertificadoA1 = (
+      configuracao,
+    ) => new ProvedorCertificadoA1Arquivo(() => configuracao),
   ) {}
 
   async executar(
@@ -29,6 +45,14 @@ export class AtualizarConfiguracaoFiscalEmpresaAutenticadaService {
       dados,
       configuracaoExistente,
     );
+
+    if (this.deveValidarCertificado(dados)) {
+      await this.validarCertificadoDaEmpresa(
+        autenticacao.empresaId,
+        dadosAlteracao,
+      );
+    }
+
     const configuracao =
       configuracaoExistente ??
       new ConfiguracaoFiscalEmpresa({
@@ -39,6 +63,39 @@ export class AtualizarConfiguracaoFiscalEmpresaAutenticadaService {
     configuracao.ativar();
 
     return this.configuracaoFiscalRepository.salvar(configuracao);
+  }
+
+  private deveValidarCertificado(
+    dados: AtualizarConfiguracaoFiscalEmpresaAutenticadaInput,
+  ): boolean {
+    return (
+      dados.certificadoA1Path !== undefined ||
+      dados.certificadoA1Senha !== undefined
+    );
+  }
+
+  private async validarCertificadoDaEmpresa(
+    empresaId: string,
+    dados: AlterarConfiguracaoFiscalEmpresaProps,
+  ): Promise<void> {
+    if (!dados.certificadoA1Path || !dados.certificadoA1Senha) {
+      return;
+    }
+
+    const empresa = await this.empresaRepository.buscarPorId(empresaId);
+
+    if (!empresa) {
+      throw new AutenticacaoInvalidaError();
+    }
+
+    const certificado = await this.criarProvedorCertificado({
+      caminho: dados.certificadoA1Path,
+      senha: dados.certificadoA1Senha,
+    }).obter();
+
+    if (certificado.cnpj !== empresa.cnpj) {
+      throw new CertificadoA1CnpjDivergenteError();
+    }
   }
 
   private criarDadosAlteracao(

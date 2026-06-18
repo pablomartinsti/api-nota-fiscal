@@ -19,6 +19,7 @@ export function criarGestaoEmpresaController(): GestaoEmpresaController {
     ),
     new AtualizarConfiguracaoFiscalEmpresaAutenticadaService(
       configuracaoFiscalRepository,
+      empresaRepository,
     ),
   );
 }
