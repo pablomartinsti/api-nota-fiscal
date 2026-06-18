@@ -7,7 +7,6 @@ const NAMESPACE_NFSE = 'http://www.sped.fazenda.gov.br/nfse';
 const VERSAO_LAYOUT = '1.01';
 const VERSAO_APLICACAO = 'api-nota-fiscal-1.0';
 const TIPO_EVENTO_CANCELAMENTO = '101101';
-const NUMERO_PEDIDO_REGISTRO_EVENTO = '001';
 
 type ElementoXml = ReturnType<typeof create>;
 
@@ -78,7 +77,7 @@ export class GeradorXmlPedidoCancelamentoNfseNacional {
   }
 
   private criarIdPedidoRegistroEvento(chaveAcesso: string): string {
-    return `PRE${chaveAcesso}${TIPO_EVENTO_CANCELAMENTO}${NUMERO_PEDIDO_REGISTRO_EVENTO}`;
+    return `PRE${chaveAcesso}${TIPO_EVENTO_CANCELAMENTO}`;
   }
 
   private mapearAmbiente(ambiente: AmbienteFiscal): string {

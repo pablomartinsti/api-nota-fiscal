@@ -20,7 +20,7 @@ describe('GeradorXmlPedidoCancelamentoNfseNacional', () => {
       '<pedRegEvento xmlns="http://www.sped.fazenda.gov.br/nfse" versao="1.01">',
     );
     expect(xml).toContain(
-      `<infPedReg Id="PRE${chaveAcesso}101101001">`,
+      `<infPedReg Id="PRE${chaveAcesso}101101">`,
     );
     expect(xml).toContain('<tpAmb>2</tpAmb>');
     expect(xml).toContain('<verAplic>api-nota-fiscal-1.0</verAplic>');
