@@ -9,6 +9,7 @@ import {
 } from '../entities/NotaServico';
 import { PerfilUsuario } from '../entities/Usuario';
 import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
+import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { ProducaoRealBloqueadaError } from '../errors/ProducaoRealBloqueadaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
@@ -16,6 +17,7 @@ import { ClienteNfseNacional } from '../fiscal/ClienteNfseNacional';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { GerarXmlDpsAssinadoNotaServicoService } from './GerarXmlDpsAssinadoNotaServicoService';
 import { EnviarDpsAssinadaNotaServicoService } from './EnviarDpsAssinadaNotaServicoService';
+import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
 
 const autenticacao = {
@@ -251,11 +253,47 @@ describe('EnviarDpsAssinadaNotaServicoService', () => {
     expect(clienteNfse.enviarDpsAssinada).not.toHaveBeenCalled();
     expect(salvar).not.toHaveBeenCalled();
   });
+
+  it('deve bloquear producao real sem certificado proprio da empresa', async () => {
+    const nota = criarNota(StatusNota.RASCUNHO, {
+      ambienteFiscal: AmbienteFiscal.PRODUCAO,
+    });
+    const { service, clienteNfse, gerarXml, salvar } = criarService(nota);
+
+    await expect(
+      service.executar(autenticacao, 'nota-1'),
+    ).rejects.toBeInstanceOf(CertificadoA1EmpresaProducaoAusenteError);
+    expect(gerarXml.executar).not.toHaveBeenCalled();
+    expect(clienteNfse.enviarDpsAssinada).not.toHaveBeenCalled();
+    expect(salvar).not.toHaveBeenCalled();
+  });
+
+  it('deve permitir producao real com certificado proprio da empresa', async () => {
+    const nota = criarNota(StatusNota.RASCUNHO, {
+      ambienteFiscal: AmbienteFiscal.PRODUCAO,
+    });
+    const resolverConfiguracaoFiscal =
+      criarResolverComCertificadoEmpresa();
+    const { service, clienteNfse } = criarService(
+      nota,
+      true,
+      resolverConfiguracaoFiscal,
+    );
+
+    await service.executar(autenticacao, 'nota-1');
+
+    expect(clienteNfse.enviarDpsAssinada).toHaveBeenCalledWith({
+      xmlAssinado: '<DPS>assinado</DPS>',
+      certificadoPath: 'C:/certificados/empresa.pfx',
+      certificadoSenha: 'senha-empresa',
+    });
+  });
 });
 
 function criarService(
   nota: NotaServico | null,
   permitirProducaoReal = true,
+  resolverConfiguracaoFiscal?: ResolverConfiguracaoFiscalEmpresaService,
 ): {
   service: EnviarDpsAssinadaNotaServicoService;
   gerarXml: GerarXmlDpsAssinadoNotaServicoService;
@@ -292,7 +330,7 @@ function criarService(
       notaRepository,
       gerarXml,
       clienteNfse,
-      undefined,
+      resolverConfiguracaoFiscal,
       new ValidarPermissaoProducaoRealService(permitirProducaoReal),
     ),
     gerarXml,
@@ -300,4 +338,13 @@ function criarService(
     salvar,
     buscarPorIdEEmpresaId,
   };
+}
+
+function criarResolverComCertificadoEmpresa() {
+  return {
+    obterCertificadoA1ParaAmbiente: vi.fn().mockResolvedValue({
+      caminho: 'C:/certificados/empresa.pfx',
+      senha: 'senha-empresa',
+    }),
+  } as unknown as ResolverConfiguracaoFiscalEmpresaService;
 }

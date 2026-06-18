@@ -7,6 +7,7 @@ import {
   StatusNota,
 } from '../entities/NotaServico';
 import { PerfilUsuario } from '../entities/Usuario';
+import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { ProducaoRealBloqueadaError } from '../errors/ProducaoRealBloqueadaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
@@ -107,6 +108,18 @@ describe('CriarRascunhoSubstituicaoNotaServicoService', () => {
     await expect(
       service.executar(autenticacao, 'nota-original-1', dadosSubstituicao()),
     ).rejects.toBeInstanceOf(ProducaoRealBloqueadaError);
+    expect(validarReferencias.executar).not.toHaveBeenCalled();
+    expect(salvar).not.toHaveBeenCalled();
+  });
+
+  it('deve bloquear substituicao em producao real sem certificado proprio da empresa', async () => {
+    const notaSubstituida = criarNotaEmitida(AmbienteFiscal.PRODUCAO);
+    const { service, salvar, validarReferencias } =
+      criarService(notaSubstituida);
+
+    await expect(
+      service.executar(autenticacao, 'nota-original-1', dadosSubstituicao()),
+    ).rejects.toBeInstanceOf(CertificadoA1EmpresaProducaoAusenteError);
     expect(validarReferencias.executar).not.toHaveBeenCalled();
     expect(salvar).not.toHaveBeenCalled();
   });

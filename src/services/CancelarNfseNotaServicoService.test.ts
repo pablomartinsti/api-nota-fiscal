@@ -9,6 +9,7 @@ import {
 import { PerfilUsuario } from '../entities/Usuario';
 import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
 import { CertificadoA1CnpjDivergenteError } from '../errors/CertificadoA1CnpjDivergenteError';
+import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { ProducaoRealBloqueadaError } from '../errors/ProducaoRealBloqueadaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
@@ -20,6 +21,7 @@ import { AssinadorXmlDps } from '../fiscal/AssinadorXmlDps';
 import { EmpresaRepository } from '../repositories/EmpresaRepository';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { CancelarNfseNotaServicoService } from './CancelarNfseNotaServicoService';
+import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
 
 const autenticacao = {
@@ -146,6 +148,23 @@ describe('CancelarNfseNotaServicoService', () => {
     expect(clienteNfse.registrarEventoCancelamento).not.toHaveBeenCalled();
     expect(salvar).not.toHaveBeenCalled();
   });
+
+  it('deve bloquear cancelamento em producao real sem certificado proprio da empresa', async () => {
+    const nota = criarNotaEmitida(AmbienteFiscal.PRODUCAO);
+    const { service, clienteNfse, salvar, validadorXml } = criarService({
+      nota,
+    });
+
+    await expect(
+      service.executar(autenticacao, 'nota-1', {
+        codigoMotivo: '1',
+        motivo: 'Erro na emissao em ambiente de homologacao',
+      }),
+    ).rejects.toBeInstanceOf(CertificadoA1EmpresaProducaoAusenteError);
+    expect(validadorXml.validar).not.toHaveBeenCalled();
+    expect(clienteNfse.registrarEventoCancelamento).not.toHaveBeenCalled();
+    expect(salvar).not.toHaveBeenCalled();
+  });
 });
 
 function criarService(props?: {
@@ -153,6 +172,7 @@ function criarService(props?: {
   empresa?: Empresa | null;
   certificadoCnpj?: string;
   permitirProducaoReal?: boolean;
+  resolverConfiguracaoFiscal?: ResolverConfiguracaoFiscalEmpresaService;
 }) {
   const nota = props?.nota === undefined ? criarNotaEmitida() : props.nota;
   const empresa = props?.empresa === undefined ? criarEmpresa() : props.empresa;
@@ -208,7 +228,7 @@ function criarService(props?: {
       provedorCertificado,
       assinadorXml,
       clienteNfse,
-      undefined,
+      props?.resolverConfiguracaoFiscal,
       new ValidarPermissaoProducaoRealService(
         props?.permitirProducaoReal ?? true,
       ),

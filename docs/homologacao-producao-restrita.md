@@ -68,7 +68,8 @@ Observacao: o banco ja possui a tabela de configuracao fiscal por empresa. O
 fluxo fiscal ja usa essa configuracao para ambiente fiscal padrao, serie padrao
 da DPS e certificado A1 quando esses dados estiverem cadastrados para a empresa.
 Enquanto a empresa ainda nao tiver configuracao ativa ou certificado completo,
-o `.env` global continua sendo usado como fallback temporario.
+o `.env` global continua sendo usado como fallback temporario apenas em
+`HOMOLOGACAO`.
 
 Para cadastrar a configuracao fiscal pela API, use a rota autenticada:
 
@@ -115,6 +116,11 @@ NFSE_PERMITIR_PRODUCAO_REAL="false"
 So altere para `true` quando a empresa estiver pronta para emitir em producao
 real, com certificado correto, dados fiscais revisados e decisao consciente de
 ativar o ambiente oficial.
+
+Mesmo com essa variavel habilitada, producao real exige certificado A1
+configurado na propria empresa pela rota `PUT /empresa/configuracao-fiscal`.
+O certificado global do `.env` nao e usado como fallback para notas em
+`PRODUCAO`.
 
 ## 3. Checagem local
 

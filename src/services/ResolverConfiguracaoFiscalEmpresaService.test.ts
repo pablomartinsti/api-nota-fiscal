@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ConfiguracaoFiscalEmpresa } from '../entities/ConfiguracaoFiscalEmpresa';
 import { AmbienteFiscal } from '../entities/NotaServico';
+import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
 import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
 import { CifradorTexto } from '../security/CifradorTexto';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
@@ -67,6 +68,28 @@ describe('ResolverConfiguracaoFiscalEmpresaService', () => {
 
     expect(configuracao.certificadoA1Senha).toBe('criptografado:senha');
     expect(certificado?.senha).toBe('senha-aberta');
+  });
+
+  it('deve permitir fallback global apenas em homologacao', async () => {
+    const service = criarService(null);
+
+    await expect(
+      service.obterCertificadoA1ParaAmbiente(
+        'empresa-1',
+        AmbienteFiscal.HOMOLOGACAO,
+      ),
+    ).resolves.toBeUndefined();
+  });
+
+  it('deve bloquear producao real sem certificado proprio da empresa', async () => {
+    const service = criarService(null);
+
+    await expect(
+      service.obterCertificadoA1ParaAmbiente(
+        'empresa-1',
+        AmbienteFiscal.PRODUCAO,
+      ),
+    ).rejects.toBeInstanceOf(CertificadoA1EmpresaProducaoAusenteError);
   });
 });
 

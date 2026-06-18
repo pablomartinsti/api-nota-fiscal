@@ -76,6 +76,7 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     })),
     new AssinadorXmlDpsXmlDsig(),
     resolverConfiguracaoFiscal,
+    notaRepository,
   );
   const clienteNfse = new ClienteHttpSefinNacional(() => ({
     baseUrl: env.NFSE_SEFIN_BASE_URL,

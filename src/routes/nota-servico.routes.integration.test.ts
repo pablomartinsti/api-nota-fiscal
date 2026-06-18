@@ -318,8 +318,6 @@ describe('Gestao de rascunhos de notas de servico HTTP', () => {
       expect.arrayContaining([
         'empresa.codigoMunicipioIbge',
         'servico.codigoTributacaoNacional',
-        'nota.serieDps',
-        'nota.numeroDps',
         'nota.dataCompetencia',
         'nota.codigoMunicipioPrestacao',
       ]),
@@ -427,15 +425,13 @@ describe('Gestao de rascunhos de notas de servico HTTP', () => {
       expect.arrayContaining([
         'empresa.codigoMunicipioIbge',
         'servico.codigoTributacaoNacional',
-        'nota.serieDps',
-        'nota.numeroDps',
         'nota.dataCompetencia',
         'nota.codigoMunicipioPrestacao',
       ]),
     );
   });
 
-  it('deve exigir configuracao fiscal para gerar XML assinado', async () => {
+  it('deve bloquear XML assinado em producao sem certificado proprio da empresa', async () => {
     const contexto = await criarContexto(PerfilUsuario.OPERADOR, '3509502');
     const cliente = await criarCliente(contexto.empresa.id!);
     const servico = await criarServico(
@@ -454,18 +450,25 @@ describe('Gestao de rascunhos de notas de servico HTTP', () => {
         dataCompetencia: '2026-06-15',
         codigoMunicipioPrestacao: '3509502',
       });
+
+    await prisma.notaServico.update({
+      where: { id: cadastro.body.id },
+      data: {
+        ambienteFiscal: 'PRODUCAO',
+      },
+    });
 
     const geracao = await request(app)
       .get(`/notas-servico/${cadastro.body.id}/xml-dps-assinado`)
       .set('Authorization', `Bearer ${contexto.token}`);
 
-    expect(geracao.status).toBe(503);
-    expect(geracao.body).toEqual({
-      message: 'Configuracao fiscal para assinatura da DPS nao foi informada.',
-    });
+    expect(geracao.status).toBe(409);
+    expect(geracao.body.message).toBe(
+      'Producao real exige certificado A1 configurado na propria empresa. Atualize a configuracao fiscal da empresa antes de continuar.',
+    );
   });
 
-  it('deve exigir configuracao fiscal para enviar DPS assinada', async () => {
+  it('deve bloquear envio de DPS em producao sem configuracao segura', async () => {
     const contexto = await criarContexto(PerfilUsuario.OPERADOR, '3509502');
     const cliente = await criarCliente(contexto.empresa.id!);
     const servico = await criarServico(
@@ -484,19 +487,27 @@ describe('Gestao de rascunhos de notas de servico HTTP', () => {
         dataCompetencia: '2026-06-15',
         codigoMunicipioPrestacao: '3509502',
       });
+
+    await prisma.notaServico.update({
+      where: { id: cadastro.body.id },
+      data: {
+        ambienteFiscal: 'PRODUCAO',
+      },
+    });
 
     const envio = await request(app)
       .post(`/notas-servico/${cadastro.body.id}/enviar-dps`)
       .set('Authorization', `Bearer ${contexto.token}`)
       .send({});
 
-    expect(envio.status).toBe(503);
-    expect(envio.body).toEqual({
-      message: 'Configuracao fiscal para assinatura da DPS nao foi informada.',
-    });
+    expect(envio.status).toBe(409);
+    expect([
+      'Operacao em producao real bloqueada por seguranca. Configure NFSE_PERMITIR_PRODUCAO_REAL=true para permitir.',
+      'Producao real exige certificado A1 configurado na propria empresa. Atualize a configuracao fiscal da empresa antes de continuar.',
+    ]).toContain(envio.body.message);
   });
 
-  it('deve exigir configuracao fiscal para consultar NFS-e emitida na SEFIN', async () => {
+  it('deve bloquear consulta de NFS-e em producao sem configuracao segura', async () => {
     const contexto = await criarContexto(PerfilUsuario.OPERADOR, '3509502');
     const cliente = await criarCliente(contexto.empresa.id!);
     const servico = await criarServico(
@@ -520,6 +531,7 @@ describe('Gestao de rascunhos de notas de servico HTTP', () => {
       where: { id: cadastro.body.id },
       data: {
         status: 'EMITIDA',
+        ambienteFiscal: 'PRODUCAO',
         numeroNfse: '100',
         chaveAcesso: '12345678901234567890123456789012345678901234567890',
         dataEmissao: new Date(),
@@ -530,10 +542,11 @@ describe('Gestao de rascunhos de notas de servico HTTP', () => {
       .get(`/notas-servico/${cadastro.body.id}/consulta-nfse`)
       .set('Authorization', `Bearer ${contexto.token}`);
 
-    expect(consulta.status).toBe(503);
-    expect(consulta.body).toEqual({
-      message: 'Configuracao fiscal para assinatura da DPS nao foi informada.',
-    });
+    expect(consulta.status).toBe(409);
+    expect([
+      'Operacao em producao real bloqueada por seguranca. Configure NFSE_PERMITIR_PRODUCAO_REAL=true para permitir.',
+      'Producao real exige certificado A1 configurado na propria empresa. Atualize a configuracao fiscal da empresa antes de continuar.',
+    ]).toContain(consulta.body.message);
   });
 
   it('deve criar rascunho de substituicao para uma NFS-e emitida', async () => {

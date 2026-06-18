@@ -1,4 +1,5 @@
-import { StatusNota } from '../entities/NotaServico';
+import { AmbienteFiscal, StatusNota } from '../entities/NotaServico';
+import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import {
@@ -60,6 +61,7 @@ export class ConsultarNfseEmitidaNotaServicoService {
     const resultado = await this.clienteNfse.consultarNfsePorChave(
       await this.criarInputConsultaNfse(
         autenticacao.empresaId,
+        nota.ambienteFiscal,
         nota.chaveAcesso,
       ),
     );
@@ -79,10 +81,13 @@ export class ConsultarNfseEmitidaNotaServicoService {
 
   private async criarInputConsultaNfse(
     empresaId: string,
+    ambienteFiscal: AmbienteFiscal,
     chaveAcesso: string,
   ) {
-    const configuracaoCertificado =
-      await this.resolverConfiguracaoFiscal?.obterCertificadoA1(empresaId);
+    const configuracaoCertificado = await this.obterConfiguracaoCertificado(
+      empresaId,
+      ambienteFiscal,
+    );
 
     if (!configuracaoCertificado) {
       return { chaveAcesso };
@@ -93,5 +98,23 @@ export class ConsultarNfseEmitidaNotaServicoService {
       certificadoPath: configuracaoCertificado.caminho,
       certificadoSenha: configuracaoCertificado.senha,
     };
+  }
+
+  private async obterConfiguracaoCertificado(
+    empresaId: string,
+    ambienteFiscal: AmbienteFiscal,
+  ) {
+    if (!this.resolverConfiguracaoFiscal) {
+      if (ambienteFiscal === AmbienteFiscal.PRODUCAO) {
+        throw new CertificadoA1EmpresaProducaoAusenteError();
+      }
+
+      return undefined;
+    }
+
+    return this.resolverConfiguracaoFiscal.obterCertificadoA1ParaAmbiente(
+      empresaId,
+      ambienteFiscal,
+    );
   }
 }

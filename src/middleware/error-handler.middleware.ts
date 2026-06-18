@@ -6,6 +6,7 @@ import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
 import { ClienteNaoEncontradoError } from '../errors/ClienteNaoEncontradoError';
 import { ClienteInativoError } from '../errors/ClienteInativoError';
 import { CertificadoA1CnpjDivergenteError } from '../errors/CertificadoA1CnpjDivergenteError';
+import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
 import { CertificadoA1InvalidoError } from '../errors/CertificadoA1InvalidoError';
 import { ChaveCriptografiaAusenteError } from '../errors/ChaveCriptografiaAusenteError';
 import { CnpjJaCadastradoError } from '../errors/CnpjJaCadastradoError';
@@ -66,6 +67,13 @@ export const errorHandler: ErrorRequestHandler = (
   }
 
   if (error instanceof ProducaoRealBloqueadaError) {
+    response.status(409).json({
+      message: error.message,
+    });
+    return;
+  }
+
+  if (error instanceof CertificadoA1EmpresaProducaoAusenteError) {
     response.status(409).json({
       message: error.message,
     });

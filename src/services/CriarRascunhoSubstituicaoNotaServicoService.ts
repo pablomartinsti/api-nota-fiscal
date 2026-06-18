@@ -58,6 +58,10 @@ export class CriarRascunhoSubstituicaoNotaServicoService {
     this.validarPermissaoProducaoReal?.executar(
       notaSubstituida.ambienteFiscal,
     );
+    await this.resolverConfiguracaoFiscal.obterCertificadoA1ParaAmbiente(
+      autenticacao.empresaId,
+      notaSubstituida.ambienteFiscal,
+    );
 
     const { servico } = await this.validarReferencias.executar(
       autenticacao.empresaId,

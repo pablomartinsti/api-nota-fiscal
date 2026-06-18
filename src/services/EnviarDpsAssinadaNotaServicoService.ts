@@ -1,9 +1,14 @@
-import { NotaServico, StatusNota } from '../entities/NotaServico';
+import {
+  AmbienteFiscal,
+  NotaServico,
+  StatusNota,
+} from '../entities/NotaServico';
 import {
   ClienteNfseNacional,
   ErroEnvioDpsNfse,
   ResultadoEnvioDpsNfse,
 } from '../fiscal/ClienteNfseNacional';
+import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
@@ -44,13 +49,21 @@ export class EnviarDpsAssinadaNotaServicoService {
       await this.buscarNotaSubstituidaParaEmissao(autenticacao, nota);
 
     this.validarPermissaoProducaoReal?.executar(nota.ambienteFiscal);
+    await this.obterConfiguracaoCertificado(
+      autenticacao.empresaId,
+      nota.ambienteFiscal,
+    );
 
     const xmlAssinado = await this.gerarXmlDpsAssinadoService.executar(
       autenticacao,
       notaId,
     );
     const resultado = await this.clienteNfse.enviarDpsAssinada(
-      await this.criarInputEnvioDps(autenticacao.empresaId, xmlAssinado),
+      await this.criarInputEnvioDps(
+        autenticacao.empresaId,
+        nota.ambienteFiscal,
+        xmlAssinado,
+      ),
     );
 
     if (!resultado.sucesso) {
@@ -128,10 +141,13 @@ export class EnviarDpsAssinadaNotaServicoService {
 
   private async criarInputEnvioDps(
     empresaId: string,
+    ambienteFiscal: AmbienteFiscal,
     xmlAssinado: string,
   ) {
-    const configuracaoCertificado =
-      await this.resolverConfiguracaoFiscal?.obterCertificadoA1(empresaId);
+    const configuracaoCertificado = await this.obterConfiguracaoCertificado(
+      empresaId,
+      ambienteFiscal,
+    );
 
     if (!configuracaoCertificado) {
       return { xmlAssinado };
@@ -142,5 +158,23 @@ export class EnviarDpsAssinadaNotaServicoService {
       certificadoPath: configuracaoCertificado.caminho,
       certificadoSenha: configuracaoCertificado.senha,
     };
+  }
+
+  private async obterConfiguracaoCertificado(
+    empresaId: string,
+    ambienteFiscal: AmbienteFiscal,
+  ) {
+    if (!this.resolverConfiguracaoFiscal) {
+      if (ambienteFiscal === AmbienteFiscal.PRODUCAO) {
+        throw new CertificadoA1EmpresaProducaoAusenteError();
+      }
+
+      return undefined;
+    }
+
+    return this.resolverConfiguracaoFiscal.obterCertificadoA1ParaAmbiente(
+      empresaId,
+      ambienteFiscal,
+    );
   }
 }

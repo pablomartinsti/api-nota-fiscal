@@ -6,12 +6,14 @@ import {
   StatusNota,
 } from '../entities/NotaServico';
 import { PerfilUsuario } from '../entities/Usuario';
+import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { ProducaoRealBloqueadaError } from '../errors/ProducaoRealBloqueadaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { ClienteNfseNacional } from '../fiscal/ClienteNfseNacional';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { ConsultarNfseEmitidaNotaServicoService } from './ConsultarNfseEmitidaNotaServicoService';
+import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
 
 const autenticacao = {
@@ -158,11 +160,26 @@ describe('ConsultarNfseEmitidaNotaServicoService', () => {
     ).rejects.toBeInstanceOf(ProducaoRealBloqueadaError);
     expect(clienteNfse.consultarNfsePorChave).not.toHaveBeenCalled();
   });
+
+  it('deve bloquear consulta em producao real sem certificado proprio da empresa', async () => {
+    const { service, clienteNfse } = criarService(
+      criarNota({
+        chaveAcesso: '12345678901234567890123456789012345678901234567890',
+        ambienteFiscal: AmbienteFiscal.PRODUCAO,
+      }),
+    );
+
+    await expect(
+      service.executar(autenticacao, 'nota-1'),
+    ).rejects.toBeInstanceOf(CertificadoA1EmpresaProducaoAusenteError);
+    expect(clienteNfse.consultarNfsePorChave).not.toHaveBeenCalled();
+  });
 });
 
 function criarService(
   nota: NotaServico | null,
   permitirProducaoReal = true,
+  resolverConfiguracaoFiscal?: ResolverConfiguracaoFiscalEmpresaService,
 ): {
   service: ConsultarNfseEmitidaNotaServicoService;
   clienteNfse: ClienteNfseNacional;
@@ -191,7 +208,7 @@ function criarService(
     service: new ConsultarNfseEmitidaNotaServicoService(
       notaRepository,
       clienteNfse,
-      undefined,
+      resolverConfiguracaoFiscal,
       new ValidarPermissaoProducaoRealService(permitirProducaoReal),
     ),
     clienteNfse,

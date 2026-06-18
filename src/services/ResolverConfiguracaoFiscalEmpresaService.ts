@@ -1,4 +1,5 @@
 import { AmbienteFiscal } from '../entities/NotaServico';
+import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
 import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
 import { CifradorTexto } from '../security/CifradorTexto';
 
@@ -51,6 +52,23 @@ export class ResolverConfiguracaoFiscalEmpresaService {
       caminho: configuracao.certificadoA1Path,
       senha: this.obterSenhaEmTexto(configuracao.certificadoA1Senha),
     };
+  }
+
+  async obterCertificadoA1ParaAmbiente(
+    empresaId: string,
+    ambienteFiscal: AmbienteFiscal,
+  ): Promise<ConfiguracaoCertificadoA1EmpresaResolvida | undefined> {
+    const certificado = await this.obterCertificadoA1(empresaId);
+
+    if (certificado) {
+      return certificado;
+    }
+
+    if (ambienteFiscal === AmbienteFiscal.PRODUCAO) {
+      throw new CertificadoA1EmpresaProducaoAusenteError();
+    }
+
+    return undefined;
   }
 
   private obterSenhaEmTexto(senha: string): string {

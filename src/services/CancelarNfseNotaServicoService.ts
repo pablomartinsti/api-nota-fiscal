@@ -1,6 +1,11 @@
-import { NotaServico, StatusNota } from '../entities/NotaServico';
+import {
+  AmbienteFiscal,
+  NotaServico,
+  StatusNota,
+} from '../entities/NotaServico';
 import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
 import { CertificadoA1CnpjDivergenteError } from '../errors/CertificadoA1CnpjDivergenteError';
+import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { AssinadorXmlDps } from '../fiscal/AssinadorXmlDps';
@@ -77,6 +82,10 @@ export class CancelarNfseNotaServicoService {
     }
 
     this.validarPermissaoProducaoReal?.executar(nota.ambienteFiscal);
+    await this.obterConfiguracaoCertificado(
+      autenticacao.empresaId,
+      nota.ambienteFiscal,
+    );
 
     const empresa = await this.empresaRepository.buscarPorId(
       autenticacao.empresaId,
@@ -95,7 +104,10 @@ export class CancelarNfseNotaServicoService {
 
     await this.validadorXml.validar(xmlPedido);
 
-    const certificado = await this.obterCertificado(autenticacao.empresaId);
+    const certificado = await this.obterCertificado(
+      autenticacao.empresaId,
+      nota.ambienteFiscal,
+    );
 
     if (certificado.cnpj !== empresa.cnpj) {
       throw new CertificadoA1CnpjDivergenteError();
@@ -111,6 +123,7 @@ export class CancelarNfseNotaServicoService {
     const resultado = await this.clienteNfse.registrarEventoCancelamento(
       await this.criarInputCancelamento(
         autenticacao.empresaId,
+        nota.ambienteFiscal,
         nota.chaveAcesso,
         xmlPedidoAssinado,
       ),
@@ -140,9 +153,14 @@ export class CancelarNfseNotaServicoService {
     };
   }
 
-  private async obterCertificado(empresaId: string): Promise<CertificadoA1> {
-    const configuracaoCertificado =
-      await this.resolverConfiguracaoFiscal?.obterCertificadoA1(empresaId);
+  private async obterCertificado(
+    empresaId: string,
+    ambienteFiscal: AmbienteFiscal,
+  ): Promise<CertificadoA1> {
+    const configuracaoCertificado = await this.obterConfiguracaoCertificado(
+      empresaId,
+      ambienteFiscal,
+    );
 
     if (!configuracaoCertificado) {
       return this.provedorCertificado.obter();
@@ -156,11 +174,14 @@ export class CancelarNfseNotaServicoService {
 
   private async criarInputCancelamento(
     empresaId: string,
+    ambienteFiscal: AmbienteFiscal,
     chaveAcesso: string,
     xmlPedidoEventoAssinado: string,
   ) {
-    const configuracaoCertificado =
-      await this.resolverConfiguracaoFiscal?.obterCertificadoA1(empresaId);
+    const configuracaoCertificado = await this.obterConfiguracaoCertificado(
+      empresaId,
+      ambienteFiscal,
+    );
 
     if (!configuracaoCertificado) {
       return {
@@ -175,5 +196,23 @@ export class CancelarNfseNotaServicoService {
       certificadoPath: configuracaoCertificado.caminho,
       certificadoSenha: configuracaoCertificado.senha,
     };
+  }
+
+  private async obterConfiguracaoCertificado(
+    empresaId: string,
+    ambienteFiscal: AmbienteFiscal,
+  ) {
+    if (!this.resolverConfiguracaoFiscal) {
+      if (ambienteFiscal === AmbienteFiscal.PRODUCAO) {
+        throw new CertificadoA1EmpresaProducaoAusenteError();
+      }
+
+      return undefined;
+    }
+
+    return this.resolverConfiguracaoFiscal.obterCertificadoA1ParaAmbiente(
+      empresaId,
+      ambienteFiscal,
+    );
   }
 }

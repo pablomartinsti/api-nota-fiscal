@@ -220,7 +220,7 @@ referencias do certificado A1 por empresa. O fluxo fiscal ja consulta essa
 configuracao ao criar rascunhos, assinar XML, enviar DPS, consultar NFS-e e
 cancelar NFS-e. Quando a empresa ainda nao tiver configuracao ativa ou
 certificado completo configurado, a API usa temporariamente as variaveis globais
-do `.env` como fallback.
+do `.env` como fallback apenas em `HOMOLOGACAO`.
 
 Exemplo para atualizar a configuracao fiscal da empresa autenticada:
 
@@ -245,6 +245,10 @@ Por seguranca, operacoes fiscais em `PRODUCAO` ficam bloqueadas por padrao.
 Enviar DPS, consultar NFS-e, cancelar NFS-e e criar substituicao em producao
 real so sao permitidos quando `NFSE_PERMITIR_PRODUCAO_REAL="true"` estiver
 configurado. Em `HOMOLOGACAO`, o fluxo continua funcionando normalmente.
+
+Mesmo com `NFSE_PERMITIR_PRODUCAO_REAL="true"`, uma nota em `PRODUCAO` exige
+certificado A1 configurado na propria empresa. O sistema nao usa o certificado
+global do `.env` como fallback em producao real.
 
 Antes da emissao real completa, sera necessario armazenar certificados digitais
 por empresa com seguranca e evoluir os demais endpoints fiscais, como consulta
