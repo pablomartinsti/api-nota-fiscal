@@ -8,6 +8,7 @@ import {
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
+import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
 
 export interface ConsultaNfseEmitidaResultado {
   notaId?: string;
@@ -26,6 +27,7 @@ export class ConsultarNfseEmitidaNotaServicoService {
     private readonly notaRepository: NotaServicoRepository,
     private readonly clienteNfse: ClienteNfseNacional,
     private readonly resolverConfiguracaoFiscal?: ResolverConfiguracaoFiscalEmpresaService,
+    private readonly validarPermissaoProducaoReal?: ValidarPermissaoProducaoRealService,
   ) {}
 
   async executar(
@@ -52,6 +54,8 @@ export class ConsultarNfseEmitidaNotaServicoService {
         'A nota emitida nao possui chave de acesso para consulta.',
       );
     }
+
+    this.validarPermissaoProducaoReal?.executar(nota.ambienteFiscal);
 
     const resultado = await this.clienteNfse.consultarNfsePorChave(
       await this.criarInputConsultaNfse(

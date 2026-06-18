@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   CodigoMotivoSubstituicaoNfse,
+  AmbienteFiscal,
   NotaServico,
   NotaServicoProps,
   StatusNota,
@@ -9,11 +10,13 @@ import {
 import { PerfilUsuario } from '../entities/Usuario';
 import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
+import { ProducaoRealBloqueadaError } from '../errors/ProducaoRealBloqueadaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { ClienteNfseNacional } from '../fiscal/ClienteNfseNacional';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { GerarXmlDpsAssinadoNotaServicoService } from './GerarXmlDpsAssinadoNotaServicoService';
 import { EnviarDpsAssinadaNotaServicoService } from './EnviarDpsAssinadaNotaServicoService';
+import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
 
 const autenticacao = {
   usuarioId: 'usuario-1',
@@ -231,9 +234,29 @@ describe('EnviarDpsAssinadaNotaServicoService', () => {
     ).rejects.toBeInstanceOf(ComunicacaoNfseError);
     expect(salvar).not.toHaveBeenCalled();
   });
+
+  it('deve bloquear envio de DPS em producao real sem permissao explicita', async () => {
+    const nota = criarNota(StatusNota.RASCUNHO, {
+      ambienteFiscal: AmbienteFiscal.PRODUCAO,
+    });
+    const { service, clienteNfse, gerarXml, salvar } = criarService(
+      nota,
+      false,
+    );
+
+    await expect(
+      service.executar(autenticacao, 'nota-1'),
+    ).rejects.toBeInstanceOf(ProducaoRealBloqueadaError);
+    expect(gerarXml.executar).not.toHaveBeenCalled();
+    expect(clienteNfse.enviarDpsAssinada).not.toHaveBeenCalled();
+    expect(salvar).not.toHaveBeenCalled();
+  });
 });
 
-function criarService(nota: NotaServico | null): {
+function criarService(
+  nota: NotaServico | null,
+  permitirProducaoReal = true,
+): {
   service: EnviarDpsAssinadaNotaServicoService;
   gerarXml: GerarXmlDpsAssinadoNotaServicoService;
   clienteNfse: ClienteNfseNacional;
@@ -269,6 +292,8 @@ function criarService(nota: NotaServico | null): {
       notaRepository,
       gerarXml,
       clienteNfse,
+      undefined,
+      new ValidarPermissaoProducaoRealService(permitirProducaoReal),
     ),
     gerarXml,
     clienteNfse,

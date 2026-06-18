@@ -1,12 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { NotaServico, StatusNota } from '../entities/NotaServico';
+import {
+  AmbienteFiscal,
+  NotaServico,
+  StatusNota,
+} from '../entities/NotaServico';
 import { PerfilUsuario } from '../entities/Usuario';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
+import { ProducaoRealBloqueadaError } from '../errors/ProducaoRealBloqueadaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { ClienteNfseNacional } from '../fiscal/ClienteNfseNacional';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { ConsultarNfseEmitidaNotaServicoService } from './ConsultarNfseEmitidaNotaServicoService';
+import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
 
 const autenticacao = {
   usuarioId: 'usuario-1',
@@ -17,6 +23,7 @@ const autenticacao = {
 function criarNota(props?: {
   status?: StatusNota;
   chaveAcesso?: string;
+  ambienteFiscal?: AmbienteFiscal;
 }): NotaServico {
   const status = props?.status ?? StatusNota.EMITIDA;
 
@@ -30,6 +37,7 @@ function criarNota(props?: {
     aliquotaIss: 5,
     descricao: 'Consultoria',
     status,
+    ambienteFiscal: props?.ambienteFiscal,
     ...(status === StatusNota.EMITIDA
       ? {
           numeroNfse: '100',
@@ -135,9 +143,27 @@ describe('ConsultarNfseEmitidaNotaServicoService', () => {
     ).rejects.toBeInstanceOf(TransicaoStatusNotaInvalidaError);
     expect(clienteNfse.consultarNfsePorChave).not.toHaveBeenCalled();
   });
+
+  it('deve bloquear consulta de NFS-e em producao real sem permissao explicita', async () => {
+    const { service, clienteNfse } = criarService(
+      criarNota({
+        chaveAcesso: '12345678901234567890123456789012345678901234567890',
+        ambienteFiscal: AmbienteFiscal.PRODUCAO,
+      }),
+      false,
+    );
+
+    await expect(
+      service.executar(autenticacao, 'nota-1'),
+    ).rejects.toBeInstanceOf(ProducaoRealBloqueadaError);
+    expect(clienteNfse.consultarNfsePorChave).not.toHaveBeenCalled();
+  });
 });
 
-function criarService(nota: NotaServico | null): {
+function criarService(
+  nota: NotaServico | null,
+  permitirProducaoReal = true,
+): {
   service: ConsultarNfseEmitidaNotaServicoService;
   clienteNfse: ClienteNfseNacional;
 } {
@@ -165,6 +191,8 @@ function criarService(nota: NotaServico | null): {
     service: new ConsultarNfseEmitidaNotaServicoService(
       notaRepository,
       clienteNfse,
+      undefined,
+      new ValidarPermissaoProducaoRealService(permitirProducaoReal),
     ),
     clienteNfse,
   };

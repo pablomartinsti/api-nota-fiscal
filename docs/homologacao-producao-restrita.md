@@ -43,6 +43,7 @@ NFSE_XSD_EVENTO_PATH="C:\caminho\nfse-xsd\Schemas\1.01\pedRegEvento_v1.01.xsd"
 NFSE_SEFIN_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/SefinNacional"
 NFSE_SEFIN_ENVIO_DPS_PATH="/nfse"
 NFSE_SEFIN_TIMEOUT_MS=15000
+NFSE_PERMITIR_PRODUCAO_REAL="false"
 ```
 
 Gere `NFSE_CERTIFICADO_CRYPTO_KEY` com:
@@ -99,6 +100,21 @@ abrir o arquivo A1, valida a senha, confere a validade do certificado e compara
 o CNPJ do certificado com o CNPJ da empresa autenticada. Se houver erro, a
 configuracao fiscal nao e salva. Se estiver tudo correto, a senha do
 certificado e criptografada antes de ser gravada no banco.
+
+## Protecao contra producao real
+
+O sistema bloqueia operacoes fiscais em `PRODUCAO` por padrao. Essa protecao
+vale para envio de DPS, consulta de NFS-e, cancelamento oficial e substituicao.
+
+Para homologacao, mantenha:
+
+```env
+NFSE_PERMITIR_PRODUCAO_REAL="false"
+```
+
+So altere para `true` quando a empresa estiver pronta para emitir em producao
+real, com certificado correto, dados fiscais revisados e decisao consciente de
+ativar o ambiente oficial.
 
 ## 3. Checagem local
 

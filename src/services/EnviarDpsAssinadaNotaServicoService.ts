@@ -10,6 +10,7 @@ import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
 import { GerarXmlDpsAssinadoNotaServicoService } from './GerarXmlDpsAssinadoNotaServicoService';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
+import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
 
 export class EnviarDpsAssinadaNotaServicoService {
   constructor(
@@ -17,6 +18,7 @@ export class EnviarDpsAssinadaNotaServicoService {
     private readonly gerarXmlDpsAssinadoService: GerarXmlDpsAssinadoNotaServicoService,
     private readonly clienteNfse: ClienteNfseNacional,
     private readonly resolverConfiguracaoFiscal?: ResolverConfiguracaoFiscalEmpresaService,
+    private readonly validarPermissaoProducaoReal?: ValidarPermissaoProducaoRealService,
   ) {}
 
   async executar(
@@ -40,6 +42,8 @@ export class EnviarDpsAssinadaNotaServicoService {
 
     const notaSubstituida =
       await this.buscarNotaSubstituidaParaEmissao(autenticacao, nota);
+
+    this.validarPermissaoProducaoReal?.executar(nota.ambienteFiscal);
 
     const xmlAssinado = await this.gerarXmlDpsAssinadoService.executar(
       autenticacao,

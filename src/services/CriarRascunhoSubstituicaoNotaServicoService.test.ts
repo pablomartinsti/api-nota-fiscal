@@ -1,12 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  AmbienteFiscal,
   CodigoMotivoSubstituicaoNfse,
   NotaServico,
   StatusNota,
 } from '../entities/NotaServico';
 import { PerfilUsuario } from '../entities/Usuario';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
+import { ProducaoRealBloqueadaError } from '../errors/ProducaoRealBloqueadaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
@@ -14,6 +16,7 @@ import { CriarRascunhoSubstituicaoNotaServicoService } from './CriarRascunhoSubs
 import { GerarProximoNumeroDpsService } from './GerarProximoNumeroDpsService';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarReferenciasNotaServicoService } from './ValidarReferenciasNotaServicoService';
+import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
 
 const autenticacao = {
   usuarioId: 'usuario-2',
@@ -93,9 +96,26 @@ describe('CriarRascunhoSubstituicaoNotaServicoService', () => {
       ),
     ).rejects.toBeInstanceOf(TransicaoStatusNotaInvalidaError);
   });
+
+  it('deve bloquear substituicao em producao real sem permissao explicita', async () => {
+    const notaSubstituida = criarNotaEmitida(AmbienteFiscal.PRODUCAO);
+    const { service, salvar, validarReferencias } = criarService(
+      notaSubstituida,
+      false,
+    );
+
+    await expect(
+      service.executar(autenticacao, 'nota-original-1', dadosSubstituicao()),
+    ).rejects.toBeInstanceOf(ProducaoRealBloqueadaError);
+    expect(validarReferencias.executar).not.toHaveBeenCalled();
+    expect(salvar).not.toHaveBeenCalled();
+  });
 });
 
-function criarService(notaSubstituida: NotaServico | null) {
+function criarService(
+  notaSubstituida: NotaServico | null,
+  permitirProducaoReal = true,
+) {
   const salvar = vi.fn(async (nota: NotaServico) => nota);
   const notaRepository: NotaServicoRepository = {
     salvar,
@@ -124,6 +144,7 @@ function criarService(notaSubstituida: NotaServico | null) {
       new ResolverConfiguracaoFiscalEmpresaService(
         configuracaoFiscalRepository,
       ),
+      new ValidarPermissaoProducaoRealService(permitirProducaoReal),
     ),
     salvar,
     validarReferencias,
@@ -145,7 +166,9 @@ function dadosSubstituicao() {
   };
 }
 
-function criarNotaEmitida(): NotaServico {
+function criarNotaEmitida(
+  ambienteFiscal = AmbienteFiscal.HOMOLOGACAO,
+): NotaServico {
   return new NotaServico({
     id: 'nota-original-1',
     empresaId: 'empresa-1',
@@ -156,6 +179,7 @@ function criarNotaEmitida(): NotaServico {
     aliquotaIss: 2,
     descricao: 'Servico original',
     status: StatusNota.EMITIDA,
+    ambienteFiscal,
     numeroNfse: '1',
     protocoloEmissao: 'NFS123',
     chaveAcesso,

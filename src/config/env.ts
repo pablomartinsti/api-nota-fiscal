@@ -18,6 +18,10 @@ const envSchema = z.object({
   NFSE_SEFIN_BASE_URL: z.string().trim().url().optional(),
   NFSE_SEFIN_ENVIO_DPS_PATH: z.string().trim().min(1).default('/nfse'),
   NFSE_SEFIN_TIMEOUT_MS: z.coerce.number().int().min(1).default(15_000),
+  NFSE_PERMITIR_PRODUCAO_REAL: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((valor) => valor === 'true'),
 });
 
 const resultado = envSchema.safeParse(process.env);

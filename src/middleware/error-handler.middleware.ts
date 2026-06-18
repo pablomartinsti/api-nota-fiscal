@@ -24,6 +24,7 @@ import { SenhaAtualIncorretaError } from '../errors/SenhaAtualIncorretaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { UsuarioNaoEncontradoError } from '../errors/UsuarioNaoEncontradoError';
 import { XmlDpsInvalidoError } from '../errors/XmlDpsInvalidoError';
+import { ProducaoRealBloqueadaError } from '../errors/ProducaoRealBloqueadaError';
 
 export const errorHandler: ErrorRequestHandler = (
   error,
@@ -60,6 +61,13 @@ export const errorHandler: ErrorRequestHandler = (
     response.status(409).json({
       message: error.message,
       pendencias: error.pendencias,
+    });
+    return;
+  }
+
+  if (error instanceof ProducaoRealBloqueadaError) {
+    response.status(409).json({
+      message: error.message,
     });
     return;
   }

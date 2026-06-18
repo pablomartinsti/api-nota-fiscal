@@ -205,6 +205,7 @@ NFSE_XSD_EVENTO_PATH=""
 NFSE_SEFIN_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/SefinNacional"
 NFSE_SEFIN_ENVIO_DPS_PATH="/nfse"
 NFSE_SEFIN_TIMEOUT_MS=15000
+NFSE_PERMITIR_PRODUCAO_REAL="false"
 ```
 
 Gere `NFSE_CERTIFICADO_CRYPTO_KEY` com 32 bytes em Base64:
@@ -239,6 +240,11 @@ validade do certificado e se o CNPJ do certificado pertence a empresa
 autenticada antes de salvar a configuracao. A senha do certificado e
 criptografada com `NFSE_CERTIFICADO_CRYPTO_KEY` antes de ser persistida no
 banco.
+
+Por seguranca, operacoes fiscais em `PRODUCAO` ficam bloqueadas por padrao.
+Enviar DPS, consultar NFS-e, cancelar NFS-e e criar substituicao em producao
+real so sao permitidos quando `NFSE_PERMITIR_PRODUCAO_REAL="true"` estiver
+configurado. Em `HOMOLOGACAO`, o fluxo continua funcionando normalmente.
 
 Antes da emissao real completa, sera necessario armazenar certificados digitais
 por empresa com seguranca e evoluir os demais endpoints fiscais, como consulta

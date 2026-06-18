@@ -31,6 +31,7 @@ import { ResolverConfiguracaoFiscalEmpresaService } from '../services/ResolverCo
 import { RetornarNotaServicoParaRascunhoService } from '../services/RetornarNotaServicoParaRascunhoService';
 import { ValidarReferenciasNotaServicoService } from '../services/ValidarReferenciasNotaServicoService';
 import { ValidarProntidaoFiscalNotaServicoService } from '../services/ValidarProntidaoFiscalNotaServicoService';
+import { ValidarPermissaoProducaoRealService } from '../services/ValidarPermissaoProducaoRealService';
 
 export function criarGestaoNotaServicoController(): GestaoNotaServicoController {
   const notaRepository = new PrismaNotaServicoRepository();
@@ -46,6 +47,10 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     new ResolverConfiguracaoFiscalEmpresaService(
       configuracaoFiscalRepository,
       cifradorTexto,
+    );
+  const validarPermissaoProducaoReal =
+    new ValidarPermissaoProducaoRealService(
+      env.NFSE_PERMITIR_PRODUCAO_REAL,
     );
   const validarReferencias = new ValidarReferenciasNotaServicoService(
     clienteRepository,
@@ -116,11 +121,13 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       gerarXmlDpsAssinadoService,
       clienteNfse,
       resolverConfiguracaoFiscal,
+      validarPermissaoProducaoReal,
     ),
     new ConsultarNfseEmitidaNotaServicoService(
       notaRepository,
       clienteNfse,
       resolverConfiguracaoFiscal,
+      validarPermissaoProducaoReal,
     ),
     new CancelarNfseNotaServicoService(
       notaRepository,
@@ -131,12 +138,14 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       new AssinadorXmlPedRegEventoXmlDsig(),
       clienteNfse,
       resolverConfiguracaoFiscal,
+      validarPermissaoProducaoReal,
     ),
     new CriarRascunhoSubstituicaoNotaServicoService(
       notaRepository,
       validarReferencias,
       gerarProximoNumeroDpsService,
       resolverConfiguracaoFiscal,
+      validarPermissaoProducaoReal,
     ),
   );
 }

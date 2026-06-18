@@ -11,6 +11,7 @@ import { CadastrarRascunhoNotaServicoInput } from './CadastrarRascunhoNotaServic
 import { GerarProximoNumeroDpsService } from './GerarProximoNumeroDpsService';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarReferenciasNotaServicoService } from './ValidarReferenciasNotaServicoService';
+import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
 
 export interface CriarRascunhoSubstituicaoNotaServicoInput
   extends CadastrarRascunhoNotaServicoInput {
@@ -24,6 +25,7 @@ export class CriarRascunhoSubstituicaoNotaServicoService {
     private readonly validarReferencias: ValidarReferenciasNotaServicoService,
     private readonly gerarProximoNumeroDps: GerarProximoNumeroDpsService,
     private readonly resolverConfiguracaoFiscal: ResolverConfiguracaoFiscalEmpresaService,
+    private readonly validarPermissaoProducaoReal?: ValidarPermissaoProducaoRealService,
   ) {}
 
   async executar(
@@ -52,6 +54,10 @@ export class CriarRascunhoSubstituicaoNotaServicoService {
         'A nota emitida nao possui chave de acesso para substituicao.',
       );
     }
+
+    this.validarPermissaoProducaoReal?.executar(
+      notaSubstituida.ambienteFiscal,
+    );
 
     const { servico } = await this.validarReferencias.executar(
       autenticacao.empresaId,

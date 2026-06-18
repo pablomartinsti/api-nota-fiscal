@@ -1,11 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { Empresa, RegimeTributario } from '../entities/Empresa';
-import { NotaServico, StatusNota } from '../entities/NotaServico';
+import {
+  AmbienteFiscal,
+  NotaServico,
+  StatusNota,
+} from '../entities/NotaServico';
 import { PerfilUsuario } from '../entities/Usuario';
 import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
 import { CertificadoA1CnpjDivergenteError } from '../errors/CertificadoA1CnpjDivergenteError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
+import { ProducaoRealBloqueadaError } from '../errors/ProducaoRealBloqueadaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { ProvedorCertificadoA1 } from '../fiscal/CertificadoA1';
 import { ClienteNfseNacional } from '../fiscal/ClienteNfseNacional';
@@ -15,6 +20,7 @@ import { AssinadorXmlDps } from '../fiscal/AssinadorXmlDps';
 import { EmpresaRepository } from '../repositories/EmpresaRepository';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { CancelarNfseNotaServicoService } from './CancelarNfseNotaServicoService';
+import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
 
 const autenticacao = {
   usuarioId: 'usuario-1',
@@ -122,12 +128,31 @@ describe('CancelarNfseNotaServicoService', () => {
       ),
     ).rejects.toBeInstanceOf(CertificadoA1CnpjDivergenteError);
   });
+
+  it('deve bloquear cancelamento em producao real sem permissao explicita', async () => {
+    const nota = criarNotaEmitida(AmbienteFiscal.PRODUCAO);
+    const { service, clienteNfse, salvar, validadorXml } = criarService({
+      nota,
+      permitirProducaoReal: false,
+    });
+
+    await expect(
+      service.executar(autenticacao, 'nota-1', {
+        codigoMotivo: '1',
+        motivo: 'Erro na emissao em ambiente de homologacao',
+      }),
+    ).rejects.toBeInstanceOf(ProducaoRealBloqueadaError);
+    expect(validadorXml.validar).not.toHaveBeenCalled();
+    expect(clienteNfse.registrarEventoCancelamento).not.toHaveBeenCalled();
+    expect(salvar).not.toHaveBeenCalled();
+  });
 });
 
 function criarService(props?: {
   nota?: NotaServico | null;
   empresa?: Empresa | null;
   certificadoCnpj?: string;
+  permitirProducaoReal?: boolean;
 }) {
   const nota = props?.nota === undefined ? criarNotaEmitida() : props.nota;
   const empresa = props?.empresa === undefined ? criarEmpresa() : props.empresa;
@@ -183,6 +208,10 @@ function criarService(props?: {
       provedorCertificado,
       assinadorXml,
       clienteNfse,
+      undefined,
+      new ValidarPermissaoProducaoRealService(
+        props?.permitirProducaoReal ?? true,
+      ),
     ),
     clienteNfse,
     salvar,
@@ -202,7 +231,9 @@ function criarEmpresa(): Empresa {
   });
 }
 
-function criarNotaEmitida(): NotaServico {
+function criarNotaEmitida(
+  ambienteFiscal = AmbienteFiscal.HOMOLOGACAO,
+): NotaServico {
   return new NotaServico({
     id: 'nota-1',
     empresaId: 'empresa-1',
@@ -213,6 +244,7 @@ function criarNotaEmitida(): NotaServico {
     aliquotaIss: 5,
     descricao: 'Consultoria',
     status: StatusNota.EMITIDA,
+    ambienteFiscal,
     chaveAcesso,
     dataEmissao: new Date('2026-06-16T10:00:00.000Z'),
   });
