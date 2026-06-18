@@ -86,11 +86,30 @@ model Empresa {
   clientes           Cliente[]
   servicos           Servico[]
   notas              NotaServico[]
+  configuracaoFiscal ConfiguracaoFiscalEmpresa?
 
   createdAt          DateTime          @default(now())
   updatedAt          DateTime          @updatedAt
 
   @@map("empresas")
+}
+
+model ConfiguracaoFiscalEmpresa {
+  id                 String          @id @default(uuid())
+  empresaId          String          @unique
+  ambienteFiscalPadrao AmbienteFiscal @default(HOMOLOGACAO)
+  serieDpsPadrao     String          @default("1")
+  certificadoA1Path  String?
+  certificadoA1Senha String?
+  ativo              Boolean         @default(true)
+
+  empresa            Empresa         @relation(fields: [empresaId], references: [id])
+
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@index([empresaId])
+  @@map("configuracoes_fiscais_empresas")
 }
 
 model Usuario {

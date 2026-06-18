@@ -204,6 +204,12 @@ NFSE_SEFIN_ENVIO_DPS_PATH="/nfse"
 NFSE_SEFIN_TIMEOUT_MS=15000
 ```
 
+O modelo `ConfiguracaoFiscalEmpresa` ja existe para preparar o SaaS
+multiempresa, guardando ambiente fiscal padrao, serie padrao da DPS e
+referencias do certificado A1 por empresa. Nesta etapa, o envio para a SEFIN
+ainda usa as variaveis globais do `.env`; a troca para configuracao por empresa
+sera feita em uma Issue propria.
+
 Antes da emissao real completa, sera necessario armazenar certificados digitais
 por empresa com seguranca e evoluir os demais endpoints fiscais, como consulta
 por chave de acesso e eventos de cancelamento.

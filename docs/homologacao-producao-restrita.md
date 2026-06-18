@@ -56,6 +56,10 @@ recursos carregados por ela apontam para `/SefinNacional`. Por isso:
   `NFSE_CERTIFICADO_SENHA` tambem e apresentado na conexao HTTPS com
   autenticacao mutua TLS.
 
+Observacao: o banco ja possui a tabela de configuracao fiscal por empresa para
+preparar o SaaS multiempresa. Neste momento, o envio fiscal em homologacao
+continua usando o `.env` global ate a proxima etapa de integracao.
+
 ## 3. Checagem local
 
 Antes de enviar qualquer DPS, rode:
