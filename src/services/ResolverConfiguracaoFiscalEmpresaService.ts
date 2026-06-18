@@ -1,0 +1,60 @@
+import { AmbienteFiscal } from '../entities/NotaServico';
+import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
+
+export interface ConfiguracaoFiscalEmpresaResolvida {
+  ambienteFiscalPadrao: AmbienteFiscal;
+  serieDpsPadrao: string;
+  certificadoA1Path?: string;
+  certificadoA1Senha?: string;
+}
+
+export interface ConfiguracaoCertificadoA1EmpresaResolvida {
+  caminho: string;
+  senha: string;
+}
+
+export class ResolverConfiguracaoFiscalEmpresaService {
+  constructor(
+    private readonly configuracaoFiscalRepository: ConfiguracaoFiscalEmpresaRepository,
+  ) {}
+
+  async executar(
+    empresaId: string,
+  ): Promise<ConfiguracaoFiscalEmpresaResolvida> {
+    const configuracao =
+      await this.configuracaoFiscalRepository.buscarPorEmpresaId(empresaId);
+
+    if (!configuracao?.ativo) {
+      return this.criarConfiguracaoPadrao();
+    }
+
+    return {
+      ambienteFiscalPadrao: configuracao.ambienteFiscalPadrao,
+      serieDpsPadrao: configuracao.serieDpsPadrao,
+      certificadoA1Path: configuracao.certificadoA1Path,
+      certificadoA1Senha: configuracao.certificadoA1Senha,
+    };
+  }
+
+  async obterCertificadoA1(
+    empresaId: string,
+  ): Promise<ConfiguracaoCertificadoA1EmpresaResolvida | undefined> {
+    const configuracao = await this.executar(empresaId);
+
+    if (!configuracao.certificadoA1Path || !configuracao.certificadoA1Senha) {
+      return undefined;
+    }
+
+    return {
+      caminho: configuracao.certificadoA1Path,
+      senha: configuracao.certificadoA1Senha,
+    };
+  }
+
+  private criarConfiguracaoPadrao(): ConfiguracaoFiscalEmpresaResolvida {
+    return {
+      ambienteFiscalPadrao: AmbienteFiscal.HOMOLOGACAO,
+      serieDpsPadrao: '1',
+    };
+  }
+}

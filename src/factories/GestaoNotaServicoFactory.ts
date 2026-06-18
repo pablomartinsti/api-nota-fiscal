@@ -1,5 +1,6 @@
 import { GestaoNotaServicoController } from '../controllers/GestaoNotaServicoController';
 import { env } from '../config/env';
+import { PrismaConfiguracaoFiscalEmpresaRepository } from '../database/repositories/PrismaConfiguracaoFiscalEmpresaRepository';
 import { PrismaClienteRepository } from '../database/repositories/PrismaClienteRepository';
 import { PrismaEmpresaRepository } from '../database/repositories/PrismaEmpresaRepository';
 import { PrismaNotaServicoRepository } from '../database/repositories/PrismaNotaServicoRepository';
@@ -25,6 +26,7 @@ import { GerarProximoNumeroDpsService } from '../services/GerarProximoNumeroDpsS
 import { GerarXmlDpsNotaServicoService } from '../services/GerarXmlDpsNotaServicoService';
 import { GerarXmlDpsAssinadoNotaServicoService } from '../services/GerarXmlDpsAssinadoNotaServicoService';
 import { ListarNotasServicoService } from '../services/ListarNotasServicoService';
+import { ResolverConfiguracaoFiscalEmpresaService } from '../services/ResolverConfiguracaoFiscalEmpresaService';
 import { RetornarNotaServicoParaRascunhoService } from '../services/RetornarNotaServicoParaRascunhoService';
 import { ValidarReferenciasNotaServicoService } from '../services/ValidarReferenciasNotaServicoService';
 import { ValidarProntidaoFiscalNotaServicoService } from '../services/ValidarProntidaoFiscalNotaServicoService';
@@ -34,6 +36,12 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
   const empresaRepository = new PrismaEmpresaRepository();
   const clienteRepository = new PrismaClienteRepository();
   const servicoRepository = new PrismaServicoRepository();
+  const configuracaoFiscalRepository =
+    new PrismaConfiguracaoFiscalEmpresaRepository();
+  const resolverConfiguracaoFiscal =
+    new ResolverConfiguracaoFiscalEmpresaService(
+      configuracaoFiscalRepository,
+    );
   const validarReferencias = new ValidarReferenciasNotaServicoService(
     clienteRepository,
     servicoRepository,
@@ -57,6 +65,7 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       senha: env.NFSE_CERTIFICADO_SENHA,
     })),
     new AssinadorXmlDpsXmlDsig(),
+    resolverConfiguracaoFiscal,
   );
   const clienteNfse = new ClienteHttpSefinNacional(() => ({
     baseUrl: env.NFSE_SEFIN_BASE_URL,
@@ -75,6 +84,7 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       notaRepository,
       validarReferencias,
       gerarProximoNumeroDpsService,
+      resolverConfiguracaoFiscal,
     ),
     new ListarNotasServicoService(notaRepository),
     new BuscarNotaServicoService(notaRepository),
@@ -100,8 +110,13 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       notaRepository,
       gerarXmlDpsAssinadoService,
       clienteNfse,
+      resolverConfiguracaoFiscal,
     ),
-    new ConsultarNfseEmitidaNotaServicoService(notaRepository, clienteNfse),
+    new ConsultarNfseEmitidaNotaServicoService(
+      notaRepository,
+      clienteNfse,
+      resolverConfiguracaoFiscal,
+    ),
     new CancelarNfseNotaServicoService(
       notaRepository,
       empresaRepository,
@@ -110,11 +125,13 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       provedorCertificado,
       new AssinadorXmlPedRegEventoXmlDsig(),
       clienteNfse,
+      resolverConfiguracaoFiscal,
     ),
     new CriarRascunhoSubstituicaoNotaServicoService(
       notaRepository,
       validarReferencias,
       gerarProximoNumeroDpsService,
+      resolverConfiguracaoFiscal,
     ),
   );
 }

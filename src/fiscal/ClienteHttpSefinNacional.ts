@@ -59,7 +59,10 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
   async enviarDpsAssinada(
     input: EnviarDpsAssinadaInput,
   ): Promise<ResultadoEnvioDpsNfse> {
-    const configuracao = this.obterConfiguracao();
+    const configuracao = this.mesclarConfiguracaoComCertificadoDaRequisicao(
+      this.obterConfiguracao(),
+      input,
+    );
     const timeoutMs = configuracao.timeoutMs ?? TIMEOUT_PADRAO_MS;
 
     try {
@@ -132,7 +135,10 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
   async consultarNfsePorChave(
     input: ConsultarNfsePorChaveInput,
   ): Promise<ResultadoConsultaNfseNacional> {
-    const configuracao = this.obterConfiguracao();
+    const configuracao = this.mesclarConfiguracaoComCertificadoDaRequisicao(
+      this.obterConfiguracao(),
+      input,
+    );
     const timeoutMs = configuracao.timeoutMs ?? TIMEOUT_PADRAO_MS;
 
     try {
@@ -185,7 +191,10 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
   async registrarEventoCancelamento(
     input: RegistrarEventoCancelamentoNfseInput,
   ): Promise<ResultadoRegistroEventoNfse> {
-    const configuracao = this.obterConfiguracao();
+    const configuracao = this.mesclarConfiguracaoComCertificadoDaRequisicao(
+      this.obterConfiguracao(),
+      input,
+    );
     const timeoutMs = configuracao.timeoutMs ?? TIMEOUT_PADRAO_MS;
 
     try {
@@ -256,6 +265,22 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
       timeoutMs,
       chavePrivadaPem: certificado.chavePrivadaPem,
       certificadoPem: certificado.certificadoPem,
+    };
+  }
+
+  private mesclarConfiguracaoComCertificadoDaRequisicao(
+    configuracao: ConfiguracaoClienteHttpSefinNacional,
+    input: {
+      certificadoPath?: string;
+      certificadoSenha?: string;
+    },
+  ): ConfiguracaoClienteHttpSefinNacional {
+    return {
+      ...configuracao,
+      certificadoPath:
+        input.certificadoPath ?? configuracao.certificadoPath,
+      certificadoSenha:
+        input.certificadoSenha ?? configuracao.certificadoSenha,
     };
   }
 

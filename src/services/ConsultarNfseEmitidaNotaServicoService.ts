@@ -7,6 +7,7 @@ import {
 } from '../fiscal/ClienteNfseNacional';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
+import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 
 export interface ConsultaNfseEmitidaResultado {
   notaId?: string;
@@ -24,6 +25,7 @@ export class ConsultarNfseEmitidaNotaServicoService {
   constructor(
     private readonly notaRepository: NotaServicoRepository,
     private readonly clienteNfse: ClienteNfseNacional,
+    private readonly resolverConfiguracaoFiscal?: ResolverConfiguracaoFiscalEmpresaService,
   ) {}
 
   async executar(
@@ -51,9 +53,12 @@ export class ConsultarNfseEmitidaNotaServicoService {
       );
     }
 
-    const resultado = await this.clienteNfse.consultarNfsePorChave({
-      chaveAcesso: nota.chaveAcesso,
-    });
+    const resultado = await this.clienteNfse.consultarNfsePorChave(
+      await this.criarInputConsultaNfse(
+        autenticacao.empresaId,
+        nota.chaveAcesso,
+      ),
+    );
 
     return {
       notaId: nota.id,
@@ -65,6 +70,24 @@ export class ConsultarNfseEmitidaNotaServicoService {
       dataHoraProcessamento: resultado.dataHoraProcessamento,
       xmlAutorizado: resultado.xmlAutorizado,
       erros: resultado.erros,
+    };
+  }
+
+  private async criarInputConsultaNfse(
+    empresaId: string,
+    chaveAcesso: string,
+  ) {
+    const configuracaoCertificado =
+      await this.resolverConfiguracaoFiscal?.obterCertificadoA1(empresaId);
+
+    if (!configuracaoCertificado) {
+      return { chaveAcesso };
+    }
+
+    return {
+      chaveAcesso,
+      certificadoPath: configuracaoCertificado.caminho,
+      certificadoSenha: configuracaoCertificado.senha,
     };
   }
 }

@@ -4,7 +4,7 @@ import { CertificadoA1CnpjDivergenteError } from '../errors/CertificadoA1CnpjDiv
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { AssinadorXmlDps } from '../fiscal/AssinadorXmlDps';
-import { ProvedorCertificadoA1 } from '../fiscal/CertificadoA1';
+import { CertificadoA1, ProvedorCertificadoA1 } from '../fiscal/CertificadoA1';
 import {
   ClienteNfseNacional,
   ErroEnvioDpsNfse,
@@ -13,10 +13,12 @@ import {
   CodigoMotivoCancelamentoNfse,
   GeradorXmlPedidoCancelamentoNfseNacional,
 } from '../fiscal/GeradorXmlPedidoCancelamentoNfseNacional';
+import { ProvedorCertificadoA1Arquivo } from '../fiscal/ProvedorCertificadoA1Arquivo';
 import { ValidadorXmlDps } from '../fiscal/ValidadorXmlDps';
 import { EmpresaRepository } from '../repositories/EmpresaRepository';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
+import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 
 export interface CancelarNfseNotaServicoInput {
   codigoMotivo: CodigoMotivoCancelamentoNfse;
@@ -43,6 +45,7 @@ export class CancelarNfseNotaServicoService {
     private readonly provedorCertificado: ProvedorCertificadoA1,
     private readonly assinadorXml: AssinadorXmlDps,
     private readonly clienteNfse: ClienteNfseNacional,
+    private readonly resolverConfiguracaoFiscal?: ResolverConfiguracaoFiscalEmpresaService,
   ) {}
 
   async executar(
@@ -88,7 +91,7 @@ export class CancelarNfseNotaServicoService {
 
     await this.validadorXml.validar(xmlPedido);
 
-    const certificado = await this.provedorCertificado.obter();
+    const certificado = await this.obterCertificado(autenticacao.empresaId);
 
     if (certificado.cnpj !== empresa.cnpj) {
       throw new CertificadoA1CnpjDivergenteError();
@@ -101,10 +104,13 @@ export class CancelarNfseNotaServicoService {
 
     await this.validadorXml.validar(xmlPedidoAssinado);
 
-    const resultado = await this.clienteNfse.registrarEventoCancelamento({
-      chaveAcesso: nota.chaveAcesso,
-      xmlPedidoEventoAssinado: xmlPedidoAssinado,
-    });
+    const resultado = await this.clienteNfse.registrarEventoCancelamento(
+      await this.criarInputCancelamento(
+        autenticacao.empresaId,
+        nota.chaveAcesso,
+        xmlPedidoAssinado,
+      ),
+    );
 
     if (!resultado.sucesso) {
       return {
@@ -127,6 +133,43 @@ export class CancelarNfseNotaServicoService {
       versaoAplicativo: resultado.versaoAplicativo,
       dataHoraProcessamento: resultado.dataHoraProcessamento,
       xmlEvento: resultado.xmlEvento,
+    };
+  }
+
+  private async obterCertificado(empresaId: string): Promise<CertificadoA1> {
+    const configuracaoCertificado =
+      await this.resolverConfiguracaoFiscal?.obterCertificadoA1(empresaId);
+
+    if (!configuracaoCertificado) {
+      return this.provedorCertificado.obter();
+    }
+
+    return new ProvedorCertificadoA1Arquivo(() => ({
+      caminho: configuracaoCertificado.caminho,
+      senha: configuracaoCertificado.senha,
+    })).obter();
+  }
+
+  private async criarInputCancelamento(
+    empresaId: string,
+    chaveAcesso: string,
+    xmlPedidoEventoAssinado: string,
+  ) {
+    const configuracaoCertificado =
+      await this.resolverConfiguracaoFiscal?.obterCertificadoA1(empresaId);
+
+    if (!configuracaoCertificado) {
+      return {
+        chaveAcesso,
+        xmlPedidoEventoAssinado,
+      };
+    }
+
+    return {
+      chaveAcesso,
+      xmlPedidoEventoAssinado,
+      certificadoPath: configuracaoCertificado.caminho,
+      certificadoSenha: configuracaoCertificado.senha,
     };
   }
 }

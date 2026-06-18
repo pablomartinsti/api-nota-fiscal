@@ -1,12 +1,20 @@
-export interface EnviarDpsAssinadaInput {
+export interface ConfiguracaoCertificadoClienteNfseInput {
+  certificadoPath?: string;
+  certificadoSenha?: string;
+}
+
+export interface EnviarDpsAssinadaInput
+  extends ConfiguracaoCertificadoClienteNfseInput {
   xmlAssinado: string;
 }
 
-export interface ConsultarNfsePorChaveInput {
+export interface ConsultarNfsePorChaveInput
+  extends ConfiguracaoCertificadoClienteNfseInput {
   chaveAcesso: string;
 }
 
-export interface RegistrarEventoCancelamentoNfseInput {
+export interface RegistrarEventoCancelamentoNfseInput
+  extends ConfiguracaoCertificadoClienteNfseInput {
   chaveAcesso: string;
   xmlPedidoEventoAssinado: string;
 }

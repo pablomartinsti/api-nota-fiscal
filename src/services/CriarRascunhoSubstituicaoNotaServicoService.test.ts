@@ -8,9 +8,11 @@ import {
 import { PerfilUsuario } from '../entities/Usuario';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
+import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { CriarRascunhoSubstituicaoNotaServicoService } from './CriarRascunhoSubstituicaoNotaServicoService';
 import { GerarProximoNumeroDpsService } from './GerarProximoNumeroDpsService';
+import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarReferenciasNotaServicoService } from './ValidarReferenciasNotaServicoService';
 
 const autenticacao = {
@@ -109,12 +111,18 @@ function criarService(notaSubstituida: NotaServico | null) {
       },
     }),
   } as unknown as ValidarReferenciasNotaServicoService;
+  const configuracaoFiscalRepository: ConfiguracaoFiscalEmpresaRepository = {
+    buscarPorEmpresaId: vi.fn().mockResolvedValue(null),
+  };
 
   return {
     service: new CriarRascunhoSubstituicaoNotaServicoService(
       notaRepository,
       validarReferencias,
       new GerarProximoNumeroDpsService(notaRepository),
+      new ResolverConfiguracaoFiscalEmpresaService(
+        configuracaoFiscalRepository,
+      ),
     ),
     salvar,
     validarReferencias,

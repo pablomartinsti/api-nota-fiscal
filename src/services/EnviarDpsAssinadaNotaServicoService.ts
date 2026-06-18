@@ -9,12 +9,14 @@ import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaI
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
 import { GerarXmlDpsAssinadoNotaServicoService } from './GerarXmlDpsAssinadoNotaServicoService';
+import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 
 export class EnviarDpsAssinadaNotaServicoService {
   constructor(
     private readonly notaRepository: NotaServicoRepository,
     private readonly gerarXmlDpsAssinadoService: GerarXmlDpsAssinadoNotaServicoService,
     private readonly clienteNfse: ClienteNfseNacional,
+    private readonly resolverConfiguracaoFiscal?: ResolverConfiguracaoFiscalEmpresaService,
   ) {}
 
   async executar(
@@ -43,9 +45,9 @@ export class EnviarDpsAssinadaNotaServicoService {
       autenticacao,
       notaId,
     );
-    const resultado = await this.clienteNfse.enviarDpsAssinada({
-      xmlAssinado,
-    });
+    const resultado = await this.clienteNfse.enviarDpsAssinada(
+      await this.criarInputEnvioDps(autenticacao.empresaId, xmlAssinado),
+    );
 
     if (!resultado.sucesso) {
       nota.registrarErroFiscal(this.criarMensagemErroFiscal(resultado.erros));
@@ -118,5 +120,23 @@ export class EnviarDpsAssinadaNotaServicoService {
     const prefixos = [erro.codigo, erro.campo].filter(Boolean).join(' ');
 
     return prefixos ? `${prefixos}: ${erro.mensagem}` : erro.mensagem;
+  }
+
+  private async criarInputEnvioDps(
+    empresaId: string,
+    xmlAssinado: string,
+  ) {
+    const configuracaoCertificado =
+      await this.resolverConfiguracaoFiscal?.obterCertificadoA1(empresaId);
+
+    if (!configuracaoCertificado) {
+      return { xmlAssinado };
+    }
+
+    return {
+      xmlAssinado,
+      certificadoPath: configuracaoCertificado.caminho,
+      certificadoSenha: configuracaoCertificado.senha,
+    };
   }
 }

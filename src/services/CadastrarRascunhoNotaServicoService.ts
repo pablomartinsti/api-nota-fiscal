@@ -7,6 +7,7 @@ import {
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
 import { GerarProximoNumeroDpsService } from './GerarProximoNumeroDpsService';
+import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarReferenciasNotaServicoService } from './ValidarReferenciasNotaServicoService';
 
 export interface CadastrarRascunhoNotaServicoInput {
@@ -28,6 +29,7 @@ export class CadastrarRascunhoNotaServicoService {
     private readonly notaRepository: NotaServicoRepository,
     private readonly validarReferencias: ValidarReferenciasNotaServicoService,
     private readonly gerarProximoNumeroDps: GerarProximoNumeroDpsService,
+    private readonly resolverConfiguracaoFiscal: ResolverConfiguracaoFiscalEmpresaService,
   ) {}
 
   async executar(
@@ -39,8 +41,11 @@ export class CadastrarRascunhoNotaServicoService {
       dados.clienteId,
       dados.servicoId,
     );
-    const ambienteFiscal = AmbienteFiscal.HOMOLOGACAO;
-    const serieDps = dados.serieDps ?? '1';
+    const configuracaoFiscal = await this.resolverConfiguracaoFiscal.executar(
+      autenticacao.empresaId,
+    );
+    const ambienteFiscal = configuracaoFiscal.ambienteFiscalPadrao;
+    const serieDps = dados.serieDps ?? configuracaoFiscal.serieDpsPadrao;
     const numeroDps = await this.gerarProximoNumeroDps.executar(
       autenticacao.empresaId,
       ambienteFiscal,

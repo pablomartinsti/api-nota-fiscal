@@ -1,11 +1,13 @@
 import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
 import { CertificadoA1CnpjDivergenteError } from '../errors/CertificadoA1CnpjDivergenteError';
 import { AssinadorXmlDps } from '../fiscal/AssinadorXmlDps';
-import { ProvedorCertificadoA1 } from '../fiscal/CertificadoA1';
+import { CertificadoA1, ProvedorCertificadoA1 } from '../fiscal/CertificadoA1';
+import { ProvedorCertificadoA1Arquivo } from '../fiscal/ProvedorCertificadoA1Arquivo';
 import { ValidadorXmlDps } from '../fiscal/ValidadorXmlDps';
 import { EmpresaRepository } from '../repositories/EmpresaRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
 import { GerarXmlDpsNotaServicoService } from './GerarXmlDpsNotaServicoService';
+import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 
 export class GerarXmlDpsAssinadoNotaServicoService {
   constructor(
@@ -14,6 +16,7 @@ export class GerarXmlDpsAssinadoNotaServicoService {
     private readonly validadorXml: ValidadorXmlDps,
     private readonly provedorCertificado: ProvedorCertificadoA1,
     private readonly assinadorXml: AssinadorXmlDps,
+    private readonly resolverConfiguracaoFiscal?: ResolverConfiguracaoFiscalEmpresaService,
   ) {}
 
   async executar(autenticacao: TokenPayload, notaId: string): Promise<string> {
@@ -28,7 +31,7 @@ export class GerarXmlDpsAssinadoNotaServicoService {
 
     await this.validadorXml.validar(xml);
 
-    const certificado = await this.provedorCertificado.obter();
+    const certificado = await this.obterCertificado(autenticacao.empresaId);
 
     if (certificado.cnpj !== empresa.cnpj) {
       throw new CertificadoA1CnpjDivergenteError();
@@ -39,5 +42,19 @@ export class GerarXmlDpsAssinadoNotaServicoService {
     await this.validadorXml.validar(xmlAssinado);
 
     return xmlAssinado;
+  }
+
+  private async obterCertificado(empresaId: string): Promise<CertificadoA1> {
+    const configuracaoCertificado =
+      await this.resolverConfiguracaoFiscal?.obterCertificadoA1(empresaId);
+
+    if (!configuracaoCertificado) {
+      return this.provedorCertificado.obter();
+    }
+
+    return new ProvedorCertificadoA1Arquivo(() => ({
+      caminho: configuracaoCertificado.caminho,
+      senha: configuracaoCertificado.senha,
+    })).obter();
   }
 }
