@@ -1,4 +1,5 @@
 import { NotaServico } from '../entities/NotaServico';
+import { AmbienteFiscal } from '../entities/NotaServico';
 
 export interface NotaServicoRepository {
   salvar(nota: NotaServico): Promise<NotaServico>;
@@ -7,4 +8,9 @@ export interface NotaServicoRepository {
     empresaId: string,
   ): Promise<NotaServico | null>;
   listarPorEmpresaId(empresaId: string): Promise<NotaServico[]>;
+  buscarMaiorNumeroDpsPorEmpresaAmbienteESerie(
+    empresaId: string,
+    ambienteFiscal: AmbienteFiscal,
+    serieDps: string,
+  ): Promise<number | null>;
 }

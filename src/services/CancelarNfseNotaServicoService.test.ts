@@ -136,6 +136,7 @@ function criarService(props?: {
     salvar,
     buscarPorIdEEmpresaId: vi.fn().mockResolvedValue(nota),
     listarPorEmpresaId: vi.fn(),
+    buscarMaiorNumeroDpsPorEmpresaAmbienteESerie: vi.fn(),
   };
   const empresaRepository: EmpresaRepository = {
     salvar: vi.fn(),

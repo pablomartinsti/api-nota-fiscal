@@ -21,6 +21,7 @@ import { ConsultarNfseEmitidaNotaServicoService } from '../services/ConsultarNfs
 import { CriarRascunhoSubstituicaoNotaServicoService } from '../services/CriarRascunhoSubstituicaoNotaServicoService';
 import { EmitirNotaServicoService } from '../services/EmitirNotaServicoService';
 import { EnviarDpsAssinadaNotaServicoService } from '../services/EnviarDpsAssinadaNotaServicoService';
+import { GerarProximoNumeroDpsService } from '../services/GerarProximoNumeroDpsService';
 import { GerarXmlDpsNotaServicoService } from '../services/GerarXmlDpsNotaServicoService';
 import { GerarXmlDpsAssinadoNotaServicoService } from '../services/GerarXmlDpsAssinadoNotaServicoService';
 import { ListarNotasServicoService } from '../services/ListarNotasServicoService';
@@ -36,6 +37,9 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
   const validarReferencias = new ValidarReferenciasNotaServicoService(
     clienteRepository,
     servicoRepository,
+  );
+  const gerarProximoNumeroDpsService = new GerarProximoNumeroDpsService(
+    notaRepository,
   );
   const gerarXmlDpsService = new GerarXmlDpsNotaServicoService(
     empresaRepository,
@@ -70,6 +74,7 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     new CadastrarRascunhoNotaServicoService(
       notaRepository,
       validarReferencias,
+      gerarProximoNumeroDpsService,
     ),
     new ListarNotasServicoService(notaRepository),
     new BuscarNotaServicoService(notaRepository),
@@ -109,6 +114,7 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     new CriarRascunhoSubstituicaoNotaServicoService(
       notaRepository,
       validarReferencias,
+      gerarProximoNumeroDpsService,
     ),
   );
 }

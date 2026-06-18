@@ -135,9 +135,11 @@ A nota precisa estar em `RASCUNHO` e conter:
 - valor do servico;
 - descricao;
 - serie da DPS;
-- numero da DPS;
 - data de competencia;
 - codigo IBGE do municipio de prestacao.
+
+O numero da DPS e gerado automaticamente quando `numeroDps` nao for informado.
+A regra inicial usa empresa, ambiente fiscal e serie da DPS.
 
 ## 6. Ordem recomendada do teste
 
@@ -277,7 +279,6 @@ Body:
   "valorServico": 700,
   "descricao": "Servicos contabeis corrigidos",
   "serieDps": "1",
-  "numeroDps": "3",
   "dataCompetencia": "2026-06-17",
   "codigoMunicipioPrestacao": "3170206",
   "tributacaoIssqn": "TRIBUTAVEL",

@@ -1,4 +1,4 @@
-import { NotaServico } from '../../entities/NotaServico';
+import { AmbienteFiscal, NotaServico } from '../../entities/NotaServico';
 import { NotaServicoRepository } from '../../repositories/NotaServicoRepository';
 import { PrismaNotaServicoMapper } from '../mappers/PrismaNotaServicoMapper';
 import { prisma } from '../prisma.client';
@@ -35,5 +35,30 @@ export class PrismaNotaServicoRepository implements NotaServicoRepository {
     });
 
     return registros.map(PrismaNotaServicoMapper.paraDominio);
+  }
+
+  async buscarMaiorNumeroDpsPorEmpresaAmbienteESerie(
+    empresaId: string,
+    ambienteFiscal: AmbienteFiscal,
+    serieDps: string,
+  ): Promise<number | null> {
+    const registros = await prisma.notaServico.findMany({
+      where: {
+        empresaId,
+        ambienteFiscal,
+        serieDps,
+        numeroDps: {
+          not: null,
+        },
+      },
+      select: {
+        numeroDps: true,
+      },
+    });
+    const numeros = registros
+      .map((registro) => Number(registro.numeroDps))
+      .filter((numero) => Number.isSafeInteger(numero) && numero > 0);
+
+    return numeros.length ? Math.max(...numeros) : null;
   }
 }

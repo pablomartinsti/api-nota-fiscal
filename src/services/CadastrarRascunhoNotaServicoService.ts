@@ -1,10 +1,12 @@
 import {
+  AmbienteFiscal,
   NotaServico,
   TipoRetencaoIssqn,
   TributacaoIssqn,
 } from '../entities/NotaServico';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
+import { GerarProximoNumeroDpsService } from './GerarProximoNumeroDpsService';
 import { ValidarReferenciasNotaServicoService } from './ValidarReferenciasNotaServicoService';
 
 export interface CadastrarRascunhoNotaServicoInput {
@@ -25,6 +27,7 @@ export class CadastrarRascunhoNotaServicoService {
   constructor(
     private readonly notaRepository: NotaServicoRepository,
     private readonly validarReferencias: ValidarReferenciasNotaServicoService,
+    private readonly gerarProximoNumeroDps: GerarProximoNumeroDpsService,
   ) {}
 
   async executar(
@@ -36,6 +39,14 @@ export class CadastrarRascunhoNotaServicoService {
       dados.clienteId,
       dados.servicoId,
     );
+    const ambienteFiscal = AmbienteFiscal.HOMOLOGACAO;
+    const serieDps = dados.serieDps ?? '1';
+    const numeroDps = await this.gerarProximoNumeroDps.executar(
+      autenticacao.empresaId,
+      ambienteFiscal,
+      serieDps,
+      dados.numeroDps,
+    );
     const nota = new NotaServico({
       empresaId: autenticacao.empresaId,
       usuarioId: autenticacao.usuarioId,
@@ -44,8 +55,9 @@ export class CadastrarRascunhoNotaServicoService {
       valorServico: dados.valorServico,
       aliquotaIss: servico.aliquotaIss,
       descricao: dados.descricao,
-      serieDps: dados.serieDps,
-      numeroDps: dados.numeroDps,
+      ambienteFiscal,
+      serieDps,
+      numeroDps,
       dataCompetencia: dados.dataCompetencia,
       codigoMunicipioPrestacao: dados.codigoMunicipioPrestacao,
       tributacaoIssqn: dados.tributacaoIssqn,

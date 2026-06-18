@@ -188,6 +188,10 @@ SEFIN aceita a DPS substituidora, a nota original passa para `SUBSTITUIDA` no
 sistema. A rota antiga `POST /notas-servico/:notaId/emitir` ainda usa o emissor
 simulado.
 
+Quando `numeroDps` nao e informado ao criar um rascunho, a API gera o proximo
+numero automaticamente por empresa, ambiente fiscal e serie da DPS. Informar
+`numeroDps` manualmente continua permitido para testes controlados.
+
 Variaveis fiscais:
 
 ```env

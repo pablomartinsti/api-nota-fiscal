@@ -145,6 +145,7 @@ function criarService(nota: NotaServico | null): {
     salvar: vi.fn(),
     buscarPorIdEEmpresaId: vi.fn().mockResolvedValue(nota),
     listarPorEmpresaId: vi.fn(),
+    buscarMaiorNumeroDpsPorEmpresaAmbienteESerie: vi.fn(),
   };
   const clienteNfse: ClienteNfseNacional = {
     enviarDpsAssinada: vi.fn(),

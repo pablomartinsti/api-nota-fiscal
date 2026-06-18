@@ -8,6 +8,7 @@ import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaI
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
 import { CadastrarRascunhoNotaServicoInput } from './CadastrarRascunhoNotaServicoService';
+import { GerarProximoNumeroDpsService } from './GerarProximoNumeroDpsService';
 import { ValidarReferenciasNotaServicoService } from './ValidarReferenciasNotaServicoService';
 
 export interface CriarRascunhoSubstituicaoNotaServicoInput
@@ -20,6 +21,7 @@ export class CriarRascunhoSubstituicaoNotaServicoService {
   constructor(
     private readonly notaRepository: NotaServicoRepository,
     private readonly validarReferencias: ValidarReferenciasNotaServicoService,
+    private readonly gerarProximoNumeroDps: GerarProximoNumeroDpsService,
   ) {}
 
   async executar(
@@ -54,14 +56,21 @@ export class CriarRascunhoSubstituicaoNotaServicoService {
       dados.clienteId,
       dados.servicoId,
     );
+    const serieDps = dados.serieDps ?? notaSubstituida.serieDps ?? '1';
+    const numeroDps = await this.gerarProximoNumeroDps.executar(
+      autenticacao.empresaId,
+      notaSubstituida.ambienteFiscal,
+      serieDps,
+      dados.numeroDps,
+    );
     const notaSubstituta = new NotaServico({
       empresaId: autenticacao.empresaId,
       usuarioId: autenticacao.usuarioId,
       clienteId: dados.clienteId,
       servicoId: dados.servicoId,
       ambienteFiscal: notaSubstituida.ambienteFiscal,
-      serieDps: dados.serieDps,
-      numeroDps: dados.numeroDps,
+      serieDps,
+      numeroDps,
       dataCompetencia: dados.dataCompetencia,
       codigoMunicipioPrestacao: dados.codigoMunicipioPrestacao,
       tributacaoIssqn: dados.tributacaoIssqn,
