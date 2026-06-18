@@ -105,6 +105,7 @@ function criarService(
     }),
   } as unknown as ValidarReferenciasNotaServicoService;
   const configuracaoFiscalRepository: ConfiguracaoFiscalEmpresaRepository = {
+    salvar: vi.fn(),
     buscarPorEmpresaId: vi.fn().mockResolvedValue(configuracaoFiscal),
   };
 

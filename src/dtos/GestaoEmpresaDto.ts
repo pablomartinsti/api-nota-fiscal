@@ -5,6 +5,7 @@ import {
   RegimeEspecialTributacao,
   RegimeTributario,
 } from '../entities/Empresa';
+import { AmbienteFiscal } from '../entities/NotaServico';
 
 export const atualizarEmpresaSchema = z.object({
   razaoSocial: z.string().trim().min(1),
@@ -30,4 +31,18 @@ export const atualizarEmpresaSchema = z.object({
   bairro: z.string().optional(),
   cidade: z.string().trim().min(1),
   uf: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/),
+});
+
+const textoOpcionalConfiguracaoFiscal = z
+  .string()
+  .trim()
+  .min(1)
+  .nullable()
+  .optional();
+
+export const atualizarConfiguracaoFiscalEmpresaSchema = z.object({
+  ambienteFiscalPadrao: z.enum(AmbienteFiscal),
+  serieDpsPadrao: z.string().trim().regex(/^\d{1,5}$/),
+  certificadoA1Path: textoOpcionalConfiguracaoFiscal,
+  certificadoA1Senha: textoOpcionalConfiguracaoFiscal,
 });

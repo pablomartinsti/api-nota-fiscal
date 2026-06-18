@@ -16,6 +16,15 @@ empresaRoutes.use('/empresa', (request, response, next) =>
 empresaRoutes.get('/empresa', (request, response) =>
   controller.buscar(request, response),
 );
+empresaRoutes.get('/empresa/configuracao-fiscal', (request, response) =>
+  controller.buscarConfiguracaoFiscal(request, response),
+);
+empresaRoutes.put(
+  '/empresa/configuracao-fiscal',
+  (request, response, next) => donoMiddleware.handle(request, response, next),
+  (request, response) =>
+    controller.atualizarConfiguracaoFiscal(request, response),
+);
 empresaRoutes.put(
   '/empresa',
   (request, response, next) => donoMiddleware.handle(request, response, next),

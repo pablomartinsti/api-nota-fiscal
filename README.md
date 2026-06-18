@@ -126,6 +126,8 @@ npm run prisma:studio
 
 - `GET /empresa`
 - `PUT /empresa`
+- `GET /empresa/configuracao-fiscal`
+- `PUT /empresa/configuracao-fiscal`
 - `POST /usuarios`
 - `GET /usuarios`
 - `PATCH /usuarios/:usuarioId/perfil`
@@ -211,6 +213,20 @@ configuracao ao criar rascunhos, assinar XML, enviar DPS, consultar NFS-e e
 cancelar NFS-e. Quando a empresa ainda nao tiver configuracao ativa ou
 certificado completo configurado, a API usa temporariamente as variaveis globais
 do `.env` como fallback.
+
+Exemplo para atualizar a configuracao fiscal da empresa autenticada:
+
+```json
+{
+  "ambienteFiscalPadrao": "HOMOLOGACAO",
+  "serieDpsPadrao": "1",
+  "certificadoA1Path": "C:/caminho/certificados/empresa.pfx",
+  "certificadoA1Senha": "senha-do-certificado"
+}
+```
+
+A resposta nunca retorna `certificadoA1Senha`; ela informa apenas
+`certificadoA1SenhaConfigurada`.
 
 Antes da emissao real completa, sera necessario armazenar certificados digitais
 por empresa com seguranca e evoluir os demais endpoints fiscais, como consulta

@@ -45,6 +45,7 @@ describe('ResolverConfiguracaoFiscalEmpresaService', () => {
 
 function criarService(configuracao: ConfiguracaoFiscalEmpresa | null) {
   const repository: ConfiguracaoFiscalEmpresaRepository = {
+    salvar: vi.fn(),
     buscarPorEmpresaId: vi.fn().mockResolvedValue(configuracao),
   };
 

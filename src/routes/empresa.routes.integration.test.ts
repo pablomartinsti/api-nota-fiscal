@@ -8,6 +8,7 @@ import { PrismaEmpresaRepository } from '../database/repositories/PrismaEmpresaR
 import { PrismaUsuarioRepository } from '../database/repositories/PrismaUsuarioRepository';
 import { prisma } from '../database/prisma.client';
 import { Empresa, RegimeTributario } from '../entities/Empresa';
+import { AmbienteFiscal } from '../entities/NotaServico';
 import { PerfilUsuario, Usuario } from '../entities/Usuario';
 import { BcryptGeradorHash } from '../security/BcryptGeradorHash';
 
@@ -71,6 +72,9 @@ function dadosAtualizacao() {
 
 describe('Gestao da Empresa autenticada HTTP', () => {
   afterAll(async () => {
+    await prisma.configuracaoFiscalEmpresa.deleteMany({
+      where: { empresaId: { in: empresaIdsCriados } },
+    });
     await prisma.usuario.deleteMany({
       where: { empresaId: { in: empresaIdsCriados } },
     });
@@ -169,5 +173,70 @@ describe('Gestao da Empresa autenticada HTTP', () => {
     expect(emailInvalido.status).toBe(400);
     expect(cepInvalido.status).toBe(400);
     expect(ufInvalida.status).toBe(400);
+  });
+
+  it('deve permitir ao DONO consultar e atualizar configuracao fiscal da propria empresa', async () => {
+    const dono = await criarContexto(PerfilUsuario.DONO);
+
+    const consultaInicial = await request(app)
+      .get('/empresa/configuracao-fiscal')
+      .set('Authorization', `Bearer ${dono.token}`);
+
+    expect(consultaInicial.status).toBe(200);
+    expect(consultaInicial.body).toEqual(
+      expect.objectContaining({
+        empresaId: dono.empresa.id,
+        configurada: false,
+        ambienteFiscalPadrao: AmbienteFiscal.HOMOLOGACAO,
+        serieDpsPadrao: '1',
+        certificadoA1SenhaConfigurada: false,
+        ativo: false,
+      }),
+    );
+
+    const atualizacao = await request(app)
+      .put('/empresa/configuracao-fiscal')
+      .set('Authorization', `Bearer ${dono.token}`)
+      .send({
+        ambienteFiscalPadrao: AmbienteFiscal.HOMOLOGACAO,
+        serieDpsPadrao: '2',
+        certificadoA1Path: 'C:/certificados/empresa.pfx',
+        certificadoA1Senha: 'senha-do-certificado',
+      });
+
+    expect(atualizacao.status).toBe(200);
+    expect(atualizacao.body).toEqual(
+      expect.objectContaining({
+        empresaId: dono.empresa.id,
+        configurada: true,
+        ambienteFiscalPadrao: AmbienteFiscal.HOMOLOGACAO,
+        serieDpsPadrao: '2',
+        certificadoA1Path: 'C:/certificados/empresa.pfx',
+        certificadoA1SenhaConfigurada: true,
+        ativo: true,
+      }),
+    );
+    expect(atualizacao.body.certificadoA1Senha).toBeUndefined();
+  });
+
+  it('deve impedir ADMIN e OPERADOR de atualizar configuracao fiscal', async () => {
+    const admin = await criarContexto(PerfilUsuario.ADMIN);
+    const operador = await criarContexto(PerfilUsuario.OPERADOR);
+    const body = {
+      ambienteFiscalPadrao: AmbienteFiscal.HOMOLOGACAO,
+      serieDpsPadrao: '1',
+    };
+
+    const respostaAdmin = await request(app)
+      .put('/empresa/configuracao-fiscal')
+      .set('Authorization', `Bearer ${admin.token}`)
+      .send(body);
+    const respostaOperador = await request(app)
+      .put('/empresa/configuracao-fiscal')
+      .set('Authorization', `Bearer ${operador.token}`)
+      .send(body);
+
+    expect(respostaAdmin.status).toBe(403);
+    expect(respostaOperador.status).toBe(403);
   });
 });

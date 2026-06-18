@@ -62,6 +62,31 @@ da DPS e certificado A1 quando esses dados estiverem cadastrados para a empresa.
 Enquanto a empresa ainda nao tiver configuracao ativa ou certificado completo,
 o `.env` global continua sendo usado como fallback temporario.
 
+Para cadastrar a configuracao fiscal pela API, use a rota autenticada:
+
+```http
+PUT /empresa/configuracao-fiscal
+```
+
+Body:
+
+```json
+{
+  "ambienteFiscalPadrao": "HOMOLOGACAO",
+  "serieDpsPadrao": "1",
+  "certificadoA1Path": "C:/caminho/certificados/empresa.pfx",
+  "certificadoA1Senha": "senha-do-certificado"
+}
+```
+
+Para consultar:
+
+```http
+GET /empresa/configuracao-fiscal
+```
+
+A senha do certificado nao e retornada pela API.
+
 ## 3. Checagem local
 
 Antes de enviar qualquer DPS, rode:
