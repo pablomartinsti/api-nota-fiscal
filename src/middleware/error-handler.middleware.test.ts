@@ -9,6 +9,42 @@ describe('errorHandler', () => {
     vi.restoreAllMocks();
   });
 
+  it('deve retornar 400 para JSON invalido', async () => {
+    const app = express();
+
+    app.use(express.json());
+    app.post('/json', (_request, response) => response.status(204).send());
+    app.use(errorHandler);
+
+    const response = await request(app)
+      .post('/json')
+      .set('Content-Type', 'application/json')
+      .send('{"campo":');
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      message: 'JSON da requisicao invalido.',
+    });
+  });
+
+  it('deve retornar 413 para body maior que o limite configurado', async () => {
+    const app = express();
+
+    app.use(express.json({ limit: '10b' }));
+    app.post('/json', (_request, response) => response.status(204).send());
+    app.use(errorHandler);
+
+    const response = await request(app)
+      .post('/json')
+      .set('Content-Type', 'application/json')
+      .send({ campo: 'conteudo-maior-que-dez-bytes' });
+
+    expect(response.status).toBe(413);
+    expect(response.body).toEqual({
+      message: 'Corpo da requisicao excede o tamanho maximo permitido.',
+    });
+  });
+
   it('deve retornar 500 sem expor detalhes de erros inesperados', async () => {
     const error = vi
       .spyOn(console, 'error')

@@ -29,12 +29,32 @@ import { XmlDpsInvalidoError } from '../errors/XmlDpsInvalidoError';
 import { ProducaoRealBloqueadaError } from '../errors/ProducaoRealBloqueadaError';
 import { logger } from '../observability/logger';
 
+type HttpParserError = Error & {
+  status?: number;
+  statusCode?: number;
+  type?: string;
+};
+
 export const errorHandler: ErrorRequestHandler = (
   error,
   request,
   response,
   _next,
 ) => {
+  if (isErroJsonInvalido(error)) {
+    response.status(400).json({
+      message: 'JSON da requisicao invalido.',
+    });
+    return;
+  }
+
+  if (isErroBodyMuitoGrande(error)) {
+    response.status(413).json({
+      message: 'Corpo da requisicao excede o tamanho maximo permitido.',
+    });
+    return;
+  }
+
   if (error instanceof ZodError) {
     response.status(400).json({
       message: 'Dados inválidos.',
@@ -170,3 +190,22 @@ export const errorHandler: ErrorRequestHandler = (
     message: 'Erro interno do servidor.',
   });
 };
+
+function isErroJsonInvalido(error: unknown): boolean {
+  const erro = error as HttpParserError;
+
+  return (
+    error instanceof SyntaxError &&
+    (erro.status === 400 || erro.statusCode === 400) &&
+    erro.type === 'entity.parse.failed'
+  );
+}
+
+function isErroBodyMuitoGrande(error: unknown): boolean {
+  const erro = error as HttpParserError;
+
+  return (
+    (erro.status === 413 || erro.statusCode === 413) &&
+    erro.type === 'entity.too.large'
+  );
+}
