@@ -26,10 +26,11 @@ import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaI
 import { UsuarioNaoEncontradoError } from '../errors/UsuarioNaoEncontradoError';
 import { XmlDpsInvalidoError } from '../errors/XmlDpsInvalidoError';
 import { ProducaoRealBloqueadaError } from '../errors/ProducaoRealBloqueadaError';
+import { logger } from '../observability/logger';
 
 export const errorHandler: ErrorRequestHandler = (
   error,
-  _request,
+  request,
   response,
   _next,
 ) => {
@@ -147,6 +148,19 @@ export const errorHandler: ErrorRequestHandler = (
     });
     return;
   }
+
+  logger.error({
+    evento: 'erro_inesperado',
+    contexto: {
+      method: request.method,
+      path: request.path,
+      usuarioId: request.autenticacao?.usuarioId,
+      empresaId: request.autenticacao?.empresaId,
+      errorName: error instanceof Error ? error.name : undefined,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    },
+  });
 
   response.status(500).json({
     message: 'Erro interno do servidor.',

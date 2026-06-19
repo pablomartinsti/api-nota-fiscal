@@ -3,6 +3,7 @@ import express from 'express';
 
 import { env } from './config/env';
 import { errorHandler } from './middleware/error-handler.middleware';
+import { requestLogger } from './middleware/request-logger.middleware';
 import { routes } from './routes';
 
 const app = express();
@@ -13,6 +14,7 @@ const origensPermitidas =
 
 app.use(cors({ origin: origensPermitidas }));
 app.use(express.json());
+app.use(requestLogger);
 app.use(routes);
 app.use((_request, response) => {
   return response.status(404).json({

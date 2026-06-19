@@ -270,3 +270,10 @@ automatica e suporte aos demais regimes tributarios.
 Para preparar o primeiro teste em Producao Restrita, consulte:
 
 - [Guia de homologacao em Producao Restrita](docs/homologacao-producao-restrita.md)
+
+## Logs seguros
+
+A API registra logs tecnicos em JSON para requisicoes HTTP e erros inesperados.
+Esses logs incluem metodo, rota, status HTTP, duracao e contexto autenticado
+quando existir. Campos sensiveis como token, senha, certificado e XML fiscal
+sao mascarados e o body completo da requisicao nao e registrado.
