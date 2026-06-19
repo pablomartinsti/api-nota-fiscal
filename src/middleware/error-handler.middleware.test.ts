@@ -32,7 +32,7 @@ describe('errorHandler', () => {
     const payload = JSON.parse(error.mock.calls[0][0] as string);
     expect(payload.evento).toBe('erro_inesperado');
     expect(payload.contexto.errorMessage).toBe(
-      'Detalhe interno que nÃ£o deve ser exposto.',
+      'Detalhe interno que não deve ser exposto.',
     );
   });
 });
