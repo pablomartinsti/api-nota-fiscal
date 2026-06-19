@@ -9,6 +9,7 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "start": "node build/server.js",
     "nfse:check-homologacao": "tsx src/scripts/check-homologacao-nfse.ts",
+    "config:check-production": "tsx src/scripts/check-production-config.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio"

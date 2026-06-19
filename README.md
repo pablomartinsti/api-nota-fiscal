@@ -102,6 +102,7 @@ npm run build
 npm test
 npm run test:integration
 npm run nfse:check-homologacao
+npm run config:check-production
 npm run prisma:generate
 npm run prisma:migrate
 npm run prisma:studio
@@ -262,6 +263,21 @@ configurado. Em `HOMOLOGACAO`, o fluxo continua funcionando normalmente.
 Mesmo com `NFSE_PERMITIR_PRODUCAO_REAL="true"`, uma nota em `PRODUCAO` exige
 certificado A1 configurado na propria empresa. O sistema nao usa o certificado
 global do `.env` como fallback em producao real.
+
+Em `NODE_ENV="production"`, a API valida configuracoes minimas de seguranca
+antes de subir:
+
+- `JWT_SECRET` deve ser forte e ter pelo menos 32 caracteres
+- `CORS_ORIGIN` nao pode permitir `*`
+- `NFSE_CERTIFICADO_CRYPTO_KEY` deve ser uma chave valida de 32 bytes
+- quando `NFSE_PERMITIR_PRODUCAO_REAL="true"`, a URL da SEFIN nao pode apontar
+  para Producao Restrita e os XSDs de DPS/evento precisam estar configurados
+
+Para simular essa validacao localmente antes de publicar:
+
+```bash
+npm run config:check-production
+```
 
 Antes da emissao real completa, sera necessario armazenar certificados digitais
 por empresa com seguranca e evoluir monitoramento, logs fiscais, conciliacao
