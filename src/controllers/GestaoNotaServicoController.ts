@@ -6,6 +6,7 @@ import {
   cadastrarRascunhoNotaServicoSchema,
   emitirNotaServicoSchema,
   notaServicoParamsSchema,
+  reconciliarEnvioDpsNotaServicoSchema,
   substituirNfseNotaServicoSchema,
 } from '../dtos/GestaoNotaServicoDto';
 import { NotaServicoPresenter } from '../presenters/NotaServicoPresenter';
@@ -21,6 +22,7 @@ import { EnviarDpsAssinadaNotaServicoService } from '../services/EnviarDpsAssina
 import { GerarXmlDpsNotaServicoService } from '../services/GerarXmlDpsNotaServicoService';
 import { GerarXmlDpsAssinadoNotaServicoService } from '../services/GerarXmlDpsAssinadoNotaServicoService';
 import { ListarNotasServicoService } from '../services/ListarNotasServicoService';
+import { ReconciliarEnvioDpsNotaServicoService } from '../services/ReconciliarEnvioDpsNotaServicoService';
 import { RetornarNotaServicoParaRascunhoService } from '../services/RetornarNotaServicoParaRascunhoService';
 import { ValidarProntidaoFiscalNotaServicoService } from '../services/ValidarProntidaoFiscalNotaServicoService';
 
@@ -40,6 +42,7 @@ export class GestaoNotaServicoController {
     private readonly consultarNfseEmitidaService: ConsultarNfseEmitidaNotaServicoService,
     private readonly cancelarNfseService: CancelarNfseNotaServicoService,
     private readonly criarRascunhoSubstituicaoService: CriarRascunhoSubstituicaoNotaServicoService,
+    private readonly reconciliarEnvioDpsService: ReconciliarEnvioDpsNotaServicoService,
   ) {}
 
   async cadastrar(request: Request, response: Response): Promise<Response> {
@@ -211,5 +214,33 @@ export class GestaoNotaServicoController {
     );
 
     return response.status(201).json(NotaServicoPresenter.paraHttp(nota));
+  }
+
+  async reconciliarEnvioDps(
+    request: Request,
+    response: Response,
+  ): Promise<Response> {
+    const { notaId } = notaServicoParamsSchema.parse(request.params);
+    const input = reconciliarEnvioDpsNotaServicoSchema.parse(
+      request.body ?? {},
+    );
+    const resultado = await this.reconciliarEnvioDpsService.executar(
+      request.autenticacao,
+      notaId,
+      input,
+    );
+
+    return response.status(200).json({
+      nota: NotaServicoPresenter.paraHttp(resultado.nota),
+      reconciliada: resultado.reconciliada,
+      sucesso: resultado.sucesso,
+      statusHttp: resultado.statusHttp,
+      chaveAcesso: resultado.chaveAcesso,
+      tipoAmbiente: resultado.tipoAmbiente,
+      versaoAplicativo: resultado.versaoAplicativo,
+      dataHoraProcessamento: resultado.dataHoraProcessamento,
+      xmlAutorizado: resultado.xmlAutorizado,
+      erros: resultado.erros,
+    });
   }
 }

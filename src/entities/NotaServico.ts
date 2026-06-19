@@ -462,6 +462,16 @@ export class NotaServico {
   registrarSucessoFiscal(props: RegistrarSucessoFiscalProps): void {
     this.garantirRascunhoOuProcessando();
 
+    this.aplicarSucessoFiscal(props);
+  }
+
+  reconciliarSucessoFiscal(props: RegistrarSucessoFiscalProps): void {
+    this.garantirErroOuProcessando();
+
+    this.aplicarSucessoFiscal(props);
+  }
+
+  private aplicarSucessoFiscal(props: RegistrarSucessoFiscalProps): void {
     const numeroNfse = NotaServico.normalizarTextoOpcional(props.numeroNfse);
     const codigoVerificacao = NotaServico.normalizarTextoOpcional(
       props.codigoVerificacao,
@@ -521,6 +531,19 @@ export class NotaServico {
   registrarErroFiscal(mensagemErroFiscal: string): void {
     this.registrarErro(mensagemErroFiscal);
     this._mensagemErroFiscal = this._mensagemErro;
+    this.atualizarDataDeAlteracao();
+  }
+
+  registrarFalhaReconciliacaoFiscal(mensagemErroFiscal: string): void {
+    this.garantirErroOuProcessando();
+
+    const mensagem = mensagemErroFiscal.trim();
+
+    NotaServico.validarTextoObrigatorio(mensagem, 'Mensagem de erro');
+
+    this._mensagemErro = mensagem;
+    this._mensagemErroFiscal = mensagem;
+    this._status = StatusNota.ERRO;
     this.atualizarDataDeAlteracao();
   }
 
@@ -784,6 +807,17 @@ export class NotaServico {
     ) {
       throw new Error(
         'A operação só pode ser realizada em uma nota rascunho ou em processamento.',
+      );
+    }
+  }
+
+  private garantirErroOuProcessando(): void {
+    if (
+      this._status !== StatusNota.ERRO &&
+      this._status !== StatusNota.PROCESSANDO
+    ) {
+      throw new Error(
+        'A operacao so pode ser realizada em uma nota com erro ou em processamento.',
       );
     }
   }

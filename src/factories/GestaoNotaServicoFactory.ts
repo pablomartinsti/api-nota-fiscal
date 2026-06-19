@@ -27,6 +27,7 @@ import { GerarProximoNumeroDpsService } from '../services/GerarProximoNumeroDpsS
 import { GerarXmlDpsNotaServicoService } from '../services/GerarXmlDpsNotaServicoService';
 import { GerarXmlDpsAssinadoNotaServicoService } from '../services/GerarXmlDpsAssinadoNotaServicoService';
 import { ListarNotasServicoService } from '../services/ListarNotasServicoService';
+import { ReconciliarEnvioDpsNotaServicoService } from '../services/ReconciliarEnvioDpsNotaServicoService';
 import { ResolverConfiguracaoFiscalEmpresaService } from '../services/ResolverConfiguracaoFiscalEmpresaService';
 import { RetornarNotaServicoParaRascunhoService } from '../services/RetornarNotaServicoParaRascunhoService';
 import { ValidarReferenciasNotaServicoService } from '../services/ValidarReferenciasNotaServicoService';
@@ -145,6 +146,12 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       notaRepository,
       validarReferencias,
       gerarProximoNumeroDpsService,
+      resolverConfiguracaoFiscal,
+      validarPermissaoProducaoReal,
+    ),
+    new ReconciliarEnvioDpsNotaServicoService(
+      notaRepository,
+      clienteNfse,
       resolverConfiguracaoFiscal,
       validarPermissaoProducaoReal,
     ),

@@ -285,6 +285,38 @@ describe('NotaServico', () => {
     expect(nota.mensagemErroFiscal).toBe('Falha de comunicacao com a SEFIN');
   });
 
+  it('deve reconciliar sucesso fiscal de uma nota com erro', () => {
+    const nota = criarNota();
+    const dataAutorizacao = new Date('2026-06-18T12:00:00.000Z');
+
+    nota.registrarErroFiscal('Timeout ao enviar DPS');
+    nota.reconciliarSucessoFiscal({
+      chaveAcesso: '12345678901234567890123456789012345678901234567890',
+      xmlAutorizado: '<NFSe>autorizada</NFSe>',
+      dataAutorizacao,
+    });
+
+    expect(nota.status).toBe(StatusNota.EMITIDA);
+    expect(nota.chaveAcesso).toBe(
+      '12345678901234567890123456789012345678901234567890',
+    );
+    expect(nota.xmlAutorizado).toBe('<NFSe>autorizada</NFSe>');
+    expect(nota.dataAutorizacao).toBe(dataAutorizacao);
+    expect(nota.mensagemErroFiscal).toBeUndefined();
+  });
+
+  it('nao deve reconciliar uma nota que ainda esta em rascunho', () => {
+    const nota = criarNota();
+
+    expect(() =>
+      nota.reconciliarSucessoFiscal({
+        chaveAcesso: '12345678901234567890123456789012345678901234567890',
+      }),
+    ).toThrow(
+      'A operacao so pode ser realizada em uma nota com erro ou em processamento.',
+    );
+  });
+
   it('deve registrar sucesso fiscal sem codigo de verificacao quando houver chave nacional', () => {
     const nota = criarNota();
 

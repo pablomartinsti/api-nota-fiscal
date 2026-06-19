@@ -291,6 +291,36 @@ Erros comuns:
 - resposta fiscal com `mensagemErroFiscal`: a SEFIN processou a requisicao e
   recusou por regra fiscal, dados da DPS, prestador, tomador ou servico.
 
+Se o erro for de comunicacao ou timeout, nao reenvie a DPS imediatamente. Antes
+disso, tente reconciliar a nota pela chave de acesso, caso voce tenha obtido a
+chave no portal, em log fiscal ou em retorno parcial:
+
+```http
+POST /notas-servico/:notaId/reconciliar-envio
+```
+
+Body:
+
+```json
+{
+  "chaveAcesso": "12345678901234567890123456789012345678901234567890"
+}
+```
+
+Exemplo com `curl`:
+
+```bash
+curl -X POST "http://localhost:3333/notas-servico/NOTA_ID/reconciliar-envio" \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"chaveAcesso":"12345678901234567890123456789012345678901234567890"}'
+```
+
+Se a nota local ja possuir `chaveAcesso`, o body pode ser `{}`. Essa rota so
+deve ser usada quando a nota estiver em `ERRO` ou `PROCESSANDO`. Se a SEFIN
+confirmar a NFS-e, a API atualiza a nota para `EMITIDA`. Se a SEFIN nao
+encontrar a NFS-e, a nota permanece em `ERRO` com a mensagem fiscal da consulta.
+
 ## 8. Depois do primeiro envio
 
 Se a nota for emitida:

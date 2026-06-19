@@ -39,6 +39,10 @@ notaServicoRoutes.get(
   (request, response) => controller.consultarNfseEmitida(request, response),
 );
 notaServicoRoutes.post(
+  '/notas-servico/:notaId/reconciliar-envio',
+  (request, response) => controller.reconciliarEnvioDps(request, response),
+);
+notaServicoRoutes.post(
   '/notas-servico/:notaId/cancelar-nfse',
   (request, response) => controller.cancelarNfse(request, response),
 );

@@ -156,6 +156,7 @@ npm run prisma:studio
 - `GET /notas-servico/:notaId/xml-dps-assinado`
 - `POST /notas-servico/:notaId/enviar-dps`
 - `GET /notas-servico/:notaId/consulta-nfse`
+- `POST /notas-servico/:notaId/reconciliar-envio`
 - `POST /notas-servico/:notaId/cancelar-nfse`
 - `POST /notas-servico/:notaId/substituir`
 - `PUT /notas-servico/:notaId`
@@ -185,7 +186,10 @@ NotaServico conforme o retorno recebido. Antes da chamada externa, a nota sai
 de `RASCUNHO` para `PROCESSANDO`, evitando novo envio concorrente da mesma
 DPS. Em caso de rejeicao fiscal, retorno inconsistente ou falha de comunicacao,
 a nota fica como `ERRO` com mensagem rastreavel; para reenviar, e necessario
-retornar manualmente para rascunho. A rota
+retornar manualmente para rascunho. Se houver duvida se a SEFIN autorizou a
+NFS-e apesar de um timeout ou erro de comunicacao local, a rota
+`POST /notas-servico/:notaId/reconciliar-envio` consulta a SEFIN pela
+`chaveAcesso` e atualiza a nota para `EMITIDA` quando a NFS-e existir. A rota
 `POST /notas-servico/:notaId/cancelar-nfse` registra o evento oficial de
 cancelamento e so muda a nota para `CANCELADA` se a SEFIN aceitar. A rota
 `POST /notas-servico/:notaId/substituir` cria um novo rascunho com vinculo para
@@ -255,8 +259,8 @@ certificado A1 configurado na propria empresa. O sistema nao usa o certificado
 global do `.env` como fallback em producao real.
 
 Antes da emissao real completa, sera necessario armazenar certificados digitais
-por empresa com seguranca e evoluir os demais endpoints fiscais, como consulta
-por chave de acesso e eventos de cancelamento.
+por empresa com seguranca e evoluir monitoramento, logs fiscais, conciliacao
+automatica e suporte aos demais regimes tributarios.
 
 Para preparar o primeiro teste em Producao Restrita, consulte:
 

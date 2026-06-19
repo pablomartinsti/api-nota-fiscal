@@ -41,6 +41,14 @@ export const cancelarNfseNotaServicoSchema = z.object({
   motivo: z.string().trim().min(15).max(255),
 });
 
+export const reconciliarEnvioDpsNotaServicoSchema = z.object({
+  chaveAcesso: z
+    .string()
+    .trim()
+    .regex(/^\d{50}$/)
+    .optional(),
+});
+
 export const substituirNfseNotaServicoSchema = z.object({
   ...camposRascunhoNotaServico,
   codigoMotivoSubstituicao: z.enum(CodigoMotivoSubstituicaoNfse),
