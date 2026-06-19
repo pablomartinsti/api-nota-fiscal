@@ -4,11 +4,13 @@ import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaI
 import { EmissorNotaServico } from '../fiscal/EmissorNotaServico';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
+import { ValidarOperacaoSimuladaService } from './ValidarOperacaoSimuladaService';
 
 export class EmitirNotaServicoService {
   constructor(
     private readonly notaRepository: NotaServicoRepository,
     private readonly emissor: EmissorNotaServico,
+    private readonly validarOperacaoSimulada?: ValidarOperacaoSimuladaService,
   ) {}
 
   async executar(
@@ -16,6 +18,8 @@ export class EmitirNotaServicoService {
     notaId: string,
     simularFalha = false,
   ): Promise<NotaServico> {
+    this.validarOperacaoSimulada?.executar();
+
     const nota = await this.notaRepository.buscarPorIdEEmpresaId(
       notaId,
       autenticacao.empresaId,

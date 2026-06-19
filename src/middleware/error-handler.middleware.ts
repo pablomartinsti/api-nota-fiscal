@@ -19,6 +19,7 @@ import { EmailJaCadastradoError } from '../errors/EmailJaCadastradoError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { NotaServicoComPendenciasFiscaisError } from '../errors/NotaServicoComPendenciasFiscaisError';
 import { NotaServicoNaoPodeSerAlteradaError } from '../errors/NotaServicoNaoPodeSerAlteradaError';
+import { OperacaoSimuladaBloqueadaError } from '../errors/OperacaoSimuladaBloqueadaError';
 import { ServicoInativoError } from '../errors/ServicoInativoError';
 import { ServicoNaoEncontradoError } from '../errors/ServicoNaoEncontradoError';
 import { SenhaAtualIncorretaError } from '../errors/SenhaAtualIncorretaError';
@@ -99,7 +100,10 @@ export const errorHandler: ErrorRequestHandler = (
     return;
   }
 
-  if (error instanceof AcessoNegadoError) {
+  if (
+    error instanceof AcessoNegadoError ||
+    error instanceof OperacaoSimuladaBloqueadaError
+  ) {
     response.status(403).json({
       message: error.message,
     });

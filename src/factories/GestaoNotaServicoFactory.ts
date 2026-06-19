@@ -36,6 +36,7 @@ import { RetornarNotaServicoParaRascunhoService } from '../services/RetornarNota
 import { ValidarReferenciasNotaServicoService } from '../services/ValidarReferenciasNotaServicoService';
 import { ValidarProntidaoFiscalNotaServicoService } from '../services/ValidarProntidaoFiscalNotaServicoService';
 import { ValidarPermissaoProducaoRealService } from '../services/ValidarPermissaoProducaoRealService';
+import { ValidarOperacaoSimuladaService } from '../services/ValidarOperacaoSimuladaService';
 
 export function criarGestaoNotaServicoController(): GestaoNotaServicoController {
   const notaRepository = new PrismaNotaServicoRepository();
@@ -58,6 +59,9 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     new ValidarPermissaoProducaoRealService(
       env.NFSE_PERMITIR_PRODUCAO_REAL,
     );
+  const validarOperacaoSimulada = new ValidarOperacaoSimuladaService(
+    env.NODE_ENV,
+  );
   const registrarEventoFiscal =
     new RegistrarEventoFiscalNotaServicoService(eventoFiscalRepository);
   const validarReferencias = new ValidarReferenciasNotaServicoService(
@@ -116,9 +120,10 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     new EmitirNotaServicoService(
       notaRepository,
       new EmissorNotaServicoSimulado(),
+      validarOperacaoSimulada,
     ),
     new RetornarNotaServicoParaRascunhoService(notaRepository),
-    new CancelarNotaServicoService(notaRepository),
+    new CancelarNotaServicoService(notaRepository, validarOperacaoSimulada),
     new ValidarProntidaoFiscalNotaServicoService(
       empresaRepository,
       clienteRepository,

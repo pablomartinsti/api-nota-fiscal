@@ -266,6 +266,12 @@ Enviar DPS, consultar NFS-e, cancelar NFS-e e criar substituicao em producao
 real so sao permitidos quando `NFSE_PERMITIR_PRODUCAO_REAL="true"` estiver
 configurado. Em `HOMOLOGACAO`, o fluxo continua funcionando normalmente.
 
+As rotas simuladas `POST /notas-servico/:notaId/emitir` e
+`POST /notas-servico/:notaId/cancelar` existem apenas para desenvolvimento e
+testes locais. Em `NODE_ENV="production"`, elas ficam bloqueadas. Para uso
+fiscal real, use `POST /notas-servico/:notaId/enviar-dps` e
+`POST /notas-servico/:notaId/cancelar-nfse`.
+
 Mesmo com `NFSE_PERMITIR_PRODUCAO_REAL="true"`, uma nota em `PRODUCAO` exige
 certificado A1 configurado na propria empresa. O sistema nao usa o certificado
 global do `.env` como fallback em producao real.
