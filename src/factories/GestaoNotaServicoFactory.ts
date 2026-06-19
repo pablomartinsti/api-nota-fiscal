@@ -129,6 +129,13 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       clienteRepository,
       servicoRepository,
       notaRepository,
+      {
+        configuracaoFiscalRepository,
+        permitirProducaoReal: env.NFSE_PERMITIR_PRODUCAO_REAL,
+        baseUrlProducao: env.NFSE_SEFIN_PRODUCAO_BASE_URL,
+        xsdDpsPath: env.NFSE_XSD_DPS_PATH,
+        xsdEventoPath: env.NFSE_XSD_EVENTO_PATH,
+      },
     ),
     gerarXmlDpsService,
     gerarXmlDpsAssinadoService,

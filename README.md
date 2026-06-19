@@ -308,9 +308,48 @@ Para simular essa validacao localmente antes de publicar:
 npm run config:check-production
 ```
 
-Antes da emissao real completa, sera necessario armazenar certificados digitais
-por empresa com seguranca e evoluir monitoramento, logs fiscais, conciliacao
-automatica e suporte aos demais regimes tributarios.
+Antes de enviar a primeira DPS em producao real, use a rota de prontidao da
+nota:
+
+```http
+GET /notas-servico/:notaId/prontidao-fiscal
+```
+
+Para notas em `HOMOLOGACAO`, ela confere somente os dados fiscais minimos da
+DPS. Para notas em `PRODUCAO`, a resposta tambem inclui o bloco
+`producaoReal`, conferindo:
+
+- `NFSE_PERMITIR_PRODUCAO_REAL`
+- URL oficial de producao da SEFIN
+- XSD da DPS
+- XSD de evento
+- certificado A1 configurado na propria empresa
+
+Exemplo de pendencias para uma nota de producao ainda bloqueada:
+
+```json
+{
+  "pronto": false,
+  "pendencias": [
+    "producaoReal.permissao",
+    "empresa.configuracaoFiscal.certificadoA1"
+  ],
+  "producaoReal": {
+    "habilitada": false,
+    "urlSefinProducaoConfigurada": true,
+    "xsdDpsConfigurado": true,
+    "xsdEventoConfigurado": true,
+    "certificadoA1EmpresaConfigurado": false
+  }
+}
+```
+
+Quando essa rota retornar `pronto: true` para uma nota em `PRODUCAO`, a API
+estara pronta para uma tentativa manual de envio real pela rota
+`POST /notas-servico/:notaId/enviar-dps`.
+
+Antes da emissao real completa em clientes de outros regimes, ainda sera
+necessario validar as regras fiscais especificas de cada regime tributario.
 
 Para preparar o primeiro teste em Producao Restrita, consulte:
 
