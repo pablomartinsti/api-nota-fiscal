@@ -25,6 +25,12 @@ empresaRoutes.put(
   (request, response) =>
     controller.atualizarConfiguracaoFiscal(request, response),
 );
+empresaRoutes.post(
+  '/empresa/configuracao-fiscal/certificado-a1',
+  (request, response, next) => donoMiddleware.handle(request, response, next),
+  (request, response) =>
+    controller.configurarCertificadoA1(request, response),
+);
 empresaRoutes.put(
   '/empresa',
   (request, response, next) => donoMiddleware.handle(request, response, next),

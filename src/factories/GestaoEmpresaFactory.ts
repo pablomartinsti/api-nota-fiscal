@@ -7,6 +7,8 @@ import { AtualizarConfiguracaoFiscalEmpresaAutenticadaService } from '../service
 import { AtualizarEmpresaAutenticadaService } from '../services/AtualizarEmpresaAutenticadaService';
 import { BuscarConfiguracaoFiscalEmpresaAutenticadaService } from '../services/BuscarConfiguracaoFiscalEmpresaAutenticadaService';
 import { BuscarEmpresaAutenticadaService } from '../services/BuscarEmpresaAutenticadaService';
+import { ConfigurarCertificadoA1EmpresaAutenticadaService } from '../services/ConfigurarCertificadoA1EmpresaAutenticadaService';
+import { ArmazenadorCertificadoA1Local } from '../storage/ArmazenadorCertificadoA1Local';
 
 export function criarGestaoEmpresaController(): GestaoEmpresaController {
   const empresaRepository = new PrismaEmpresaRepository();
@@ -14,6 +16,9 @@ export function criarGestaoEmpresaController(): GestaoEmpresaController {
     new PrismaConfiguracaoFiscalEmpresaRepository();
   const cifradorTexto = new AesGcmCifradorTexto(
     env.NFSE_CERTIFICADO_CRYPTO_KEY,
+  );
+  const armazenadorCertificado = new ArmazenadorCertificadoA1Local(
+    env.NFSE_CERTIFICADO_STORAGE_DIR,
   );
 
   return new GestaoEmpresaController(
@@ -26,6 +31,12 @@ export function criarGestaoEmpresaController(): GestaoEmpresaController {
       configuracaoFiscalRepository,
       empresaRepository,
       cifradorTexto,
+    ),
+    new ConfigurarCertificadoA1EmpresaAutenticadaService(
+      configuracaoFiscalRepository,
+      empresaRepository,
+      cifradorTexto,
+      armazenadorCertificado,
     ),
   );
 }

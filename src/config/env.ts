@@ -28,6 +28,11 @@ const envSchema = z
       z.string().optional(),
     ),
     NFSE_CERTIFICADO_CRYPTO_KEY: stringOpcional,
+    NFSE_CERTIFICADO_STORAGE_DIR: z
+      .string()
+      .trim()
+      .min(1)
+      .default('storage/certificados'),
     NFSE_XSD_DPS_PATH: stringOpcional,
     NFSE_XSD_EVENTO_PATH: stringOpcional,
     NFSE_SEFIN_BASE_URL: z.preprocess(

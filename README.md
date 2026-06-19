@@ -129,6 +129,7 @@ npm run prisma:studio
 - `PUT /empresa`
 - `GET /empresa/configuracao-fiscal`
 - `PUT /empresa/configuracao-fiscal`
+- `POST /empresa/configuracao-fiscal/certificado-a1`
 - `POST /usuarios`
 - `GET /usuarios`
 - `PATCH /usuarios/:usuarioId/perfil`
@@ -218,6 +219,7 @@ Variaveis fiscais:
 NFSE_CERTIFICADO_PATH=""
 NFSE_CERTIFICADO_SENHA=""
 NFSE_CERTIFICADO_CRYPTO_KEY=""
+NFSE_CERTIFICADO_STORAGE_DIR="storage/certificados"
 NFSE_XSD_DPS_PATH=""
 NFSE_XSD_EVENTO_PATH=""
 NFSE_SEFIN_HOMOLOGACAO_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/SefinNacional"
@@ -242,6 +244,22 @@ cancelar NFS-e. Quando a empresa ainda nao tiver configuracao ativa ou
 certificado completo configurado, a API usa temporariamente as variaveis globais
 do `.env` como fallback apenas em `HOMOLOGACAO`.
 
+Para preparar producao real, prefira configurar o certificado A1 pela rota de
+upload em Base64. A API salva o arquivo em `NFSE_CERTIFICADO_STORAGE_DIR`,
+valida senha, validade e CNPJ do certificado contra a empresa autenticada, e
+grava a senha criptografada no banco. A resposta nunca retorna senha nem
+conteudo do certificado.
+
+Exemplo para configurar o certificado A1 da empresa autenticada:
+
+```json
+{
+  "certificadoA1NomeArquivo": "empresa.pfx",
+  "certificadoA1Base64": "BASE64_DO_ARQUIVO_PFX",
+  "certificadoA1Senha": "senha-do-certificado"
+}
+```
+
 Exemplo para atualizar a configuracao fiscal da empresa autenticada:
 
 ```json
@@ -254,12 +272,10 @@ Exemplo para atualizar a configuracao fiscal da empresa autenticada:
 ```
 
 A resposta nunca retorna `certificadoA1Senha`; ela informa apenas
-`certificadoA1SenhaConfigurada`. Quando `certificadoA1Path` e
-`certificadoA1Senha` forem informados, a API valida o arquivo A1, a senha, a
-validade do certificado e se o CNPJ do certificado pertence a empresa
-autenticada antes de salvar a configuracao. A senha do certificado e
-criptografada com `NFSE_CERTIFICADO_CRYPTO_KEY` antes de ser persistida no
-banco.
+`certificadoA1SenhaConfigurada`. A configuracao manual por
+`certificadoA1Path` e `certificadoA1Senha` continua disponivel para
+desenvolvimento/homologacao local, mas para producao real o fluxo recomendado e
+o upload controlado pela API.
 
 Por seguranca, operacoes fiscais em `PRODUCAO` ficam bloqueadas por padrao.
 Enviar DPS, consultar NFS-e, cancelar NFS-e e criar substituicao em producao

@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import {
   atualizarConfiguracaoFiscalEmpresaSchema,
   atualizarEmpresaSchema,
+  configurarCertificadoA1EmpresaSchema,
 } from '../dtos/GestaoEmpresaDto';
 import { ConfiguracaoFiscalEmpresaPresenter } from '../presenters/ConfiguracaoFiscalEmpresaPresenter';
 import { EmpresaPresenter } from '../presenters/EmpresaPresenter';
@@ -10,6 +11,7 @@ import { AtualizarConfiguracaoFiscalEmpresaAutenticadaService } from '../service
 import { AtualizarEmpresaAutenticadaService } from '../services/AtualizarEmpresaAutenticadaService';
 import { BuscarConfiguracaoFiscalEmpresaAutenticadaService } from '../services/BuscarConfiguracaoFiscalEmpresaAutenticadaService';
 import { BuscarEmpresaAutenticadaService } from '../services/BuscarEmpresaAutenticadaService';
+import { ConfigurarCertificadoA1EmpresaAutenticadaService } from '../services/ConfigurarCertificadoA1EmpresaAutenticadaService';
 
 export class GestaoEmpresaController {
   constructor(
@@ -17,6 +19,7 @@ export class GestaoEmpresaController {
     private readonly atualizarService: AtualizarEmpresaAutenticadaService,
     private readonly buscarConfiguracaoFiscalService: BuscarConfiguracaoFiscalEmpresaAutenticadaService,
     private readonly atualizarConfiguracaoFiscalService: AtualizarConfiguracaoFiscalEmpresaAutenticadaService,
+    private readonly configurarCertificadoA1Service: ConfigurarCertificadoA1EmpresaAutenticadaService,
   ) {}
 
   async buscar(request: Request, response: Response): Promise<Response> {
@@ -63,6 +66,21 @@ export class GestaoEmpresaController {
         request.autenticacao,
         input,
       );
+
+    return response
+      .status(200)
+      .json(ConfiguracaoFiscalEmpresaPresenter.paraHttp(configuracao));
+  }
+
+  async configurarCertificadoA1(
+    request: Request,
+    response: Response,
+  ): Promise<Response> {
+    const input = configurarCertificadoA1EmpresaSchema.parse(request.body);
+    const configuracao = await this.configurarCertificadoA1Service.executar(
+      request.autenticacao,
+      input,
+    );
 
     return response
       .status(200)

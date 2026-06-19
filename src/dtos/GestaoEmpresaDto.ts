@@ -46,3 +46,12 @@ export const atualizarConfiguracaoFiscalEmpresaSchema = z.object({
   certificadoA1Path: textoOpcionalConfiguracaoFiscal,
   certificadoA1Senha: textoOpcionalConfiguracaoFiscal,
 });
+
+export const configurarCertificadoA1EmpresaSchema = z.object({
+  certificadoA1NomeArquivo: z
+    .string()
+    .trim()
+    .regex(/\.(pfx|p12)$/i),
+  certificadoA1Base64: z.string().trim().min(1),
+  certificadoA1Senha: z.string().min(1),
+});
