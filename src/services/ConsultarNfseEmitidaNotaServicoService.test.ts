@@ -66,6 +66,7 @@ describe('ConsultarNfseEmitidaNotaServicoService', () => {
     const resultado = await service.executar(autenticacao, 'nota-1');
 
     expect(clienteNfse.consultarNfsePorChave).toHaveBeenCalledWith({
+      ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
       chaveAcesso: '12345678901234567890123456789012345678901234567890',
     });
     expect(resultado).toEqual({

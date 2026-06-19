@@ -78,6 +78,7 @@ describe('EnviarDpsAssinadaNotaServicoService', () => {
 
     expect(gerarXml.executar).toHaveBeenCalledWith(autenticacao, 'nota-1');
     expect(clienteNfse.enviarDpsAssinada).toHaveBeenCalledWith({
+      ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
       xmlAssinado: '<DPS>assinado</DPS>',
     });
     expect(salvar).toHaveBeenCalledOnce();
@@ -317,6 +318,7 @@ describe('EnviarDpsAssinadaNotaServicoService', () => {
     await service.executar(autenticacao, 'nota-1');
 
     expect(clienteNfse.enviarDpsAssinada).toHaveBeenCalledWith({
+      ambienteFiscal: AmbienteFiscal.PRODUCAO,
       xmlAssinado: '<DPS>assinado</DPS>',
       certificadoPath: 'C:/certificados/empresa.pfx',
       certificadoSenha: 'senha-empresa',

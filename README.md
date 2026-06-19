@@ -182,14 +182,18 @@ Tambem existe um cliente HTTP inicial para comunicacao com a SEFIN Nacional em
 Producao Restrita e uma rota para enviar a DPS assinada. O Swagger oficial da
 SEFIN Nacional informa `basePath` `/SefinNacional` e envio sincrono em
 `POST /nfse`, recebendo JSON com o campo `dpsXmlGZipB64`. Por isso, a
-`NFSE_SEFIN_BASE_URL` deve ficar sem `/API`. O endpoint interno
-`POST /notas-servico/:notaId/enviar-dps` registra sucesso ou erro fiscal na
-NotaServico conforme o retorno recebido. Antes da chamada externa, a nota sai
-de `RASCUNHO` para `PROCESSANDO`, evitando novo envio concorrente da mesma
-DPS. Em caso de rejeicao fiscal, retorno inconsistente ou falha de comunicacao,
-a nota fica como `ERRO` com mensagem rastreavel; para reenviar, e necessario
-retornar manualmente para rascunho. Se houver duvida se a SEFIN autorizou a
-NFS-e apesar de um timeout ou erro de comunicacao local, a rota
+URL configurada deve ficar sem `/API`. A API separa a URL da SEFIN por
+ambiente fiscal: `NFSE_SEFIN_HOMOLOGACAO_BASE_URL` para Producao Restrita e
+`NFSE_SEFIN_PRODUCAO_BASE_URL` para producao real. A variavel antiga
+`NFSE_SEFIN_BASE_URL` continua aceita apenas como fallback temporario de
+homologacao. O endpoint interno `POST /notas-servico/:notaId/enviar-dps`
+registra sucesso ou erro fiscal na NotaServico conforme o retorno recebido.
+Antes da chamada externa, a nota sai de `RASCUNHO` para `PROCESSANDO`, evitando
+novo envio concorrente da mesma DPS. Em caso de rejeicao fiscal, retorno
+inconsistente ou falha de comunicacao, a nota fica como `ERRO` com mensagem
+rastreavel; para reenviar, e necessario retornar manualmente para rascunho. Se
+houver duvida se a SEFIN autorizou a NFS-e apesar de um timeout ou erro de
+comunicacao local, a rota
 `POST /notas-servico/:notaId/reconciliar-envio` consulta a SEFIN pela
 `chaveAcesso` e atualiza a nota para `EMITIDA` quando a NFS-e existir. A rota
 `GET /notas-servico/:notaId/eventos-fiscais` lista a trilha de auditoria
@@ -216,7 +220,9 @@ NFSE_CERTIFICADO_SENHA=""
 NFSE_CERTIFICADO_CRYPTO_KEY=""
 NFSE_XSD_DPS_PATH=""
 NFSE_XSD_EVENTO_PATH=""
-NFSE_SEFIN_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/SefinNacional"
+NFSE_SEFIN_HOMOLOGACAO_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/SefinNacional"
+NFSE_SEFIN_PRODUCAO_BASE_URL=""
+NFSE_SEFIN_BASE_URL=""
 NFSE_SEFIN_ENVIO_DPS_PATH="/nfse"
 NFSE_SEFIN_TIMEOUT_MS=15000
 NFSE_PERMITIR_PRODUCAO_REAL="false"
@@ -270,8 +276,9 @@ antes de subir:
 - `JWT_SECRET` deve ser forte e ter pelo menos 32 caracteres
 - `CORS_ORIGIN` nao pode permitir `*`
 - `NFSE_CERTIFICADO_CRYPTO_KEY` deve ser uma chave valida de 32 bytes
-- quando `NFSE_PERMITIR_PRODUCAO_REAL="true"`, a URL da SEFIN nao pode apontar
-  para Producao Restrita e os XSDs de DPS/evento precisam estar configurados
+- quando `NFSE_PERMITIR_PRODUCAO_REAL="true"`,
+  `NFSE_SEFIN_PRODUCAO_BASE_URL` nao pode apontar para Producao Restrita e os
+  XSDs de DPS/evento precisam estar configurados
 
 Para simular essa validacao localmente antes de publicar:
 

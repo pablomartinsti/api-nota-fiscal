@@ -38,6 +38,7 @@ describe('ReconciliarEnvioDpsNotaServicoService', () => {
     });
 
     expect(clienteNfse.consultarNfsePorChave).toHaveBeenCalledWith({
+      ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
       chaveAcesso,
     });
     expect(salvar).toHaveBeenCalledOnce();
@@ -62,6 +63,7 @@ describe('ReconciliarEnvioDpsNotaServicoService', () => {
     const resultado = await service.executar(autenticacao, 'nota-1');
 
     expect(clienteNfse.consultarNfsePorChave).toHaveBeenCalledWith({
+      ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
       chaveAcesso,
     });
     expect(resultado.nota.status).toBe(StatusNota.EMITIDA);
@@ -162,6 +164,7 @@ describe('ReconciliarEnvioDpsNotaServicoService', () => {
     await service.executar(autenticacao, 'nota-1', { chaveAcesso });
 
     expect(clienteNfse.consultarNfsePorChave).toHaveBeenCalledWith({
+      ambienteFiscal: AmbienteFiscal.PRODUCAO,
       chaveAcesso,
       certificadoPath: 'C:/certificados/empresa.pfx',
       certificadoSenha: 'senha-empresa',

@@ -34,6 +34,14 @@ const envSchema = z
       (valor) => (valor === '' ? undefined : valor),
       z.string().trim().url().optional(),
     ),
+    NFSE_SEFIN_HOMOLOGACAO_BASE_URL: z.preprocess(
+      (valor) => (valor === '' ? undefined : valor),
+      z.string().trim().url().optional(),
+    ),
+    NFSE_SEFIN_PRODUCAO_BASE_URL: z.preprocess(
+      (valor) => (valor === '' ? undefined : valor),
+      z.string().trim().url().optional(),
+    ),
     NFSE_SEFIN_ENVIO_DPS_PATH: z.string().trim().min(1).default('/nfse'),
     NFSE_SEFIN_TIMEOUT_MS: z.coerce.number().int().min(1).default(15_000),
     NFSE_PERMITIR_PRODUCAO_REAL: z
@@ -101,20 +109,25 @@ function validarProducaoRealNfse(
   env: EnvValidado,
   contexto: z.RefinementCtx,
 ): void {
-  if (!env.NFSE_SEFIN_BASE_URL) {
+  if (!env.NFSE_SEFIN_PRODUCAO_BASE_URL) {
     contexto.addIssue({
       code: 'custom',
-      path: ['NFSE_SEFIN_BASE_URL'],
-      message: 'NFSE_SEFIN_BASE_URL e obrigatoria para producao real.',
+      path: ['NFSE_SEFIN_PRODUCAO_BASE_URL'],
+      message:
+        'NFSE_SEFIN_PRODUCAO_BASE_URL e obrigatoria para producao real.',
     });
   }
 
-  if (env.NFSE_SEFIN_BASE_URL?.includes('producaorestrita')) {
+  if (
+    env.NFSE_SEFIN_PRODUCAO_BASE_URL
+      ?.toLowerCase()
+      .includes('producaorestrita')
+  ) {
     contexto.addIssue({
       code: 'custom',
-      path: ['NFSE_SEFIN_BASE_URL'],
+      path: ['NFSE_SEFIN_PRODUCAO_BASE_URL'],
       message:
-        'NFSE_SEFIN_BASE_URL nao pode apontar para producao restrita quando producao real estiver habilitada.',
+        'NFSE_SEFIN_PRODUCAO_BASE_URL nao pode apontar para producao restrita quando producao real estiver habilitada.',
     });
   }
 

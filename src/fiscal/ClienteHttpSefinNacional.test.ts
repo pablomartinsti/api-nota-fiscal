@@ -9,6 +9,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
 import { ConfiguracaoFiscalAusenteError } from '../errors/ConfiguracaoFiscalAusenteError';
 import { ConfiguracaoSefinNacionalAusenteError } from '../errors/ConfiguracaoSefinNacionalAusenteError';
+import { AmbienteFiscal } from '../entities/NotaServico';
 import {
   ClienteHttpSefinNacional,
   ConfiguracaoClienteHttpSefinNacional,
@@ -40,7 +41,10 @@ describe('ClienteHttpSefinNacional', () => {
     });
 
     try {
-      const resultado = await cliente.enviarDpsAssinada({ xmlAssinado });
+      const resultado = await cliente.enviarDpsAssinada({
+        ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
+        xmlAssinado,
+      });
 
       expect(transportador).toHaveBeenCalledOnce();
       const requisicao = transportador.mock.calls[0][0];
@@ -77,6 +81,35 @@ describe('ClienteHttpSefinNacional', () => {
     }
   });
 
+  it('deve escolher a URL da SEFIN conforme o ambiente fiscal', async () => {
+    const certificado = criarCertificadoTeste();
+    const transportador = vi.fn<TransportadorHttpSefinNacional>().mockResolvedValue({
+      status: 201,
+      body: JSON.stringify({
+        idDps: 'DPS-123',
+        chaveAcesso: 'CHAVE-456',
+      }),
+    });
+    const cliente = criarClienteTeste(transportador, {
+      certificadoPath: certificado.caminho,
+      certificadoSenha: 'senha-teste',
+    });
+
+    try {
+      await cliente.enviarDpsAssinada({
+        ambienteFiscal: AmbienteFiscal.PRODUCAO,
+        xmlAssinado,
+      });
+
+      expect(transportador).toHaveBeenCalledOnce();
+      expect(transportador.mock.calls[0][0].url).toBe(
+        'https://sefin.nfse.gov.br/SefinNacional/nfse',
+      );
+    } finally {
+      certificado.limpar();
+    }
+  });
+
   it('deve consultar NFS-e pela chave de acesso usando certificado cliente', async () => {
     const certificado = criarCertificadoTeste();
     const nfseXmlGZipB64 = gzipSync(
@@ -100,6 +133,7 @@ describe('ClienteHttpSefinNacional', () => {
 
     try {
       const resultado = await cliente.consultarNfsePorChave({
+        ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
         chaveAcesso: '12345678901234567890123456789012345678901234567890',
       });
 
@@ -152,6 +186,7 @@ describe('ClienteHttpSefinNacional', () => {
 
     try {
       const resultado = await cliente.registrarEventoCancelamento({
+        ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
         chaveAcesso: '12345678901234567890123456789012345678901234567890',
         xmlPedidoEventoAssinado: '<pedRegEvento>assinado</pedRegEvento>',
       });
@@ -209,7 +244,10 @@ describe('ClienteHttpSefinNacional', () => {
     });
 
     try {
-      const resultado = await cliente.enviarDpsAssinada({ xmlAssinado });
+      const resultado = await cliente.enviarDpsAssinada({
+        ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
+        xmlAssinado,
+      });
 
       expect(resultado).toEqual({
         sucesso: false,
@@ -247,7 +285,10 @@ describe('ClienteHttpSefinNacional', () => {
     });
 
     try {
-      const resultado = await cliente.enviarDpsAssinada({ xmlAssinado });
+      const resultado = await cliente.enviarDpsAssinada({
+        ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
+        xmlAssinado,
+      });
 
       expect(resultado).toEqual({
         sucesso: false,
@@ -283,6 +324,7 @@ describe('ClienteHttpSefinNacional', () => {
 
     try {
       const resultado = await cliente.consultarNfsePorChave({
+        ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
         chaveAcesso: '12345678901234567890123456789012345678901234567890',
       });
 
@@ -322,6 +364,7 @@ describe('ClienteHttpSefinNacional', () => {
 
     try {
       const resultado = await cliente.registrarEventoCancelamento({
+        ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
         chaveAcesso: '12345678901234567890123456789012345678901234567890',
         xmlPedidoEventoAssinado: '<pedRegEvento>assinado</pedRegEvento>',
       });
@@ -355,7 +398,10 @@ describe('ClienteHttpSefinNacional', () => {
     );
 
     await expect(
-      cliente.enviarDpsAssinada({ xmlAssinado }),
+      cliente.enviarDpsAssinada({
+        ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
+        xmlAssinado,
+      }),
     ).rejects.toBeInstanceOf(ConfiguracaoSefinNacionalAusenteError);
     expect(transportador).not.toHaveBeenCalled();
   });
@@ -368,7 +414,10 @@ describe('ClienteHttpSefinNacional', () => {
     });
 
     await expect(
-      cliente.enviarDpsAssinada({ xmlAssinado }),
+      cliente.enviarDpsAssinada({
+        ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
+        xmlAssinado,
+      }),
     ).rejects.toBeInstanceOf(ConfiguracaoFiscalAusenteError);
     expect(transportador).not.toHaveBeenCalled();
   });
@@ -385,12 +434,18 @@ describe('ClienteHttpSefinNacional', () => {
 
     try {
       await expect(
-        cliente.enviarDpsAssinada({ xmlAssinado }),
+        cliente.enviarDpsAssinada({
+          ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
+          xmlAssinado,
+        }),
       ).rejects.toMatchObject({
         message: 'Nao foi possivel comunicar com a SEFIN Nacional.',
       });
       await expect(
-        cliente.enviarDpsAssinada({ xmlAssinado }),
+        cliente.enviarDpsAssinada({
+          ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
+          xmlAssinado,
+        }),
       ).rejects.not.toThrow(xmlAssinado);
     } finally {
       certificado.limpar();
@@ -412,10 +467,16 @@ describe('ClienteHttpSefinNacional', () => {
 
     try {
       await expect(
-        cliente.enviarDpsAssinada({ xmlAssinado }),
+        cliente.enviarDpsAssinada({
+          ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
+          xmlAssinado,
+        }),
       ).rejects.toBeInstanceOf(ComunicacaoNfseError);
       await expect(
-        cliente.enviarDpsAssinada({ xmlAssinado }),
+        cliente.enviarDpsAssinada({
+          ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
+          xmlAssinado,
+        }),
       ).rejects.toMatchObject({
         message: 'Tempo limite excedido ao comunicar com a SEFIN Nacional.',
       });
@@ -431,7 +492,9 @@ function criarClienteTeste(
 ): ClienteHttpSefinNacional {
   return new ClienteHttpSefinNacional(
     () => ({
-      baseUrl: 'https://sefin.producaorestrita.nfse.gov.br/SefinNacional',
+      baseUrlHomologacao:
+        'https://sefin.producaorestrita.nfse.gov.br/SefinNacional',
+      baseUrlProducao: 'https://sefin.nfse.gov.br/SefinNacional',
       endpointEnvioDps: 'nfse',
       ...configuracao,
     }),

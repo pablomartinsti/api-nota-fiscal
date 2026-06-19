@@ -257,12 +257,14 @@ export class CancelarNfseNotaServicoService {
 
     if (!configuracaoCertificado) {
       return {
+        ambienteFiscal,
         chaveAcesso,
         xmlPedidoEventoAssinado,
       };
     }
 
     return {
+      ambienteFiscal,
       chaveAcesso,
       xmlPedidoEventoAssinado,
       certificadoPath: configuracaoCertificado.caminho,

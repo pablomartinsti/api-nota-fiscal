@@ -14,6 +14,8 @@ interface ResultadoCheck {
 
 async function main(): Promise<void> {
   const resultados: ResultadoCheck[] = [];
+  const sefinHomologacaoBaseUrl =
+    env.NFSE_SEFIN_HOMOLOGACAO_BASE_URL ?? env.NFSE_SEFIN_BASE_URL;
 
   resultados.push(await verificarArquivo('Certificado A1', env.NFSE_CERTIFICADO_PATH));
   resultados.push(await verificarArquivo('XSD da DPS', env.NFSE_XSD_DPS_PATH));
@@ -21,11 +23,11 @@ async function main(): Promise<void> {
     await verificarArquivo('XSD do pedido de evento', env.NFSE_XSD_EVENTO_PATH),
   );
   resultados.push(verificarValor('Senha do certificado', env.NFSE_CERTIFICADO_SENHA));
-  resultados.push(verificarValor('URL base da SEFIN', env.NFSE_SEFIN_BASE_URL));
+  resultados.push(verificarValor('URL base da SEFIN em homologacao', sefinHomologacaoBaseUrl));
   resultados.push(
     verificarValor('Endpoint de envio da DPS', env.NFSE_SEFIN_ENVIO_DPS_PATH),
   );
-  resultados.push(verificarUrlSefin(env.NFSE_SEFIN_BASE_URL));
+  resultados.push(verificarUrlSefin(sefinHomologacaoBaseUrl));
   resultados.push(verificarEndpointEnvio(env.NFSE_SEFIN_ENVIO_DPS_PATH));
   resultados.push(await verificarGitignore());
   resultados.push(await verificarCertificado());

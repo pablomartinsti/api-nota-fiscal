@@ -270,10 +270,14 @@ export class ReconciliarEnvioDpsNotaServicoService {
     );
 
     if (!configuracaoCertificado) {
-      return { chaveAcesso };
+      return {
+        ambienteFiscal,
+        chaveAcesso,
+      };
     }
 
     return {
+      ambienteFiscal,
       chaveAcesso,
       certificadoPath: configuracaoCertificado.caminho,
       certificadoSenha: configuracaoCertificado.senha,

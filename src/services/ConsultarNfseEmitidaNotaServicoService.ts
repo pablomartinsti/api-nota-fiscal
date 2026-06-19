@@ -172,10 +172,14 @@ export class ConsultarNfseEmitidaNotaServicoService {
     );
 
     if (!configuracaoCertificado) {
-      return { chaveAcesso };
+      return {
+        ambienteFiscal,
+        chaveAcesso,
+      };
     }
 
     return {
+      ambienteFiscal,
       chaveAcesso,
       certificadoPath: configuracaoCertificado.caminho,
       certificadoSenha: configuracaoCertificado.senha,

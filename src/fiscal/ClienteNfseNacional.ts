@@ -1,20 +1,29 @@
+import { AmbienteFiscal } from '../entities/NotaServico';
+
 export interface ConfiguracaoCertificadoClienteNfseInput {
   certificadoPath?: string;
   certificadoSenha?: string;
 }
 
+export interface ConfiguracaoAmbienteFiscalClienteNfseInput {
+  ambienteFiscal: AmbienteFiscal;
+}
+
 export interface EnviarDpsAssinadaInput
-  extends ConfiguracaoCertificadoClienteNfseInput {
+  extends ConfiguracaoCertificadoClienteNfseInput,
+    ConfiguracaoAmbienteFiscalClienteNfseInput {
   xmlAssinado: string;
 }
 
 export interface ConsultarNfsePorChaveInput
-  extends ConfiguracaoCertificadoClienteNfseInput {
+  extends ConfiguracaoCertificadoClienteNfseInput,
+    ConfiguracaoAmbienteFiscalClienteNfseInput {
   chaveAcesso: string;
 }
 
 export interface RegistrarEventoCancelamentoNfseInput
-  extends ConfiguracaoCertificadoClienteNfseInput {
+  extends ConfiguracaoCertificadoClienteNfseInput,
+    ConfiguracaoAmbienteFiscalClienteNfseInput {
   chaveAcesso: string;
   xmlPedidoEventoAssinado: string;
 }

@@ -258,10 +258,14 @@ export class EnviarDpsAssinadaNotaServicoService {
     );
 
     if (!configuracaoCertificado) {
-      return { xmlAssinado };
+      return {
+        ambienteFiscal,
+        xmlAssinado,
+      };
     }
 
     return {
+      ambienteFiscal,
       xmlAssinado,
       certificadoPath: configuracaoCertificado.caminho,
       certificadoSenha: configuracaoCertificado.senha,

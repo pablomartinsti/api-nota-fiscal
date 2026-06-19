@@ -43,11 +43,11 @@ describe('carregarEnv', () => {
       carregarEnv({
         ...envBase,
         NFSE_PERMITIR_PRODUCAO_REAL: 'true',
-        NFSE_SEFIN_BASE_URL:
+        NFSE_SEFIN_PRODUCAO_BASE_URL:
           'https://sefin.producaorestrita.nfse.gov.br/SefinNacional',
       }),
     ).toThrow(
-      'Variaveis de ambiente invalidas: NFSE_SEFIN_BASE_URL, NFSE_XSD_DPS_PATH, NFSE_XSD_EVENTO_PATH.',
+      'Variaveis de ambiente invalidas: NFSE_SEFIN_PRODUCAO_BASE_URL, NFSE_XSD_DPS_PATH, NFSE_XSD_EVENTO_PATH.',
     );
   });
 
@@ -55,7 +55,10 @@ describe('carregarEnv', () => {
     const env = carregarEnv({
       ...envBase,
       NFSE_PERMITIR_PRODUCAO_REAL: 'true',
-      NFSE_SEFIN_BASE_URL: 'https://sefin.nfse.gov.br/SefinNacional',
+      NFSE_SEFIN_HOMOLOGACAO_BASE_URL:
+        'https://sefin.producaorestrita.nfse.gov.br/SefinNacional',
+      NFSE_SEFIN_PRODUCAO_BASE_URL:
+        'https://sefin.nfse.gov.br/SefinNacional',
       NFSE_XSD_DPS_PATH: 'C:/nfse/DPS_v1.01.xsd',
       NFSE_XSD_EVENTO_PATH: 'C:/nfse/pedRegEvento_v1.01.xsd',
     });

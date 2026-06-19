@@ -49,6 +49,7 @@ describe('CancelarNfseNotaServicoService', () => {
       expect.objectContaining({ cnpj: '12345678000199' }),
     );
     expect(clienteNfse.registrarEventoCancelamento).toHaveBeenCalledWith({
+      ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
       chaveAcesso,
       xmlPedidoEventoAssinado: '<pedRegEvento>assinado</pedRegEvento>',
     });

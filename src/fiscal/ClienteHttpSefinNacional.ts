@@ -6,6 +6,7 @@ import { CertificadoA1InvalidoError } from '../errors/CertificadoA1InvalidoError
 import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
 import { ConfiguracaoFiscalAusenteError } from '../errors/ConfiguracaoFiscalAusenteError';
 import { ConfiguracaoSefinNacionalAusenteError } from '../errors/ConfiguracaoSefinNacionalAusenteError';
+import { AmbienteFiscal } from '../entities/NotaServico';
 import {
   ClienteNfseNacional,
   ConsultarNfsePorChaveInput,
@@ -21,6 +22,8 @@ import { ProvedorCertificadoA1Arquivo } from './ProvedorCertificadoA1Arquivo';
 
 export interface ConfiguracaoClienteHttpSefinNacional {
   baseUrl?: string;
+  baseUrlHomologacao?: string;
+  baseUrlProducao?: string;
   endpointEnvioDps?: string;
   timeoutMs?: number;
   certificadoPath?: string;
@@ -68,7 +71,7 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
     try {
       const requisicao = await this.criarRequisicaoEnvioDps(
         configuracao,
-        input.xmlAssinado,
+        input,
         timeoutMs,
       );
       const resposta = await this.transportador(requisicao);
@@ -144,7 +147,7 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
     try {
       const requisicao = await this.criarRequisicaoConsultaNfse(
         configuracao,
-        input.chaveAcesso,
+        input,
         timeoutMs,
       );
       const resposta = await this.transportador(requisicao);
@@ -200,8 +203,7 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
     try {
       const requisicao = await this.criarRequisicaoRegistroEventoCancelamento(
         configuracao,
-        input.chaveAcesso,
-        input.xmlPedidoEventoAssinado,
+        input,
         timeoutMs,
       );
       const resposta = await this.transportador(requisicao);
@@ -246,11 +248,11 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
 
   private async criarRequisicaoEnvioDps(
     configuracao: ConfiguracaoClienteHttpSefinNacional,
-    xmlAssinado: string,
+    input: EnviarDpsAssinadaInput,
     timeoutMs: number,
   ): Promise<RequisicaoHttpSefinNacional> {
-    const body = this.criarCorpoEnvioDps(xmlAssinado);
-    const url = this.criarUrlEnvioDps(configuracao);
+    const body = this.criarCorpoEnvioDps(input.xmlAssinado);
+    const url = this.criarUrlEnvioDps(configuracao, input.ambienteFiscal);
     const certificado = await this.carregarCertificadoCliente(configuracao);
 
     return {
@@ -286,10 +288,14 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
 
   private async criarRequisicaoConsultaNfse(
     configuracao: ConfiguracaoClienteHttpSefinNacional,
-    chaveAcesso: string,
+    input: ConsultarNfsePorChaveInput,
     timeoutMs: number,
   ): Promise<RequisicaoHttpSefinNacional> {
-    const url = this.criarUrlConsultaNfse(configuracao, chaveAcesso);
+    const url = this.criarUrlConsultaNfse(
+      configuracao,
+      input.chaveAcesso,
+      input.ambienteFiscal,
+    );
     const certificado = await this.carregarCertificadoCliente(configuracao);
 
     return {
@@ -306,12 +312,17 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
 
   private async criarRequisicaoRegistroEventoCancelamento(
     configuracao: ConfiguracaoClienteHttpSefinNacional,
-    chaveAcesso: string,
-    xmlPedidoEventoAssinado: string,
+    input: RegistrarEventoCancelamentoNfseInput,
     timeoutMs: number,
   ): Promise<RequisicaoHttpSefinNacional> {
-    const body = this.criarCorpoRegistroEvento(xmlPedidoEventoAssinado);
-    const url = this.criarUrlRegistroEvento(configuracao, chaveAcesso);
+    const body = this.criarCorpoRegistroEvento(
+      input.xmlPedidoEventoAssinado,
+    );
+    const url = this.criarUrlRegistroEvento(
+      configuracao,
+      input.chaveAcesso,
+      input.ambienteFiscal,
+    );
     const certificado = await this.carregarCertificadoCliente(configuracao);
 
     return {
@@ -346,8 +357,9 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
 
   private criarUrlEnvioDps(
     configuracao: ConfiguracaoClienteHttpSefinNacional,
+    ambienteFiscal: AmbienteFiscal,
   ): string {
-    const baseUrl = configuracao.baseUrl?.trim();
+    const baseUrl = this.obterBaseUrl(configuracao, ambienteFiscal);
     const endpoint = (
       configuracao.endpointEnvioDps ?? ENDPOINT_ENVIO_DPS_PADRAO
     ).trim();
@@ -377,8 +389,9 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
   private criarUrlConsultaNfse(
     configuracao: ConfiguracaoClienteHttpSefinNacional,
     chaveAcesso: string,
+    ambienteFiscal: AmbienteFiscal,
   ): string {
-    const baseUrl = configuracao.baseUrl?.trim();
+    const baseUrl = this.obterBaseUrl(configuracao, ambienteFiscal);
     const chave = chaveAcesso.trim();
 
     if (!baseUrl || !chave) {
@@ -401,8 +414,27 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
   private criarUrlRegistroEvento(
     configuracao: ConfiguracaoClienteHttpSefinNacional,
     chaveAcesso: string,
+    ambienteFiscal: AmbienteFiscal,
   ): string {
-    return `${this.criarUrlConsultaNfse(configuracao, chaveAcesso)}/eventos`;
+    return `${this.criarUrlConsultaNfse(
+      configuracao,
+      chaveAcesso,
+      ambienteFiscal,
+    )}/eventos`;
+  }
+
+  private obterBaseUrl(
+    configuracao: ConfiguracaoClienteHttpSefinNacional,
+    ambienteFiscal: AmbienteFiscal,
+  ): string | undefined {
+    if (ambienteFiscal === AmbienteFiscal.PRODUCAO) {
+      return configuracao.baseUrlProducao?.trim();
+    }
+
+    return (
+      configuracao.baseUrlHomologacao?.trim() ??
+      configuracao.baseUrl?.trim()
+    );
   }
 
   private criarCorpoEnvioDps(xmlAssinado: string): string {
