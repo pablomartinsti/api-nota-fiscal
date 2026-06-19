@@ -17,6 +17,7 @@ import { ClienteNfseNacional } from '../fiscal/ClienteNfseNacional';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { GerarXmlDpsAssinadoNotaServicoService } from './GerarXmlDpsAssinadoNotaServicoService';
 import { EnviarDpsAssinadaNotaServicoService } from './EnviarDpsAssinadaNotaServicoService';
+import { RegistrarEventoFiscalNotaServicoService } from './RegistrarEventoFiscalNotaServicoService';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
 
@@ -60,7 +61,8 @@ function criarNota(
 describe('EnviarDpsAssinadaNotaServicoService', () => {
   it('deve enviar XML assinado e salvar sucesso fiscal', async () => {
     const nota = criarNota();
-    const { service, gerarXml, clienteNfse, salvar } = criarService(nota);
+    const { service, gerarXml, clienteNfse, salvar, registrarEventoFiscal } =
+      criarService(nota);
 
     clienteNfse.enviarDpsAssinada = vi.fn().mockResolvedValue({
       sucesso: true,
@@ -86,11 +88,22 @@ describe('EnviarDpsAssinadaNotaServicoService', () => {
     expect(resultado.chaveAcesso).toBe('CHAVE-456');
     expect(resultado.xmlAutorizado).toBe('<NFS-e>autorizada</NFS-e>');
     expect(resultado.mensagemErroFiscal).toBeUndefined();
+    expect(registrarEventoFiscal.sucesso).toHaveBeenCalledWith(
+      expect.objectContaining({
+        empresaId: 'empresa-1',
+        notaServicoId: 'nota-1',
+        usuarioId: 'usuario-1',
+        tipo: 'ENVIO_DPS',
+        statusHttp: 202,
+        chaveAcesso: 'CHAVE-456',
+      }),
+    );
   });
 
   it('deve salvar erro fiscal quando a SEFIN rejeitar a DPS', async () => {
     const nota = criarNota();
-    const { service, clienteNfse } = criarService(nota);
+    const { service, clienteNfse, registrarEventoFiscal } =
+      criarService(nota);
 
     clienteNfse.enviarDpsAssinada = vi.fn().mockResolvedValue({
       sucesso: false,
@@ -109,6 +122,13 @@ describe('EnviarDpsAssinadaNotaServicoService', () => {
     expect(resultado.status).toBe(StatusNota.ERRO);
     expect(resultado.mensagemErroFiscal).toBe(
       'E001 infDPS: DPS rejeitada.',
+    );
+    expect(registrarEventoFiscal.erro).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tipo: 'ENVIO_DPS',
+        statusHttp: 400,
+        mensagem: 'E001 infDPS: DPS rejeitada.',
+      }),
     );
   });
 
@@ -314,6 +334,10 @@ function criarService(
   clienteNfse: ClienteNfseNacional;
   salvar: ReturnType<typeof vi.fn>;
   buscarPorIdEEmpresaId: ReturnType<typeof vi.fn>;
+  registrarEventoFiscal: {
+    sucesso: ReturnType<typeof vi.fn>;
+    erro: ReturnType<typeof vi.fn>;
+  };
 } {
   const salvar = vi.fn(async (notaParaSalvar: NotaServico) => notaParaSalvar);
   const buscarPorIdEEmpresaId = vi.fn().mockResolvedValue(nota);
@@ -352,6 +376,10 @@ function criarService(
     consultarNfsePorChave: vi.fn(),
     registrarEventoCancelamento: vi.fn(),
   };
+  const registrarEventoFiscal = {
+    sucesso: vi.fn().mockResolvedValue(undefined),
+    erro: vi.fn().mockResolvedValue(undefined),
+  };
 
   return {
     service: new EnviarDpsAssinadaNotaServicoService(
@@ -360,11 +388,13 @@ function criarService(
       clienteNfse,
       resolverConfiguracaoFiscal,
       new ValidarPermissaoProducaoRealService(permitirProducaoReal),
+      registrarEventoFiscal as unknown as RegistrarEventoFiscalNotaServicoService,
     ),
     gerarXml,
     clienteNfse,
     salvar,
     buscarPorIdEEmpresaId,
+    registrarEventoFiscal,
   };
 }
 

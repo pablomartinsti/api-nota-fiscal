@@ -3,6 +3,7 @@ import {
   NotaServico,
   StatusNota,
 } from '../entities/NotaServico';
+import { TipoEventoFiscalNotaServico } from '../entities/NotaServicoEventoFiscal';
 import {
   ClienteNfseNacional,
   ErroEnvioDpsNfse,
@@ -16,6 +17,7 @@ import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
 import { GerarXmlDpsAssinadoNotaServicoService } from './GerarXmlDpsAssinadoNotaServicoService';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
+import { RegistrarEventoFiscalNotaServicoService } from './RegistrarEventoFiscalNotaServicoService';
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
 
 export class EnviarDpsAssinadaNotaServicoService {
@@ -25,6 +27,7 @@ export class EnviarDpsAssinadaNotaServicoService {
     private readonly clienteNfse: ClienteNfseNacional,
     private readonly resolverConfiguracaoFiscal?: ResolverConfiguracaoFiscalEmpresaService,
     private readonly validarPermissaoProducaoReal?: ValidarPermissaoProducaoRealService,
+    private readonly registrarEventoFiscal?: RegistrarEventoFiscalNotaServicoService,
   ) {}
 
   async executar(
@@ -85,26 +88,52 @@ export class EnviarDpsAssinadaNotaServicoService {
       if (error instanceof ComunicacaoNfseError) {
         notaEmProcessamento.registrarErroFiscal(error.message);
 
-        return this.notaRepository.salvar(notaEmProcessamento);
+        const notaComErro = await this.notaRepository.salvar(
+          notaEmProcessamento,
+        );
+        await this.registrarErroFiscal(
+          autenticacao,
+          notaComErro,
+          error.message,
+        );
+
+        return notaComErro;
       }
 
       throw error;
     }
 
     if (!resultado.sucesso) {
-      notaEmProcessamento.registrarErroFiscal(
-        this.criarMensagemErroFiscal(resultado.erros),
+      const mensagemErro = this.criarMensagemErroFiscal(resultado.erros);
+      notaEmProcessamento.registrarErroFiscal(mensagemErro);
+
+      const notaComErro = await this.notaRepository.salvar(notaEmProcessamento);
+      await this.registrarErroFiscal(
+        autenticacao,
+        notaComErro,
+        mensagemErro,
+        resultado.statusHttp,
+        resultado.chaveAcesso,
       );
 
-      return this.notaRepository.salvar(notaEmProcessamento);
+      return notaComErro;
     }
 
     if (!resultado.protocolo && !resultado.chaveAcesso) {
-      notaEmProcessamento.registrarErroFiscal(
-        'Retorno fiscal da SEFIN nao informou protocolo ou chave de acesso.',
+      const mensagemErro =
+        'Retorno fiscal da SEFIN nao informou protocolo ou chave de acesso.';
+      notaEmProcessamento.registrarErroFiscal(mensagemErro);
+
+      const notaComErro = await this.notaRepository.salvar(notaEmProcessamento);
+      await this.registrarErroFiscal(
+        autenticacao,
+        notaComErro,
+        mensagemErro,
+        resultado.statusHttp,
+        resultado.chaveAcesso,
       );
 
-      return this.notaRepository.salvar(notaEmProcessamento);
+      return notaComErro;
     }
 
     notaEmProcessamento.registrarSucessoFiscal({
@@ -121,6 +150,14 @@ export class EnviarDpsAssinadaNotaServicoService {
       notaSubstituida.marcarComoSubstituida();
       await this.notaRepository.salvar(notaSubstituida);
     }
+
+    await this.registrarSucessoFiscal(
+      autenticacao,
+      notaEmitida,
+      'DPS enviada e autorizada pela SEFIN Nacional.',
+      resultado.statusHttp,
+      resultado.chaveAcesso,
+    );
 
     return notaEmitida;
   }
@@ -164,6 +201,50 @@ export class EnviarDpsAssinadaNotaServicoService {
     const prefixos = [erro.codigo, erro.campo].filter(Boolean).join(' ');
 
     return prefixos ? `${prefixos}: ${erro.mensagem}` : erro.mensagem;
+  }
+
+  private async registrarSucessoFiscal(
+    autenticacao: TokenPayload,
+    nota: NotaServico,
+    mensagem: string,
+    statusHttp?: number,
+    chaveAcesso?: string,
+  ): Promise<void> {
+    if (!this.registrarEventoFiscal || !nota.id) {
+      return;
+    }
+
+    await this.registrarEventoFiscal.sucesso({
+      empresaId: autenticacao.empresaId,
+      notaServicoId: nota.id,
+      usuarioId: autenticacao.usuarioId,
+      tipo: TipoEventoFiscalNotaServico.ENVIO_DPS,
+      statusHttp,
+      chaveAcesso: chaveAcesso ?? nota.chaveAcesso,
+      mensagem,
+    });
+  }
+
+  private async registrarErroFiscal(
+    autenticacao: TokenPayload,
+    nota: NotaServico,
+    mensagem: string,
+    statusHttp?: number,
+    chaveAcesso?: string,
+  ): Promise<void> {
+    if (!this.registrarEventoFiscal || !nota.id) {
+      return;
+    }
+
+    await this.registrarEventoFiscal.erro({
+      empresaId: autenticacao.empresaId,
+      notaServicoId: nota.id,
+      usuarioId: autenticacao.usuarioId,
+      tipo: TipoEventoFiscalNotaServico.ENVIO_DPS,
+      statusHttp,
+      chaveAcesso: chaveAcesso ?? nota.chaveAcesso,
+      mensagem,
+    });
   }
 
   private async criarInputEnvioDps(

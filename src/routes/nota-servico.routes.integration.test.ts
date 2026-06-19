@@ -650,4 +650,50 @@ describe('Gestao de rascunhos de notas de servico HTTP', () => {
     expect(retorno.body.mensagemErro).toBeUndefined();
     expect(segundoRetorno.status).toBe(409);
   });
+
+  it('deve listar eventos fiscais da nota mantendo isolamento', async () => {
+    const contexto = await criarContexto();
+    const outraEmpresa = await criarContexto();
+    const cliente = await criarCliente(contexto.empresa.id!);
+    const servico = await criarServico(contexto.empresa.id!);
+    const cadastro = await request(app)
+      .post('/notas-servico')
+      .set('Authorization', `Bearer ${contexto.token}`)
+      .send(dadosRascunho(cliente.id!, servico.id!));
+
+    await prisma.notaServicoEventoFiscal.create({
+      data: {
+        empresaId: contexto.empresa.id!,
+        notaServicoId: cadastro.body.id,
+        usuarioId: contexto.usuario.id,
+        tipo: 'ENVIO_DPS',
+        status: 'SUCESSO',
+        statusHttp: 200,
+        chaveAcesso: '12345678901234567890123456789012345678901234567890',
+        mensagem: 'DPS autorizada pela SEFIN Nacional.',
+      },
+    });
+
+    const tentativaOutraEmpresa = await request(app)
+      .get(`/notas-servico/${cadastro.body.id}/eventos-fiscais`)
+      .set('Authorization', `Bearer ${outraEmpresa.token}`);
+    const listagem = await request(app)
+      .get(`/notas-servico/${cadastro.body.id}/eventos-fiscais`)
+      .set('Authorization', `Bearer ${contexto.token}`);
+
+    expect(tentativaOutraEmpresa.status).toBe(404);
+    expect(listagem.status).toBe(200);
+    expect(listagem.body).toHaveLength(1);
+    expect(listagem.body[0]).toEqual(
+      expect.objectContaining({
+        empresaId: contexto.empresa.id,
+        notaServicoId: cadastro.body.id,
+        usuarioId: contexto.usuario.id,
+        tipo: 'ENVIO_DPS',
+        status: 'SUCESSO',
+        statusHttp: 200,
+        mensagem: 'DPS autorizada pela SEFIN Nacional.',
+      }),
+    );
+  });
 });

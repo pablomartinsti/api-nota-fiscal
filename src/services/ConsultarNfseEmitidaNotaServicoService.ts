@@ -1,4 +1,5 @@
 import { AmbienteFiscal, StatusNota } from '../entities/NotaServico';
+import { TipoEventoFiscalNotaServico } from '../entities/NotaServicoEventoFiscal';
 import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
@@ -8,6 +9,7 @@ import {
 } from '../fiscal/ClienteNfseNacional';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
+import { RegistrarEventoFiscalNotaServicoService } from './RegistrarEventoFiscalNotaServicoService';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
 
@@ -29,6 +31,7 @@ export class ConsultarNfseEmitidaNotaServicoService {
     private readonly clienteNfse: ClienteNfseNacional,
     private readonly resolverConfiguracaoFiscal?: ResolverConfiguracaoFiscalEmpresaService,
     private readonly validarPermissaoProducaoReal?: ValidarPermissaoProducaoRealService,
+    private readonly registrarEventoFiscal?: RegistrarEventoFiscalNotaServicoService,
   ) {}
 
   async executar(
@@ -65,6 +68,27 @@ export class ConsultarNfseEmitidaNotaServicoService {
         nota.chaveAcesso,
       ),
     );
+    const mensagem = resultado.sucesso
+      ? 'NFS-e consultada na SEFIN Nacional.'
+      : this.criarMensagemErroFiscal(resultado.erros);
+
+    if (resultado.sucesso) {
+      await this.registrarSucessoFiscal(
+        autenticacao,
+        notaId,
+        mensagem,
+        resultado.statusHttp,
+        resultado.chaveAcesso ?? nota.chaveAcesso,
+      );
+    } else {
+      await this.registrarErroFiscal(
+        autenticacao,
+        notaId,
+        mensagem,
+        resultado.statusHttp,
+        resultado.chaveAcesso ?? nota.chaveAcesso,
+      );
+    }
 
     return {
       notaId: nota.id,
@@ -77,6 +101,64 @@ export class ConsultarNfseEmitidaNotaServicoService {
       xmlAutorizado: resultado.xmlAutorizado,
       erros: resultado.erros,
     };
+  }
+
+  private criarMensagemErroFiscal(erros?: ErroEnvioDpsNfse[]): string {
+    if (!erros?.length) {
+      return 'Consulta da NFS-e nao retornou sucesso.';
+    }
+
+    return erros.map((erro) => this.formatarErro(erro)).join('; ');
+  }
+
+  private formatarErro(erro: ErroEnvioDpsNfse): string {
+    const prefixos = [erro.codigo, erro.campo].filter(Boolean).join(' ');
+
+    return prefixos ? `${prefixos}: ${erro.mensagem}` : erro.mensagem;
+  }
+
+  private async registrarSucessoFiscal(
+    autenticacao: TokenPayload,
+    notaServicoId: string,
+    mensagem: string,
+    statusHttp?: number,
+    chaveAcesso?: string,
+  ): Promise<void> {
+    if (!this.registrarEventoFiscal) {
+      return;
+    }
+
+    await this.registrarEventoFiscal.sucesso({
+      empresaId: autenticacao.empresaId,
+      notaServicoId,
+      usuarioId: autenticacao.usuarioId,
+      tipo: TipoEventoFiscalNotaServico.CONSULTA_NFSE,
+      statusHttp,
+      chaveAcesso,
+      mensagem,
+    });
+  }
+
+  private async registrarErroFiscal(
+    autenticacao: TokenPayload,
+    notaServicoId: string,
+    mensagem: string,
+    statusHttp?: number,
+    chaveAcesso?: string,
+  ): Promise<void> {
+    if (!this.registrarEventoFiscal) {
+      return;
+    }
+
+    await this.registrarEventoFiscal.erro({
+      empresaId: autenticacao.empresaId,
+      notaServicoId,
+      usuarioId: autenticacao.usuarioId,
+      tipo: TipoEventoFiscalNotaServico.CONSULTA_NFSE,
+      statusHttp,
+      chaveAcesso,
+      mensagem,
+    });
   }
 
   private async criarInputConsultaNfse(

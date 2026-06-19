@@ -9,6 +9,7 @@ import {
   reconciliarEnvioDpsNotaServicoSchema,
   substituirNfseNotaServicoSchema,
 } from '../dtos/GestaoNotaServicoDto';
+import { NotaServicoEventoFiscalPresenter } from '../presenters/NotaServicoEventoFiscalPresenter';
 import { NotaServicoPresenter } from '../presenters/NotaServicoPresenter';
 import { AtualizarRascunhoNotaServicoService } from '../services/AtualizarRascunhoNotaServicoService';
 import { BuscarNotaServicoService } from '../services/BuscarNotaServicoService';
@@ -21,6 +22,7 @@ import { EmitirNotaServicoService } from '../services/EmitirNotaServicoService';
 import { EnviarDpsAssinadaNotaServicoService } from '../services/EnviarDpsAssinadaNotaServicoService';
 import { GerarXmlDpsNotaServicoService } from '../services/GerarXmlDpsNotaServicoService';
 import { GerarXmlDpsAssinadoNotaServicoService } from '../services/GerarXmlDpsAssinadoNotaServicoService';
+import { ListarEventosFiscaisNotaServicoService } from '../services/ListarEventosFiscaisNotaServicoService';
 import { ListarNotasServicoService } from '../services/ListarNotasServicoService';
 import { ReconciliarEnvioDpsNotaServicoService } from '../services/ReconciliarEnvioDpsNotaServicoService';
 import { RetornarNotaServicoParaRascunhoService } from '../services/RetornarNotaServicoParaRascunhoService';
@@ -43,6 +45,7 @@ export class GestaoNotaServicoController {
     private readonly cancelarNfseService: CancelarNfseNotaServicoService,
     private readonly criarRascunhoSubstituicaoService: CriarRascunhoSubstituicaoNotaServicoService,
     private readonly reconciliarEnvioDpsService: ReconciliarEnvioDpsNotaServicoService,
+    private readonly listarEventosFiscaisService: ListarEventosFiscaisNotaServicoService,
   ) {}
 
   async cadastrar(request: Request, response: Response): Promise<Response> {
@@ -242,5 +245,20 @@ export class GestaoNotaServicoController {
       xmlAutorizado: resultado.xmlAutorizado,
       erros: resultado.erros,
     });
+  }
+
+  async listarEventosFiscais(
+    request: Request,
+    response: Response,
+  ): Promise<Response> {
+    const { notaId } = notaServicoParamsSchema.parse(request.params);
+    const eventos = await this.listarEventosFiscaisService.executar(
+      request.autenticacao,
+      notaId,
+    );
+
+    return response
+      .status(200)
+      .json(eventos.map(NotaServicoEventoFiscalPresenter.paraHttp));
   }
 }

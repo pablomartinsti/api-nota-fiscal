@@ -14,6 +14,7 @@ import { ProducaoRealBloqueadaError } from '../errors/ProducaoRealBloqueadaError
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { ClienteNfseNacional } from '../fiscal/ClienteNfseNacional';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
+import { RegistrarEventoFiscalNotaServicoService } from './RegistrarEventoFiscalNotaServicoService';
 import { ReconciliarEnvioDpsNotaServicoService } from './ReconciliarEnvioDpsNotaServicoService';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
@@ -29,7 +30,8 @@ const chaveAcesso = '12345678901234567890123456789012345678901234567890';
 describe('ReconciliarEnvioDpsNotaServicoService', () => {
   it('deve reconciliar uma nota com erro quando a SEFIN encontrar a NFS-e', async () => {
     const nota = criarNota(StatusNota.ERRO);
-    const { service, clienteNfse, salvar } = criarService(nota);
+    const { service, clienteNfse, salvar, registrarEventoFiscal } =
+      criarService(nota);
 
     const resultado = await service.executar(autenticacao, 'nota-1', {
       chaveAcesso,
@@ -44,6 +46,13 @@ describe('ReconciliarEnvioDpsNotaServicoService', () => {
     expect(resultado.nota.chaveAcesso).toBe(chaveAcesso);
     expect(resultado.nota.xmlAutorizado).toBe('<NFSe>autorizada</NFSe>');
     expect(resultado.nota.mensagemErroFiscal).toBeUndefined();
+    expect(registrarEventoFiscal.sucesso).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tipo: 'RECONCILIACAO_ENVIO',
+        statusHttp: 200,
+        chaveAcesso,
+      }),
+    );
   });
 
   it('deve usar chave ja salva na nota quando o input nao informar chave', async () => {
@@ -60,7 +69,8 @@ describe('ReconciliarEnvioDpsNotaServicoService', () => {
 
   it('deve registrar erro quando a SEFIN nao encontrar NFS-e para reconciliar', async () => {
     const nota = criarNota(StatusNota.PROCESSANDO, { chaveAcesso });
-    const { service, clienteNfse, salvar } = criarService(nota);
+    const { service, clienteNfse, salvar, registrarEventoFiscal } =
+      criarService(nota);
     clienteNfse.consultarNfsePorChave = vi.fn().mockResolvedValue({
       sucesso: false,
       statusHttp: 404,
@@ -79,6 +89,13 @@ describe('ReconciliarEnvioDpsNotaServicoService', () => {
     expect(resultado.nota.status).toBe(StatusNota.ERRO);
     expect(resultado.nota.mensagemErroFiscal).toBe(
       'E404: Chave de acesso nao encontrada.',
+    );
+    expect(registrarEventoFiscal.erro).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tipo: 'RECONCILIACAO_ENVIO',
+        statusHttp: 404,
+        mensagem: 'E404: Chave de acesso nao encontrada.',
+      }),
     );
   });
 
@@ -200,6 +217,10 @@ function criarService(
   clienteNfse: ClienteNfseNacional;
   salvar: ReturnType<typeof vi.fn>;
   buscarPorIdEEmpresaId: ReturnType<typeof vi.fn>;
+  registrarEventoFiscal: {
+    sucesso: ReturnType<typeof vi.fn>;
+    erro: ReturnType<typeof vi.fn>;
+  };
 } {
   const salvar = vi.fn(async (notaParaSalvar: NotaServico) => notaParaSalvar);
   const buscarPorIdEEmpresaId = vi.fn().mockResolvedValue(nota);
@@ -223,6 +244,10 @@ function criarService(
     }),
     registrarEventoCancelamento: vi.fn(),
   };
+  const registrarEventoFiscal = {
+    sucesso: vi.fn().mockResolvedValue(undefined),
+    erro: vi.fn().mockResolvedValue(undefined),
+  };
 
   return {
     service: new ReconciliarEnvioDpsNotaServicoService(
@@ -230,10 +255,12 @@ function criarService(
       clienteNfse,
       resolverConfiguracaoFiscal,
       new ValidarPermissaoProducaoRealService(permitirProducaoReal),
+      registrarEventoFiscal as unknown as RegistrarEventoFiscalNotaServicoService,
     ),
     clienteNfse,
     salvar,
     buscarPorIdEEmpresaId,
+    registrarEventoFiscal,
   };
 }
 

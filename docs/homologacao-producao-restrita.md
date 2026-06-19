@@ -321,6 +321,23 @@ deve ser usada quando a nota estiver em `ERRO` ou `PROCESSANDO`. Se a SEFIN
 confirmar a NFS-e, a API atualiza a nota para `EMITIDA`. Se a SEFIN nao
 encontrar a NFS-e, a nota permanece em `ERRO` com a mensagem fiscal da consulta.
 
+Para auditar o que aconteceu com uma nota, consulte o historico fiscal:
+
+```http
+GET /notas-servico/:notaId/eventos-fiscais
+```
+
+Exemplo com `curl`:
+
+```bash
+curl "http://localhost:3333/notas-servico/NOTA_ID/eventos-fiscais" \
+  -H "Authorization: Bearer SEU_TOKEN"
+```
+
+O historico registra metadados como tipo do evento, sucesso/erro, status HTTP,
+chave de acesso e mensagem resumida. Ele nao deve armazenar certificado, senha
+ou XML completo.
+
 ## 8. Depois do primeiro envio
 
 Se a nota for emitida:

@@ -38,6 +38,10 @@ notaServicoRoutes.get(
   '/notas-servico/:notaId/consulta-nfse',
   (request, response) => controller.consultarNfseEmitida(request, response),
 );
+notaServicoRoutes.get(
+  '/notas-servico/:notaId/eventos-fiscais',
+  (request, response) => controller.listarEventosFiscais(request, response),
+);
 notaServicoRoutes.post(
   '/notas-servico/:notaId/reconciliar-envio',
   (request, response) => controller.reconciliarEnvioDps(request, response),

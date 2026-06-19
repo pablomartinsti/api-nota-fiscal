@@ -63,97 +63,111 @@ enum StatusNota {
   ERRO
 }
 
+enum TipoEventoFiscalNotaServico {
+  ENVIO_DPS
+  CONSULTA_NFSE
+  RECONCILIACAO_ENVIO
+  CANCELAMENTO_NFSE
+}
+
+enum StatusEventoFiscalNotaServico {
+  SUCESSO
+  ERRO
+}
+
 model Empresa {
-  id                 String            @id @default(uuid())
-  razaoSocial        String
-  nomeFantasia       String?
-  cnpj               String            @unique
-  inscricaoMunicipal String?
-  regimeTributario   RegimeTributario
-  regimeEspecialTributacao RegimeEspecialTributacao @default(NENHUM)
+  id                            String                         @id @default(uuid())
+  razaoSocial                   String
+  nomeFantasia                  String?
+  cnpj                          String                         @unique
+  inscricaoMunicipal            String?
+  regimeTributario              RegimeTributario
+  regimeEspecialTributacao      RegimeEspecialTributacao       @default(NENHUM)
   regimeApuracaoSimplesNacional RegimeApuracaoSimplesNacional?
-  codigoMunicipioIbge String?
-  email              String?
-  telefone           String?
-  cep                String?
-  endereco           String?
-  numero             String?
-  bairro             String?
-  cidade             String
-  uf                 String
-  ativo              Boolean           @default(true)
+  codigoMunicipioIbge           String?
+  email                         String?
+  telefone                      String?
+  cep                           String?
+  endereco                      String?
+  numero                        String?
+  bairro                        String?
+  cidade                        String
+  uf                            String
+  ativo                         Boolean                        @default(true)
 
-  usuarios           Usuario[]
-  clientes           Cliente[]
-  servicos           Servico[]
-  notas              NotaServico[]
-  configuracaoFiscal ConfiguracaoFiscalEmpresa?
+  usuarios            Usuario[]
+  clientes            Cliente[]
+  servicos            Servico[]
+  notas               NotaServico[]
+  eventosFiscaisNotas NotaServicoEventoFiscal[]
+  configuracaoFiscal  ConfiguracaoFiscalEmpresa?
 
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("empresas")
 }
 
 model ConfiguracaoFiscalEmpresa {
-  id                 String          @id @default(uuid())
-  empresaId          String          @unique
+  id                   String         @id @default(uuid())
+  empresaId            String         @unique
   ambienteFiscalPadrao AmbienteFiscal @default(HOMOLOGACAO)
-  serieDpsPadrao     String          @default("1")
-  certificadoA1Path  String?
-  certificadoA1Senha String?
-  ativo              Boolean         @default(true)
+  serieDpsPadrao       String         @default("1")
+  certificadoA1Path    String?
+  certificadoA1Senha   String?
+  ativo                Boolean        @default(true)
 
-  empresa            Empresa         @relation(fields: [empresaId], references: [id])
+  empresa Empresa @relation(fields: [empresaId], references: [id])
 
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([empresaId])
   @@map("configuracoes_fiscais_empresas")
 }
 
 model Usuario {
-  id          String        @id @default(uuid())
-  empresaId   String
-  nome        String
-  email       String        @unique
-  senhaHash   String
-  perfil      PerfilUsuario @default(DONO)
-  ativo       Boolean       @default(true)
+  id        String        @id @default(uuid())
+  empresaId String
+  nome      String
+  email     String        @unique
+  senhaHash String
+  perfil    PerfilUsuario @default(DONO)
+  ativo     Boolean       @default(true)
 
-  empresa     Empresa       @relation(fields: [empresaId], references: [id])
-  notas       NotaServico[]
+  empresa             Empresa                   @relation(fields: [empresaId], references: [id])
+  notas               NotaServico[]
+  eventosFiscaisNotas NotaServicoEventoFiscal[]
 
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([empresaId])
   @@map("usuarios")
 }
 
 model Cliente {
-  id                 String        @id @default(uuid())
-  empresaId          String
-  nomeRazaoSocial    String
-  cpfCnpj            String
-  email              String?
-  telefone           String?
-  cep                String?
-  endereco           String?
-  numero             String?
-  bairro             String?
-  cidade             String
-  uf                 String
-  inscricaoMunicipal String?
+  id                  String  @id @default(uuid())
+  empresaId           String
+  nomeRazaoSocial     String
+  cpfCnpj             String
+  email               String?
+  telefone            String?
+  cep                 String?
+  endereco            String?
+  numero              String?
+  bairro              String?
+  cidade              String
+  uf                  String
+  inscricaoMunicipal  String?
   codigoMunicipioIbge String?
-  ativo              Boolean       @default(true)
+  ativo               Boolean @default(true)
 
-  empresa            Empresa       @relation(fields: [empresaId], references: [id])
-  notas              NotaServico[]
+  empresa Empresa       @relation(fields: [empresaId], references: [id])
+  notas   NotaServico[]
 
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([empresaId, cpfCnpj])
   @@index([empresaId])
@@ -161,75 +175,76 @@ model Cliente {
 }
 
 model Servico {
-  id                       String        @id @default(uuid())
-  empresaId                String
-  descricao                String
-  codigoServico            String
-  codigoTributacaoNacional String?
+  id                        String  @id @default(uuid())
+  empresaId                 String
+  descricao                 String
+  codigoServico             String
+  codigoTributacaoNacional  String?
   codigoTributacaoMunicipal String?
   codigoNbs                 String?
-  aliquotaIss              Decimal       @db.Decimal(5, 2)
-  ativo                    Boolean       @default(true)
+  aliquotaIss               Decimal @db.Decimal(5, 2)
+  ativo                     Boolean @default(true)
 
-  empresa                  Empresa       @relation(fields: [empresaId], references: [id])
-  notas                    NotaServico[]
+  empresa Empresa       @relation(fields: [empresaId], references: [id])
+  notas   NotaServico[]
 
-  createdAt                DateTime      @default(now())
-  updatedAt                DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([empresaId])
   @@map("servicos")
 }
 
 model NotaServico {
-  id                String      @id @default(uuid())
+  id String @id @default(uuid())
 
-  empresaId         String
-  usuarioId         String
-  clienteId         String
-  servicoId         String
+  empresaId String
+  usuarioId String
+  clienteId String
+  servicoId String
 
-  numeroNfse        String?
-  codigoVerificacao String?
-  protocoloEmissao  String?
-  chaveAcesso       String?
-  xmlAutorizado     String?
-  dataAutorizacao   DateTime?
-  mensagemErroFiscal String?
-  ambienteFiscal    AmbienteFiscal       @default(HOMOLOGACAO)
-  serieDps          String?
-  numeroDps         String?
-  dataCompetencia   DateTime?
-  codigoMunicipioPrestacao String?
-  tributacaoIssqn   TributacaoIssqn      @default(TRIBUTAVEL)
-  tipoRetencaoIssqn TipoRetencaoIssqn    @default(NAO_RETIDO)
+  numeroNfse                String?
+  codigoVerificacao         String?
+  protocoloEmissao          String?
+  chaveAcesso               String?
+  xmlAutorizado             String?
+  dataAutorizacao           DateTime?
+  mensagemErroFiscal        String?
+  ambienteFiscal            AmbienteFiscal    @default(HOMOLOGACAO)
+  serieDps                  String?
+  numeroDps                 String?
+  dataCompetencia           DateTime?
+  codigoMunicipioPrestacao  String?
+  tributacaoIssqn           TributacaoIssqn   @default(TRIBUTAVEL)
+  tipoRetencaoIssqn         TipoRetencaoIssqn @default(NAO_RETIDO)
   informacoesComplementares String?
-  notaSubstituidaId String?
-  chaveAcessoSubstituida String?
-  codigoMotivoSubstituicao String?
-  motivoSubstituicao String?
+  notaSubstituidaId         String?
+  chaveAcessoSubstituida    String?
+  codigoMotivoSubstituicao  String?
+  motivoSubstituicao        String?
 
-  valorServico      Decimal     @db.Decimal(10, 2)
-  valorIss          Decimal     @db.Decimal(10, 2)
-  aliquotaIss       Decimal     @db.Decimal(5, 2)
+  valorServico Decimal @db.Decimal(10, 2)
+  valorIss     Decimal @db.Decimal(10, 2)
+  aliquotaIss  Decimal @db.Decimal(5, 2)
 
-  descricao         String
-  status            StatusNota  @default(RASCUNHO)
+  descricao String
+  status    StatusNota @default(RASCUNHO)
 
-  dataEmissao       DateTime?
-  linkPdf           String?
-  xmlUrl            String?
-  mensagemErro      String?
+  dataEmissao  DateTime?
+  linkPdf      String?
+  xmlUrl       String?
+  mensagemErro String?
 
-  empresa           Empresa     @relation(fields: [empresaId], references: [id])
-  usuario           Usuario     @relation(fields: [usuarioId], references: [id])
-  cliente           Cliente     @relation(fields: [clienteId], references: [id])
-  servico           Servico     @relation(fields: [servicoId], references: [id])
-  notaSubstituida   NotaServico? @relation("SubstituicaoNotaServico", fields: [notaSubstituidaId], references: [id])
-  notasSubstitutas  NotaServico[] @relation("SubstituicaoNotaServico")
+  empresa          Empresa                   @relation(fields: [empresaId], references: [id])
+  usuario          Usuario                   @relation(fields: [usuarioId], references: [id])
+  cliente          Cliente                   @relation(fields: [clienteId], references: [id])
+  servico          Servico                   @relation(fields: [servicoId], references: [id])
+  notaSubstituida  NotaServico?              @relation("SubstituicaoNotaServico", fields: [notaSubstituidaId], references: [id])
+  notasSubstitutas NotaServico[]             @relation("SubstituicaoNotaServico")
+  eventosFiscais   NotaServicoEventoFiscal[]
 
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([empresaId])
   @@index([clienteId])
@@ -238,4 +253,30 @@ model NotaServico {
   @@index([notaSubstituidaId])
   @@index([status])
   @@map("notas_servico")
+}
+
+model NotaServicoEventoFiscal {
+  id            String  @id @default(uuid())
+  empresaId     String
+  notaServicoId String
+  usuarioId     String?
+
+  tipo        TipoEventoFiscalNotaServico
+  status      StatusEventoFiscalNotaServico
+  statusHttp  Int?
+  chaveAcesso String?
+  mensagem    String?
+
+  empresa     Empresa     @relation(fields: [empresaId], references: [id])
+  notaServico NotaServico @relation(fields: [notaServicoId], references: [id], onDelete: Cascade)
+  usuario     Usuario?    @relation(fields: [usuarioId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([empresaId])
+  @@index([notaServicoId])
+  @@index([usuarioId])
+  @@index([tipo])
+  @@index([status])
+  @@map("notas_servico_eventos_fiscais")
 }

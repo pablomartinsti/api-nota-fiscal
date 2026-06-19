@@ -3,6 +3,7 @@ import { env } from '../config/env';
 import { PrismaConfiguracaoFiscalEmpresaRepository } from '../database/repositories/PrismaConfiguracaoFiscalEmpresaRepository';
 import { PrismaClienteRepository } from '../database/repositories/PrismaClienteRepository';
 import { PrismaEmpresaRepository } from '../database/repositories/PrismaEmpresaRepository';
+import { PrismaNotaServicoEventoFiscalRepository } from '../database/repositories/PrismaNotaServicoEventoFiscalRepository';
 import { PrismaNotaServicoRepository } from '../database/repositories/PrismaNotaServicoRepository';
 import { PrismaServicoRepository } from '../database/repositories/PrismaServicoRepository';
 import { ClienteHttpSefinNacional } from '../fiscal/ClienteHttpSefinNacional';
@@ -26,8 +27,10 @@ import { EnviarDpsAssinadaNotaServicoService } from '../services/EnviarDpsAssina
 import { GerarProximoNumeroDpsService } from '../services/GerarProximoNumeroDpsService';
 import { GerarXmlDpsNotaServicoService } from '../services/GerarXmlDpsNotaServicoService';
 import { GerarXmlDpsAssinadoNotaServicoService } from '../services/GerarXmlDpsAssinadoNotaServicoService';
+import { ListarEventosFiscaisNotaServicoService } from '../services/ListarEventosFiscaisNotaServicoService';
 import { ListarNotasServicoService } from '../services/ListarNotasServicoService';
 import { ReconciliarEnvioDpsNotaServicoService } from '../services/ReconciliarEnvioDpsNotaServicoService';
+import { RegistrarEventoFiscalNotaServicoService } from '../services/RegistrarEventoFiscalNotaServicoService';
 import { ResolverConfiguracaoFiscalEmpresaService } from '../services/ResolverConfiguracaoFiscalEmpresaService';
 import { RetornarNotaServicoParaRascunhoService } from '../services/RetornarNotaServicoParaRascunhoService';
 import { ValidarReferenciasNotaServicoService } from '../services/ValidarReferenciasNotaServicoService';
@@ -36,6 +39,8 @@ import { ValidarPermissaoProducaoRealService } from '../services/ValidarPermissa
 
 export function criarGestaoNotaServicoController(): GestaoNotaServicoController {
   const notaRepository = new PrismaNotaServicoRepository();
+  const eventoFiscalRepository =
+    new PrismaNotaServicoEventoFiscalRepository();
   const empresaRepository = new PrismaEmpresaRepository();
   const clienteRepository = new PrismaClienteRepository();
   const servicoRepository = new PrismaServicoRepository();
@@ -53,6 +58,8 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     new ValidarPermissaoProducaoRealService(
       env.NFSE_PERMITIR_PRODUCAO_REAL,
     );
+  const registrarEventoFiscal =
+    new RegistrarEventoFiscalNotaServicoService(eventoFiscalRepository);
   const validarReferencias = new ValidarReferenciasNotaServicoService(
     clienteRepository,
     servicoRepository,
@@ -124,12 +131,14 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       clienteNfse,
       resolverConfiguracaoFiscal,
       validarPermissaoProducaoReal,
+      registrarEventoFiscal,
     ),
     new ConsultarNfseEmitidaNotaServicoService(
       notaRepository,
       clienteNfse,
       resolverConfiguracaoFiscal,
       validarPermissaoProducaoReal,
+      registrarEventoFiscal,
     ),
     new CancelarNfseNotaServicoService(
       notaRepository,
@@ -141,6 +150,7 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       clienteNfse,
       resolverConfiguracaoFiscal,
       validarPermissaoProducaoReal,
+      registrarEventoFiscal,
     ),
     new CriarRascunhoSubstituicaoNotaServicoService(
       notaRepository,
@@ -154,6 +164,11 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       clienteNfse,
       resolverConfiguracaoFiscal,
       validarPermissaoProducaoReal,
+      registrarEventoFiscal,
+    ),
+    new ListarEventosFiscaisNotaServicoService(
+      notaRepository,
+      eventoFiscalRepository,
     ),
   );
 }

@@ -1,4 +1,5 @@
 import { AmbienteFiscal, NotaServico, StatusNota } from '../entities/NotaServico';
+import { TipoEventoFiscalNotaServico } from '../entities/NotaServicoEventoFiscal';
 import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
@@ -9,6 +10,7 @@ import {
 } from '../fiscal/ClienteNfseNacional';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
+import { RegistrarEventoFiscalNotaServicoService } from './RegistrarEventoFiscalNotaServicoService';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
 
@@ -35,6 +37,7 @@ export class ReconciliarEnvioDpsNotaServicoService {
     private readonly clienteNfse: ClienteNfseNacional,
     private readonly resolverConfiguracaoFiscal?: ResolverConfiguracaoFiscalEmpresaService,
     private readonly validarPermissaoProducaoReal?: ValidarPermissaoProducaoRealService,
+    private readonly registrarEventoFiscal?: RegistrarEventoFiscalNotaServicoService,
   ) {}
 
   async executar(
@@ -73,11 +76,19 @@ export class ReconciliarEnvioDpsNotaServicoService {
     );
 
     if (!resultado.sucesso) {
+      const mensagemErro = this.criarMensagemErroFiscal(resultado.erros);
       nota.registrarFalhaReconciliacaoFiscal(
-        this.criarMensagemErroFiscal(resultado.erros),
+        mensagemErro,
       );
 
       const notaComErro = await this.notaRepository.salvar(nota);
+      await this.registrarErroFiscal(
+        autenticacao,
+        notaComErro,
+        mensagemErro,
+        resultado.statusHttp,
+        chaveAcesso,
+      );
 
       return {
         nota: notaComErro,
@@ -101,6 +112,13 @@ export class ReconciliarEnvioDpsNotaServicoService {
     await this.marcarNotaOriginalComoSubstituidaSeNecessario(
       autenticacao,
       notaReconciliada,
+    );
+    await this.registrarSucessoFiscal(
+      autenticacao,
+      notaReconciliada,
+      'Envio fiscal reconciliado pela consulta da SEFIN Nacional.',
+      resultado.statusHttp,
+      resultado.chaveAcesso ?? chaveAcesso,
     );
 
     return {
@@ -195,6 +213,50 @@ export class ReconciliarEnvioDpsNotaServicoService {
     const prefixos = [erro.codigo, erro.campo].filter(Boolean).join(' ');
 
     return prefixos ? `${prefixos}: ${erro.mensagem}` : erro.mensagem;
+  }
+
+  private async registrarSucessoFiscal(
+    autenticacao: TokenPayload,
+    nota: NotaServico,
+    mensagem: string,
+    statusHttp?: number,
+    chaveAcesso?: string,
+  ): Promise<void> {
+    if (!this.registrarEventoFiscal || !nota.id) {
+      return;
+    }
+
+    await this.registrarEventoFiscal.sucesso({
+      empresaId: autenticacao.empresaId,
+      notaServicoId: nota.id,
+      usuarioId: autenticacao.usuarioId,
+      tipo: TipoEventoFiscalNotaServico.RECONCILIACAO_ENVIO,
+      statusHttp,
+      chaveAcesso,
+      mensagem,
+    });
+  }
+
+  private async registrarErroFiscal(
+    autenticacao: TokenPayload,
+    nota: NotaServico,
+    mensagem: string,
+    statusHttp?: number,
+    chaveAcesso?: string,
+  ): Promise<void> {
+    if (!this.registrarEventoFiscal || !nota.id) {
+      return;
+    }
+
+    await this.registrarEventoFiscal.erro({
+      empresaId: autenticacao.empresaId,
+      notaServicoId: nota.id,
+      usuarioId: autenticacao.usuarioId,
+      tipo: TipoEventoFiscalNotaServico.RECONCILIACAO_ENVIO,
+      statusHttp,
+      chaveAcesso,
+      mensagem,
+    });
   }
 
   private async criarInputConsultaNfse(

@@ -156,6 +156,7 @@ npm run prisma:studio
 - `GET /notas-servico/:notaId/xml-dps-assinado`
 - `POST /notas-servico/:notaId/enviar-dps`
 - `GET /notas-servico/:notaId/consulta-nfse`
+- `GET /notas-servico/:notaId/eventos-fiscais`
 - `POST /notas-servico/:notaId/reconciliar-envio`
 - `POST /notas-servico/:notaId/cancelar-nfse`
 - `POST /notas-servico/:notaId/substituir`
@@ -190,6 +191,10 @@ retornar manualmente para rascunho. Se houver duvida se a SEFIN autorizou a
 NFS-e apesar de um timeout ou erro de comunicacao local, a rota
 `POST /notas-servico/:notaId/reconciliar-envio` consulta a SEFIN pela
 `chaveAcesso` e atualiza a nota para `EMITIDA` quando a NFS-e existir. A rota
+`GET /notas-servico/:notaId/eventos-fiscais` lista a trilha de auditoria
+fiscal da nota, com tipo do evento, sucesso/erro, status HTTP, chave de acesso
+e mensagem resumida. Esse historico nao armazena certificado, senha ou XML
+completo. A rota
 `POST /notas-servico/:notaId/cancelar-nfse` registra o evento oficial de
 cancelamento e so muda a nota para `CANCELADA` se a SEFIN aceitar. A rota
 `POST /notas-servico/:notaId/substituir` cria um novo rascunho com vinculo para
