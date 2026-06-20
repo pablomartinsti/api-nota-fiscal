@@ -38,6 +38,9 @@ notaServicoRoutes.get(
   '/notas-servico/:notaId/consulta-nfse',
   (request, response) => controller.consultarNfseEmitida(request, response),
 );
+notaServicoRoutes.get('/notas-servico/:notaId/danfse', (request, response) =>
+  controller.baixarDanfse(request, response),
+);
 notaServicoRoutes.get(
   '/notas-servico/:notaId/eventos-fiscais',
   (request, response) => controller.listarEventosFiscais(request, response),

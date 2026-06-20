@@ -49,6 +49,24 @@ const envSchema = z
     ),
     NFSE_SEFIN_ENVIO_DPS_PATH: z.string().trim().min(1).default('/nfse'),
     NFSE_SEFIN_TIMEOUT_MS: z.coerce.number().int().min(1).default(15_000),
+    NFSE_ADN_HOMOLOGACAO_BASE_URL: z.preprocess(
+      (valor) => (valor === '' ? undefined : valor),
+      z.string().trim().url().optional(),
+    ),
+    NFSE_ADN_PRODUCAO_BASE_URL: z.preprocess(
+      (valor) => (valor === '' ? undefined : valor),
+      z.string().trim().url().optional(),
+    ),
+    NFSE_ADN_TIMEOUT_MS: z.coerce.number().int().min(1).default(15_000),
+    NFSE_DANFSE_HOMOLOGACAO_BASE_URL: z.preprocess(
+      (valor) => (valor === '' ? undefined : valor),
+      z.string().trim().url().optional(),
+    ),
+    NFSE_DANFSE_PRODUCAO_BASE_URL: z.preprocess(
+      (valor) => (valor === '' ? undefined : valor),
+      z.string().trim().url().optional(),
+    ),
+    NFSE_DANFSE_TIMEOUT_MS: z.coerce.number().int().min(1).default(15_000),
     NFSE_PERMITIR_PRODUCAO_REAL: z
       .enum(['true', 'false'])
       .default('false')

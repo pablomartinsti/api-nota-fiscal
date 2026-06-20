@@ -12,6 +12,7 @@ import {
 import { NotaServicoEventoFiscalPresenter } from '../presenters/NotaServicoEventoFiscalPresenter';
 import { NotaServicoPresenter } from '../presenters/NotaServicoPresenter';
 import { AtualizarRascunhoNotaServicoService } from '../services/AtualizarRascunhoNotaServicoService';
+import { BaixarDanfseNotaServicoService } from '../services/BaixarDanfseNotaServicoService';
 import { BuscarNotaServicoService } from '../services/BuscarNotaServicoService';
 import { CancelarNotaServicoService } from '../services/CancelarNotaServicoService';
 import { CancelarNfseNotaServicoService } from '../services/CancelarNfseNotaServicoService';
@@ -46,6 +47,7 @@ export class GestaoNotaServicoController {
     private readonly criarRascunhoSubstituicaoService: CriarRascunhoSubstituicaoNotaServicoService,
     private readonly reconciliarEnvioDpsService: ReconciliarEnvioDpsNotaServicoService,
     private readonly listarEventosFiscaisService: ListarEventosFiscaisNotaServicoService,
+    private readonly baixarDanfseService: BaixarDanfseNotaServicoService,
   ) {}
 
   async cadastrar(request: Request, response: Response): Promise<Response> {
@@ -260,5 +262,34 @@ export class GestaoNotaServicoController {
     return response
       .status(200)
       .json(eventos.map(NotaServicoEventoFiscalPresenter.paraHttp));
+  }
+
+  async baixarDanfse(
+    request: Request,
+    response: Response,
+  ): Promise<Response> {
+    const { notaId } = notaServicoParamsSchema.parse(request.params);
+    const resultado = await this.baixarDanfseService.executar(
+      request.autenticacao,
+      notaId,
+    );
+
+    if (!resultado.sucesso || !resultado.pdf) {
+      return response.status(resultado.statusHttp).json({
+        sucesso: resultado.sucesso,
+        statusHttp: resultado.statusHttp,
+        chaveAcesso: resultado.chaveAcesso,
+        erros: resultado.erros,
+      });
+    }
+
+    return response
+      .status(200)
+      .type(resultado.contentType ?? 'application/pdf')
+      .setHeader(
+        'Content-Disposition',
+        `inline; filename="danfse-${resultado.chaveAcesso}.pdf"`,
+      )
+      .send(resultado.pdf);
   }
 }

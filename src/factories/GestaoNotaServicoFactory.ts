@@ -7,6 +7,7 @@ import { PrismaNotaServicoEventoFiscalRepository } from '../database/repositorie
 import { PrismaNotaServicoRepository } from '../database/repositories/PrismaNotaServicoRepository';
 import { PrismaServicoRepository } from '../database/repositories/PrismaServicoRepository';
 import { ClienteHttpSefinNacional } from '../fiscal/ClienteHttpSefinNacional';
+import { ClienteHttpDanfseNfseNacional } from '../fiscal/ClienteHttpDanfseNfseNacional';
 import { EmissorNotaServicoSimulado } from '../fiscal/EmissorNotaServicoSimulado';
 import { GeradorXmlDpsNacional } from '../fiscal/GeradorXmlDpsNacional';
 import { AssinadorXmlDpsXmlDsig } from '../fiscal/AssinadorXmlDpsXmlDsig';
@@ -16,6 +17,7 @@ import { ProvedorCertificadoA1Arquivo } from '../fiscal/ProvedorCertificadoA1Arq
 import { ValidadorXmlDpsXsd } from '../fiscal/ValidadorXmlDpsXsd';
 import { AesGcmCifradorTexto } from '../security/AesGcmCifradorTexto';
 import { AtualizarRascunhoNotaServicoService } from '../services/AtualizarRascunhoNotaServicoService';
+import { BaixarDanfseNotaServicoService } from '../services/BaixarDanfseNotaServicoService';
 import { BuscarNotaServicoService } from '../services/BuscarNotaServicoService';
 import { CancelarNotaServicoService } from '../services/CancelarNotaServicoService';
 import { CancelarNfseNotaServicoService } from '../services/CancelarNfseNotaServicoService';
@@ -96,6 +98,13 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     baseUrlProducao: env.NFSE_SEFIN_PRODUCAO_BASE_URL,
     endpointEnvioDps: env.NFSE_SEFIN_ENVIO_DPS_PATH,
     timeoutMs: env.NFSE_SEFIN_TIMEOUT_MS,
+    certificadoPath: env.NFSE_CERTIFICADO_PATH,
+    certificadoSenha: env.NFSE_CERTIFICADO_SENHA,
+  }));
+  const clienteDanfse = new ClienteHttpDanfseNfseNacional(() => ({
+    baseUrlHomologacao: env.NFSE_DANFSE_HOMOLOGACAO_BASE_URL,
+    baseUrlProducao: env.NFSE_DANFSE_PRODUCAO_BASE_URL,
+    timeoutMs: env.NFSE_DANFSE_TIMEOUT_MS,
     certificadoPath: env.NFSE_CERTIFICADO_PATH,
     certificadoSenha: env.NFSE_CERTIFICADO_SENHA,
   }));
@@ -183,6 +192,12 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     new ListarEventosFiscaisNotaServicoService(
       notaRepository,
       eventoFiscalRepository,
+    ),
+    new BaixarDanfseNotaServicoService(
+      notaRepository,
+      clienteDanfse,
+      resolverConfiguracaoFiscal,
+      validarPermissaoProducaoReal,
     ),
   );
 }
