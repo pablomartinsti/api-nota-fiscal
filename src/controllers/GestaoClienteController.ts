@@ -5,6 +5,7 @@ import {
   atualizarClienteSchema,
   cadastrarClienteSchema,
   clienteParamsSchema,
+  listarXmlsNfseClientePeriodoQuerySchema,
 } from '../dtos/GestaoClienteDto';
 import { ClientePresenter } from '../presenters/ClientePresenter';
 import { AlterarStatusClienteService } from '../services/AlterarStatusClienteService';
@@ -12,6 +13,7 @@ import { AtualizarClienteService } from '../services/AtualizarClienteService';
 import { BuscarClienteService } from '../services/BuscarClienteService';
 import { CadastrarClienteService } from '../services/CadastrarClienteService';
 import { ListarClientesService } from '../services/ListarClientesService';
+import { ListarXmlsNfseClientePeriodoService } from '../services/ListarXmlsNfseClientePeriodoService';
 
 export class GestaoClienteController {
   constructor(
@@ -20,6 +22,7 @@ export class GestaoClienteController {
     private readonly buscarService: BuscarClienteService,
     private readonly atualizarService: AtualizarClienteService,
     private readonly alterarStatusService: AlterarStatusClienteService,
+    private readonly listarXmlsNfseClientePeriodoService: ListarXmlsNfseClientePeriodoService,
   ) {}
 
   async cadastrar(request: Request, response: Response): Promise<Response> {
@@ -70,5 +73,22 @@ export class GestaoClienteController {
     );
 
     return response.status(200).json(ClientePresenter.paraHttp(cliente));
+  }
+
+  async listarXmlsNfsePeriodo(
+    request: Request,
+    response: Response,
+  ): Promise<Response> {
+    const { clienteId } = clienteParamsSchema.parse(request.params);
+    const query = listarXmlsNfseClientePeriodoQuerySchema.parse(request.query);
+    const resultado = await this.listarXmlsNfseClientePeriodoService.executar(
+      request.autenticacao,
+      {
+        clienteId,
+        ...query,
+      },
+    );
+
+    return response.status(200).json(resultado);
   }
 }

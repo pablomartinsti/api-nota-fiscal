@@ -16,6 +16,10 @@ clienteRoutes.post('/clientes', (request, response) =>
 clienteRoutes.get('/clientes', (request, response) =>
   controller.listar(request, response),
 );
+clienteRoutes.get(
+  '/clientes/:clienteId/notas-servico/xmls',
+  (request, response) => controller.listarXmlsNfsePeriodo(request, response),
+);
 clienteRoutes.get('/clientes/:clienteId', (request, response) =>
   controller.buscar(request, response),
 );

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { AmbienteFiscal } from '../entities/NotaServico';
+
 const camposEditaveisCliente = {
   nomeRazaoSocial: z.string().trim().min(1),
   email: z.string().trim().toLowerCase().email().optional(),
@@ -30,4 +32,12 @@ export const clienteParamsSchema = z.object({
 
 export const alterarStatusClienteSchema = z.object({
   ativo: z.boolean(),
+});
+
+export const listarXmlsNfseClientePeriodoQuerySchema = z.object({
+  ano: z.coerce.number().int().min(2000).max(2100),
+  mes: z.coerce.number().int().min(1).max(12),
+  ambienteFiscal: z.enum(AmbienteFiscal).optional(),
+  nsuInicial: z.coerce.number().int().min(0).optional(),
+  limiteConsultas: z.coerce.number().int().min(1).max(500).optional(),
 });
