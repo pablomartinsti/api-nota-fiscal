@@ -55,6 +55,7 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
   const resolverConfiguracaoFiscal =
     new ResolverConfiguracaoFiscalEmpresaService(
       configuracaoFiscalRepository,
+      empresaRepository,
       cifradorTexto,
     );
   const validarPermissaoProducaoReal =

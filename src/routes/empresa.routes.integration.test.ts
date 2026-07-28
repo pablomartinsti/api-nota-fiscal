@@ -189,6 +189,7 @@ describe('Gestao da Empresa autenticada HTTP', () => {
         configurada: false,
         ambienteFiscalPadrao: AmbienteFiscal.HOMOLOGACAO,
         serieDpsPadrao: '1',
+        certificadoA1Configurado: false,
         certificadoA1SenhaConfigurada: false,
         ativo: false,
       }),
@@ -209,29 +210,31 @@ describe('Gestao da Empresa autenticada HTTP', () => {
         configurada: true,
         ambienteFiscalPadrao: AmbienteFiscal.HOMOLOGACAO,
         serieDpsPadrao: '2',
+        certificadoA1Configurado: false,
         certificadoA1SenhaConfigurada: false,
         ativo: true,
       }),
     );
     expect(atualizacao.body.certificadoA1Senha).toBeUndefined();
+    expect(atualizacao.body.certificadoA1Conteudo).toBeUndefined();
+    expect(atualizacao.body.certificadoA1Path).toBeUndefined();
   });
 
-  it('deve rejeitar certificado A1 invalido na configuracao fiscal', async () => {
+  it('deve rejeitar certificado A1 invalido no upload da configuracao fiscal', async () => {
     const dono = await criarContexto(PerfilUsuario.DONO);
 
     const resposta = await request(app)
-      .put('/empresa/configuracao-fiscal')
+      .post('/empresa/configuracao-fiscal/certificado-a1')
       .set('Authorization', `Bearer ${dono.token}`)
       .send({
-        ambienteFiscalPadrao: AmbienteFiscal.HOMOLOGACAO,
-        serieDpsPadrao: '1',
-        certificadoA1Path: 'C:/certificados/inexistente.pfx',
+        certificadoA1NomeArquivo: 'empresa.pfx',
+        certificadoA1Base64: 'conteudo-invalido',
         certificadoA1Senha: 'senha-do-certificado',
       });
 
     expect(resposta.status).toBe(422);
     expect(resposta.body.message).toBe(
-      'Certificado A1 invalido ou indisponivel.',
+      'Conteudo do certificado A1 deve estar em Base64.',
     );
   });
 

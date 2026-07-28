@@ -27,6 +27,7 @@ import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaI
 import { UsuarioNaoEncontradoError } from '../errors/UsuarioNaoEncontradoError';
 import { XmlDpsInvalidoError } from '../errors/XmlDpsInvalidoError';
 import { ProducaoRealBloqueadaError } from '../errors/ProducaoRealBloqueadaError';
+import { RegimeTributarioProducaoNaoSuportadoError } from '../errors/RegimeTributarioProducaoNaoSuportadoError';
 import { logger } from '../observability/logger';
 
 type HttpParserError = Error & {
@@ -88,7 +89,10 @@ export const errorHandler: ErrorRequestHandler = (
     return;
   }
 
-  if (error instanceof ProducaoRealBloqueadaError) {
+  if (
+    error instanceof ProducaoRealBloqueadaError ||
+    error instanceof RegimeTributarioProducaoNaoSuportadoError
+  ) {
     response.status(409).json({
       message: error.message,
     });

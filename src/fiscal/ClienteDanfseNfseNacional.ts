@@ -5,6 +5,7 @@ export interface BaixarDanfsePorChaveInput {
   ambienteFiscal: AmbienteFiscal;
   chaveAcesso: string;
   certificadoPath?: string;
+  certificadoConteudoBase64?: string;
   certificadoSenha?: string;
 }
 

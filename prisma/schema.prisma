@@ -114,6 +114,8 @@ model ConfiguracaoFiscalEmpresa {
   ambienteFiscalPadrao AmbienteFiscal @default(HOMOLOGACAO)
   serieDpsPadrao       String         @default("1")
   certificadoA1Path    String?
+  certificadoA1NomeArquivo String?
+  certificadoA1Conteudo    String?
   certificadoA1Senha   String?
   ativo                Boolean        @default(true)
 

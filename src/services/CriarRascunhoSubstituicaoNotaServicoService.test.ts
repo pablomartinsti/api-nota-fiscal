@@ -6,12 +6,14 @@ import {
   NotaServico,
   StatusNota,
 } from '../entities/NotaServico';
+import { Empresa, RegimeTributario } from '../entities/Empresa';
 import { PerfilUsuario } from '../entities/Usuario';
 import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { ProducaoRealBloqueadaError } from '../errors/ProducaoRealBloqueadaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
+import { EmpresaRepository } from '../repositories/EmpresaRepository';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { CriarRascunhoSubstituicaoNotaServicoService } from './CriarRascunhoSubstituicaoNotaServicoService';
 import { GerarProximoNumeroDpsService } from './GerarProximoNumeroDpsService';
@@ -157,11 +159,29 @@ function criarService(
       new GerarProximoNumeroDpsService(notaRepository),
       new ResolverConfiguracaoFiscalEmpresaService(
         configuracaoFiscalRepository,
+        criarEmpresaRepository(),
       ),
       new ValidarPermissaoProducaoRealService(permitirProducaoReal),
     ),
     salvar,
     validarReferencias,
+  };
+}
+
+function criarEmpresaRepository(): EmpresaRepository {
+  return {
+    salvar: vi.fn(),
+    buscarPorId: vi.fn().mockResolvedValue(
+      new Empresa({
+        id: 'empresa-1',
+        razaoSocial: 'Empresa Teste Ltda',
+        cnpj: '12345678000199',
+        regimeTributario: RegimeTributario.SIMPLES_NACIONAL,
+        cidade: 'Uberlandia',
+        uf: 'MG',
+      }),
+    ),
+    buscarPorCnpj: vi.fn(),
   };
 }
 

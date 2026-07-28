@@ -5,12 +5,14 @@ import {
   NotaServico,
   StatusNota,
 } from '../entities/NotaServico';
+import { Empresa, RegimeTributario } from '../entities/Empresa';
 import { PerfilUsuario } from '../entities/Usuario';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { ClienteDanfseNfseNacional } from '../fiscal/ClienteDanfseNfseNacional';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
+import { EmpresaRepository } from '../repositories/EmpresaRepository';
 import { BaixarDanfseNotaServicoService } from './BaixarDanfseNotaServicoService';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
@@ -91,10 +93,28 @@ function criarService(nota: NotaServico | null): {
       clienteDanfse,
       new ResolverConfiguracaoFiscalEmpresaService(
         criarConfiguracaoFiscalRepository(),
+        criarEmpresaRepository(),
       ),
       new ValidarPermissaoProducaoRealService(false),
     ),
     clienteDanfse,
+  };
+}
+
+function criarEmpresaRepository(): EmpresaRepository {
+  return {
+    salvar: vi.fn(),
+    buscarPorId: vi.fn().mockResolvedValue(
+      new Empresa({
+        id: 'empresa-1',
+        razaoSocial: 'Empresa Teste Ltda',
+        cnpj: '12345678000199',
+        regimeTributario: RegimeTributario.SIMPLES_NACIONAL,
+        cidade: 'Uberlandia',
+        uf: 'MG',
+      }),
+    ),
+    buscarPorCnpj: vi.fn(),
   };
 }
 

@@ -1,0 +1,23 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api-nota-fiscal
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      PORT: 3333
+    ports:
+      - "127.0.0.1:3333:3333"
+    volumes:
+      - ./schemas:/app/schemas:ro
+    command: sh -c "npm run prisma:migrate:deploy && npm start"
+    mem_limit: 512m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -98,6 +98,7 @@ export class GerarXmlDpsAssinadoNotaServicoService {
 
     return new ProvedorCertificadoA1Arquivo(() => ({
       caminho: configuracaoCertificado.caminho,
+      conteudoBase64: configuracaoCertificado.conteudoBase64,
       senha: configuracaoCertificado.senha,
     })).obter();
   }

@@ -268,6 +268,7 @@ export class EnviarDpsAssinadaNotaServicoService {
       ambienteFiscal,
       xmlAssinado,
       certificadoPath: configuracaoCertificado.caminho,
+      certificadoConteudoBase64: configuracaoCertificado.conteudoBase64,
       certificadoSenha: configuracaoCertificado.senha,
     };
   }

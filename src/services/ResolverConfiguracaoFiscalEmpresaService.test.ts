@@ -1,9 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ConfiguracaoFiscalEmpresa } from '../entities/ConfiguracaoFiscalEmpresa';
+import { Empresa, RegimeTributario } from '../entities/Empresa';
 import { AmbienteFiscal } from '../entities/NotaServico';
 import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
+import { RegimeTributarioProducaoNaoSuportadoError } from '../errors/RegimeTributarioProducaoNaoSuportadoError';
 import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
+import { EmpresaRepository } from '../repositories/EmpresaRepository';
 import { CifradorTexto } from '../security/CifradorTexto';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 
@@ -70,6 +73,35 @@ describe('ResolverConfiguracaoFiscalEmpresaService', () => {
     expect(certificado?.senha).toBe('senha-aberta');
   });
 
+  it('deve descriptografar conteudo do certificado salvo no banco ao obter A1', async () => {
+    const cifradorTexto: CifradorTexto = {
+      criptografar: vi.fn(),
+      descriptografar: vi.fn((texto: string) =>
+        texto.replace(/^criptografado:/, ''),
+      ),
+      estaCriptografado: vi.fn((texto: string) =>
+        texto.startsWith('criptografado:'),
+      ),
+    };
+    const service = criarService(
+      new ConfiguracaoFiscalEmpresa({
+        empresaId: 'empresa-1',
+        certificadoA1NomeArquivo: 'empresa.pfx',
+        certificadoA1Conteudo: 'criptografado:base64-certificado',
+        certificadoA1Senha: 'criptografado:senha',
+      }),
+      cifradorTexto,
+    );
+
+    const certificado = await service.obterCertificadoA1('empresa-1');
+
+    expect(certificado).toEqual({
+      caminho: undefined,
+      conteudoBase64: 'base64-certificado',
+      senha: 'senha',
+    });
+  });
+
   it('deve permitir fallback global apenas em homologacao', async () => {
     const service = criarService(null);
 
@@ -91,11 +123,33 @@ describe('ResolverConfiguracaoFiscalEmpresaService', () => {
       ),
     ).rejects.toBeInstanceOf(CertificadoA1EmpresaProducaoAusenteError);
   });
+
+  it('deve bloquear producao real para regime tributario ainda nao suportado', async () => {
+    const service = criarService(
+      new ConfiguracaoFiscalEmpresa({
+        empresaId: 'empresa-1',
+        ambienteFiscalPadrao: AmbienteFiscal.PRODUCAO,
+        serieDpsPadrao: '1',
+        certificadoA1Path: 'C:/certificados/empresa.pfx',
+        certificadoA1Senha: 'senha',
+      }),
+      undefined,
+      RegimeTributario.LUCRO_PRESUMIDO,
+    );
+
+    await expect(
+      service.obterCertificadoA1ParaAmbiente(
+        'empresa-1',
+        AmbienteFiscal.PRODUCAO,
+      ),
+    ).rejects.toBeInstanceOf(RegimeTributarioProducaoNaoSuportadoError);
+  });
 });
 
 function criarService(
   configuracao: ConfiguracaoFiscalEmpresa | null,
   cifradorTexto?: CifradorTexto,
+  regimeTributario = RegimeTributario.SIMPLES_NACIONAL,
 ) {
   const repository: ConfiguracaoFiscalEmpresaRepository = {
     salvar: vi.fn(),
@@ -104,6 +158,26 @@ function criarService(
 
   return new ResolverConfiguracaoFiscalEmpresaService(
     repository,
+    criarEmpresaRepository(regimeTributario),
     cifradorTexto,
   );
+}
+
+function criarEmpresaRepository(
+  regimeTributario: RegimeTributario,
+): EmpresaRepository {
+  return {
+    salvar: vi.fn(),
+    buscarPorId: vi.fn().mockResolvedValue(
+      new Empresa({
+        id: 'empresa-1',
+        razaoSocial: 'Empresa Teste Ltda',
+        cnpj: '12345678000199',
+        regimeTributario,
+        cidade: 'Uberlandia',
+        uf: 'MG',
+      }),
+    ),
+    buscarPorCnpj: vi.fn(),
+  };
 }

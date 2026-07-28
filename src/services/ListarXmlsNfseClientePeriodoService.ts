@@ -95,6 +95,7 @@ export class ListarXmlsNfseClientePeriodoService {
           ambienteFiscal,
           nsu: nsuAtual,
           certificadoPath: certificado?.caminho,
+          certificadoConteudoBase64: certificado?.conteudoBase64,
           certificadoSenha: certificado?.senha,
         });
 

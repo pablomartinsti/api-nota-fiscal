@@ -1,11 +1,13 @@
 # API de Emissao de NFS-e
 
-API SaaS multiempresa para gestao e futura emissao de Notas Fiscais de
-Servico Eletronicas (NFS-e).
+API SaaS multiempresa para gestao e emissao de Notas Fiscais de Servico
+Eletronicas (NFS-e).
 
 O projeto possui autenticacao, isolamento de dados por empresa e gestao de
-usuarios, clientes, servicos e notas. A comunicacao com a NFS-e Nacional ainda
-nao foi integrada: emissao e cancelamento utilizam um emissor simulado.
+usuarios, clientes, servicos e notas. O fluxo fiscal oficial da NFS-e Nacional
+ja possui geracao/assinatura de DPS, envio, consulta, cancelamento,
+substituicao e download do DANFSe. As rotas simuladas continuam apenas para
+desenvolvimento local.
 
 ## Tecnologias
 
@@ -29,7 +31,8 @@ nao foi integrada: emissao e cancelamento utilizam um emissor simulado.
 - Gestao de usuarios, clientes e servicos
 - Criacao e atualizacao de notas em rascunho
 - Calculo de ISS
-- Ciclo simulado de emissao, erro, retorno para rascunho e cancelamento
+- Fluxo fiscal oficial de envio, consulta, cancelamento e substituicao
+- Ciclo simulado de emissao, erro, retorno para rascunho e cancelamento em desenvolvimento
 - Health check, readiness check e resposta JSON para rotas inexistentes
 - Testes unitarios e testes de integracao HTTP
 
@@ -45,8 +48,8 @@ Route
 ```
 
 As entidades concentram regras de dominio. Os services coordenam casos de uso,
-e os repositories isolam a persistencia. O contrato `EmissorNotaServico`
-permite substituir o emissor simulado por uma integracao fiscal real no futuro.
+e os repositories isolam a persistencia. A pasta `fiscal` isola geracao de XML,
+assinatura digital e comunicacao com os servicos nacionais da NFS-e.
 
 ## Requisitos
 
@@ -105,8 +108,53 @@ npm run nfse:check-homologacao
 npm run config:check-production
 npm run prisma:generate
 npm run prisma:migrate
+npm run prisma:migrate:deploy
 npm run prisma:studio
 ```
+
+## CI
+
+O repositorio possui workflow em `.github/workflows/backend-ci.yml`.
+Ao enviar codigo para `main`, `master` ou abrir pull request, o GitHub Actions
+sobe um PostgreSQL temporario e executa:
+
+```bash
+npm ci
+npm run prisma:generate
+npm run prisma:migrate:deploy
+npm run build
+npm test
+npm run test:integration
+```
+
+## Deploy da API
+
+A API pode rodar em Docker na VPS usando banco PostgreSQL externo, como Neon.
+Para producao, copie `.env.production.example` para `.env.production` no
+servidor e preencha os segredos reais. Nao versionar `.env.production`.
+
+No Neon, use:
+
+```env
+DATABASE_URL="url-com-pooler-do-neon"
+DIRECT_URL="url-direta-do-neon"
+```
+
+`DATABASE_URL` e usada pela API em runtime. `DIRECT_URL` e usada pelo Prisma
+CLI para aplicar migrations com `prisma migrate deploy`.
+
+Para subir a API na VPS:
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+O compose publica a API apenas em `127.0.0.1:3333`. Configure um proxy HTTPS
+na VPS para expor essa porta no dominio publico, por exemplo
+`https://api.seudominio.com.br`.
+
+Os arquivos XSD da NFS-e devem ficar na pasta `schemas` ao lado do compose na
+VPS, pois ela e montada no container em `/app/schemas`.
 
 ## Rotas principais
 
@@ -219,7 +267,6 @@ Variaveis fiscais:
 NFSE_CERTIFICADO_PATH=""
 NFSE_CERTIFICADO_SENHA=""
 NFSE_CERTIFICADO_CRYPTO_KEY=""
-NFSE_CERTIFICADO_STORAGE_DIR="storage/certificados"
 NFSE_XSD_DPS_PATH=""
 NFSE_XSD_EVENTO_PATH=""
 NFSE_SEFIN_HOMOLOGACAO_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/SefinNacional"
@@ -238,17 +285,17 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 O modelo `ConfiguracaoFiscalEmpresa` ja existe para preparar o SaaS
 multiempresa, guardando ambiente fiscal padrao, serie padrao da DPS e
-referencias do certificado A1 por empresa. O fluxo fiscal ja consulta essa
+certificado A1 por empresa. O fluxo fiscal ja consulta essa
 configuracao ao criar rascunhos, assinar XML, enviar DPS, consultar NFS-e e
 cancelar NFS-e. Quando a empresa ainda nao tiver configuracao ativa ou
 certificado completo configurado, a API usa temporariamente as variaveis globais
 do `.env` como fallback apenas em `HOMOLOGACAO`.
 
-Para preparar producao real, prefira configurar o certificado A1 pela rota de
-upload em Base64. A API salva o arquivo em `NFSE_CERTIFICADO_STORAGE_DIR`,
-valida senha, validade e CNPJ do certificado contra a empresa autenticada, e
-grava a senha criptografada no banco. A resposta nunca retorna senha nem
-conteudo do certificado.
+Para preparar producao real, configure o certificado A1 pela rota de upload em
+Base64. A API valida senha, validade e CNPJ do certificado contra a empresa
+autenticada, grava o conteudo do arquivo criptografado no banco e grava a senha
+criptografada no banco. A resposta nunca retorna senha nem conteudo do
+certificado.
 
 Exemplo para configurar o certificado A1 da empresa autenticada:
 
@@ -265,22 +312,25 @@ Exemplo para atualizar a configuracao fiscal da empresa autenticada:
 ```json
 {
   "ambienteFiscalPadrao": "HOMOLOGACAO",
-  "serieDpsPadrao": "1",
-  "certificadoA1Path": "C:/caminho/certificados/empresa.pfx",
-  "certificadoA1Senha": "senha-do-certificado"
+  "serieDpsPadrao": "1"
 }
 ```
 
-A resposta nunca retorna `certificadoA1Senha`; ela informa apenas
-`certificadoA1SenhaConfigurada`. A configuracao manual por
-`certificadoA1Path` e `certificadoA1Senha` continua disponivel para
-desenvolvimento/homologacao local, mas para producao real o fluxo recomendado e
-o upload controlado pela API.
+A resposta nunca retorna `certificadoA1Senha` nem `certificadoA1Conteudo`; ela
+informa apenas se o certificado esta configurado e o nome do arquivo enviado.
+Para remover o certificado cadastrado, envie `removerCertificadoA1: true` na
+atualizacao da configuracao fiscal. A configuracao por caminho local continua
+existindo apenas como fallback temporario de desenvolvimento/homologacao via
+variaveis de ambiente.
 
 Por seguranca, operacoes fiscais em `PRODUCAO` ficam bloqueadas por padrao.
 Enviar DPS, consultar NFS-e, cancelar NFS-e e criar substituicao em producao
 real so sao permitidos quando `NFSE_PERMITIR_PRODUCAO_REAL="true"` estiver
 configurado. Em `HOMOLOGACAO`, o fluxo continua funcionando normalmente.
+Nesta versao, mesmo com a producao real habilitada, a API permite operacoes
+fiscais reais apenas para empresas com `regimeTributario` igual a
+`SIMPLES_NACIONAL`. `MEI`, `LUCRO_PRESUMIDO` e `LUCRO_REAL` podem permanecer
+cadastrados, mas ainda nao sao liberados para emissao real.
 
 As rotas simuladas `POST /notas-servico/:notaId/emitir` e
 `POST /notas-servico/:notaId/cancelar` existem apenas para desenvolvimento e
@@ -320,6 +370,7 @@ DPS. Para notas em `PRODUCAO`, a resposta tambem inclui o bloco
 `producaoReal`, conferindo:
 
 - `NFSE_PERMITIR_PRODUCAO_REAL`
+- regime tributario suportado para esta versao (`SIMPLES_NACIONAL`)
 - URL oficial de producao da SEFIN
 - XSD da DPS
 - XSD de evento
@@ -332,10 +383,12 @@ Exemplo de pendencias para uma nota de producao ainda bloqueada:
   "pronto": false,
   "pendencias": [
     "producaoReal.permissao",
+    "empresa.regimeTributario",
     "empresa.configuracaoFiscal.certificadoA1"
   ],
   "producaoReal": {
     "habilitada": false,
+    "regimeTributarioSuportado": false,
     "urlSefinProducaoConfigurada": true,
     "xsdDpsConfigurado": true,
     "xsdEventoConfigurado": true,
@@ -348,8 +401,9 @@ Quando essa rota retornar `pronto: true` para uma nota em `PRODUCAO`, a API
 estara pronta para uma tentativa manual de envio real pela rota
 `POST /notas-servico/:notaId/enviar-dps`.
 
-Antes da emissao real completa em clientes de outros regimes, ainda sera
-necessario validar as regras fiscais especificas de cada regime tributario.
+Antes de liberar emissao real para `MEI`, `LUCRO_PRESUMIDO` ou `LUCRO_REAL`,
+sera necessario validar as regras fiscais especificas de cada regime
+tributario e remover esse bloqueio de producao de forma controlada.
 
 Para preparar o primeiro teste em Producao Restrita, consulte:
 

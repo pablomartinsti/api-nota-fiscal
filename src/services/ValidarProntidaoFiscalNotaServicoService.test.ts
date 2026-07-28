@@ -63,6 +63,7 @@ describe('ValidarProntidaoFiscalNotaServicoService', () => {
     );
     expect(resultado.producaoReal).toEqual({
       habilitada: false,
+      regimeTributarioSuportado: true,
       urlSefinProducaoConfigurada: false,
       xsdDpsConfigurado: false,
       xsdEventoConfigurado: false,
@@ -95,6 +96,7 @@ describe('ValidarProntidaoFiscalNotaServicoService', () => {
       pendencias: [],
       producaoReal: {
         habilitada: true,
+        regimeTributarioSuportado: true,
         urlSefinProducaoConfigurada: true,
         xsdDpsConfigurado: true,
         xsdEventoConfigurado: true,
@@ -102,9 +104,36 @@ describe('ValidarProntidaoFiscalNotaServicoService', () => {
       },
     });
   });
+
+  it('deve informar pendencia quando regime nao for Simples Nacional em producao real', async () => {
+    const { service } = criarService({
+      empresa: criarEmpresa(RegimeTributario.LUCRO_PRESUMIDO),
+      nota: criarNota(AmbienteFiscal.PRODUCAO),
+      configuracaoFiscal: new ConfiguracaoFiscalEmpresa({
+        empresaId: 'empresa-1',
+        ambienteFiscalPadrao: AmbienteFiscal.PRODUCAO,
+        serieDpsPadrao: '1',
+        certificadoA1Path: 'storage/certificados/empresa-1.pfx',
+        certificadoA1Senha: 'senha-criptografada',
+      }),
+      options: {
+        permitirProducaoReal: true,
+        baseUrlProducao: 'https://sefin.nfse.gov.br/SefinNacional',
+        xsdDpsPath: 'Schemas/1.01/DPS_v1.01.xsd',
+        xsdEventoPath: 'Schemas/1.01/pedRegEvento_v1.01.xsd',
+      },
+    });
+
+    const resultado = await service.executar(autenticacao, 'nota-1');
+
+    expect(resultado.pronto).toBe(false);
+    expect(resultado.pendencias).toContain('empresa.regimeTributario');
+    expect(resultado.producaoReal?.regimeTributarioSuportado).toBe(false);
+  });
 });
 
 function criarService(props?: {
+  empresa?: Empresa;
   nota?: NotaServico;
   configuracaoFiscal?: ConfiguracaoFiscalEmpresa | null;
   options?: Omit<
@@ -114,7 +143,7 @@ function criarService(props?: {
 }) {
   const empresaRepository: EmpresaRepository = {
     salvar: vi.fn(),
-    buscarPorId: vi.fn().mockResolvedValue(criarEmpresa()),
+    buscarPorId: vi.fn().mockResolvedValue(props?.empresa ?? criarEmpresa()),
     buscarPorCnpj: vi.fn(),
   };
   const clienteRepository: ClienteRepository = {
@@ -158,12 +187,14 @@ function criarService(props?: {
   };
 }
 
-function criarEmpresa(): Empresa {
+function criarEmpresa(
+  regimeTributario = RegimeTributario.SIMPLES_NACIONAL,
+): Empresa {
   return new Empresa({
     id: 'empresa-1',
     razaoSocial: 'Empresa Teste Ltda',
     cnpj: '12345678000199',
-    regimeTributario: RegimeTributario.SIMPLES_NACIONAL,
+    regimeTributario,
     codigoMunicipioIbge: '3170206',
     cidade: 'Uberlandia',
     uf: 'MG',

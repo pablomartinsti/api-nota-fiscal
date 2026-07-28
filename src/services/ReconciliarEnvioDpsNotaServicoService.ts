@@ -280,6 +280,7 @@ export class ReconciliarEnvioDpsNotaServicoService {
       ambienteFiscal,
       chaveAcesso,
       certificadoPath: configuracaoCertificado.caminho,
+      certificadoConteudoBase64: configuracaoCertificado.conteudoBase64,
       certificadoSenha: configuracaoCertificado.senha,
     };
   }

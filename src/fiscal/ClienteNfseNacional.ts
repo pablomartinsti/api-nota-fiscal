@@ -2,6 +2,7 @@ import { AmbienteFiscal } from '../entities/NotaServico';
 
 export interface ConfiguracaoCertificadoClienteNfseInput {
   certificadoPath?: string;
+  certificadoConteudoBase64?: string;
   certificadoSenha?: string;
 }
 

@@ -17,21 +17,22 @@ describe('ConfiguracaoFiscalEmpresa', () => {
     expect(configuracao.updatedAt).toBeInstanceOf(Date);
   });
 
-  it('deve armazenar caminho e senha do certificado A1', () => {
+  it('deve armazenar certificado A1 por conteudo criptografado', () => {
     const configuracao = new ConfiguracaoFiscalEmpresa({
       empresaId: 'empresa-1',
       ambienteFiscalPadrao: AmbienteFiscal.PRODUCAO,
       serieDpsPadrao: '10',
-      certificadoA1Path: ' C:/certificados/empresa.pfx ',
+      certificadoA1NomeArquivo: ' empresa.pfx ',
+      certificadoA1Conteudo: ' base64-criptografado ',
       certificadoA1Senha: ' senha-segura ',
     });
 
     expect(configuracao.ambienteFiscalPadrao).toBe(AmbienteFiscal.PRODUCAO);
     expect(configuracao.serieDpsPadrao).toBe('10');
-    expect(configuracao.certificadoA1Path).toBe(
-      'C:/certificados/empresa.pfx',
-    );
+    expect(configuracao.certificadoA1NomeArquivo).toBe('empresa.pfx');
+    expect(configuracao.certificadoA1Conteudo).toBe('base64-criptografado');
     expect(configuracao.certificadoA1Senha).toBe('senha-segura');
+    expect(configuracao.possuiCertificadoA1()).toBe(true);
   });
 
   it('deve alterar dados fiscais e ativar/desativar configuracao', () => {
@@ -42,16 +43,16 @@ describe('ConfiguracaoFiscalEmpresa', () => {
     configuracao.alterarDados({
       ambienteFiscalPadrao: AmbienteFiscal.PRODUCAO,
       serieDpsPadrao: '2',
-      certificadoA1Path: 'C:/certificados/producao.pfx',
+      certificadoA1NomeArquivo: 'producao.pfx',
+      certificadoA1Conteudo: 'novo-base64',
       certificadoA1Senha: 'nova-senha',
     });
     configuracao.desativar();
 
     expect(configuracao.ambienteFiscalPadrao).toBe(AmbienteFiscal.PRODUCAO);
     expect(configuracao.serieDpsPadrao).toBe('2');
-    expect(configuracao.certificadoA1Path).toBe(
-      'C:/certificados/producao.pfx',
-    );
+    expect(configuracao.certificadoA1NomeArquivo).toBe('producao.pfx');
+    expect(configuracao.certificadoA1Conteudo).toBe('novo-base64');
     expect(configuracao.certificadoA1Senha).toBe('nova-senha');
     expect(configuracao.ativo).toBe(false);
 

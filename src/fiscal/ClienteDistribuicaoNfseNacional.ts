@@ -4,6 +4,7 @@ import { ErroEnvioDpsNfse } from './ClienteNfseNacional';
 export interface ConsultarDocumentosDistribuidosPorNsuInput {
   ambienteFiscal: AmbienteFiscal;
   certificadoPath?: string;
+  certificadoConteudoBase64?: string;
   certificadoSenha?: string;
   nsu: number;
 }

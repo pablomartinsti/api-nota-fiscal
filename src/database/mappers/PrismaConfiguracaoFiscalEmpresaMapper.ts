@@ -17,6 +17,9 @@ export class PrismaConfiguracaoFiscalEmpresaMapper {
         registro.ambienteFiscalPadrao as AmbienteFiscal,
       serieDpsPadrao: registro.serieDpsPadrao,
       certificadoA1Path: registro.certificadoA1Path ?? undefined,
+      certificadoA1NomeArquivo:
+        registro.certificadoA1NomeArquivo ?? undefined,
+      certificadoA1Conteudo: registro.certificadoA1Conteudo ?? undefined,
       certificadoA1Senha: registro.certificadoA1Senha ?? undefined,
       ativo: registro.ativo,
       createdAt: registro.createdAt,
@@ -31,6 +34,9 @@ export class PrismaConfiguracaoFiscalEmpresaMapper {
         configuracao.ambienteFiscalPadrao as PrismaAmbienteFiscal,
       serieDpsPadrao: configuracao.serieDpsPadrao,
       certificadoA1Path: configuracao.certificadoA1Path ?? null,
+      certificadoA1NomeArquivo:
+        configuracao.certificadoA1NomeArquivo ?? null,
+      certificadoA1Conteudo: configuracao.certificadoA1Conteudo ?? null,
       certificadoA1Senha: configuracao.certificadoA1Senha ?? null,
       ativo: configuracao.ativo,
     };

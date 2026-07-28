@@ -149,6 +149,39 @@ export class GeradorXmlDpsNacional implements GeradorXmlDps {
     this.adicionarTexto(tomador, tipoDocumento, cliente.cpfCnpj);
     this.adicionarTextoOpcional(tomador, 'IM', cliente.inscricaoMunicipal);
     this.adicionarTexto(tomador, 'xNome', cliente.nomeRazaoSocial);
+    this.adicionarEnderecoTomador(tomador, input);
+    this.adicionarTextoOpcional(
+      tomador,
+      'fone',
+      this.normalizarTelefone(cliente.telefone),
+    );
+    this.adicionarTextoOpcional(tomador, 'email', cliente.email);
+  }
+
+  private adicionarEnderecoTomador(
+    tomador: ElementoXml,
+    input: GerarXmlDpsInput,
+  ): void {
+    const { cliente } = input;
+    const cep = this.somenteNumeros(cliente.cep);
+
+    if (
+      !cliente.codigoMunicipioIbge ||
+      !cep ||
+      !cliente.endereco ||
+      !cliente.numero ||
+      !cliente.bairro
+    ) {
+      return;
+    }
+
+    const endereco = tomador.ele('end');
+    const enderecoNacional = endereco.ele('endNac');
+    this.adicionarTexto(enderecoNacional, 'cMun', cliente.codigoMunicipioIbge);
+    this.adicionarTexto(enderecoNacional, 'CEP', cep);
+    this.adicionarTexto(endereco, 'xLgr', cliente.endereco);
+    this.adicionarTexto(endereco, 'nro', cliente.numero);
+    this.adicionarTexto(endereco, 'xBairro', cliente.bairro);
   }
 
   private adicionarServico(
@@ -385,5 +418,21 @@ export class GeradorXmlDpsNacional implements GeradorXmlDps {
     if (valor) {
       this.adicionarTexto(elemento, nome, valor);
     }
+  }
+
+  private normalizarTelefone(telefone?: string): string | undefined {
+    const numeros = this.somenteNumeros(telefone);
+
+    if (!numeros || numeros.length < 6 || numeros.length > 20) {
+      return undefined;
+    }
+
+    return numeros;
+  }
+
+  private somenteNumeros(valor?: string): string | undefined {
+    const numeros = valor?.replace(/\D/g, '');
+
+    return numeros || undefined;
   }
 }

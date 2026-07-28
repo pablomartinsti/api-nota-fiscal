@@ -240,6 +240,7 @@ export class CancelarNfseNotaServicoService {
 
     return new ProvedorCertificadoA1Arquivo(() => ({
       caminho: configuracaoCertificado.caminho,
+      conteudoBase64: configuracaoCertificado.conteudoBase64,
       senha: configuracaoCertificado.senha,
     })).obter();
   }
@@ -268,6 +269,7 @@ export class CancelarNfseNotaServicoService {
       chaveAcesso,
       xmlPedidoEventoAssinado,
       certificadoPath: configuracaoCertificado.caminho,
+      certificadoConteudoBase64: configuracaoCertificado.conteudoBase64,
       certificadoSenha: configuracaoCertificado.senha,
     };
   }

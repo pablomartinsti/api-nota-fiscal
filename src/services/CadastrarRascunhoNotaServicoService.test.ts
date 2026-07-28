@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ConfiguracaoFiscalEmpresa } from '../entities/ConfiguracaoFiscalEmpresa';
+import { Empresa, RegimeTributario } from '../entities/Empresa';
 import { AmbienteFiscal } from '../entities/NotaServico';
 import { PerfilUsuario } from '../entities/Usuario';
 import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
+import { EmpresaRepository } from '../repositories/EmpresaRepository';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { CadastrarRascunhoNotaServicoService } from './CadastrarRascunhoNotaServicoService';
 import { GerarProximoNumeroDpsService } from './GerarProximoNumeroDpsService';
@@ -116,9 +118,27 @@ function criarService(
       new GerarProximoNumeroDpsService(notaRepository),
       new ResolverConfiguracaoFiscalEmpresaService(
         configuracaoFiscalRepository,
+        criarEmpresaRepository(),
       ),
     ),
     salvar,
     buscarMaiorNumero,
+  };
+}
+
+function criarEmpresaRepository(): EmpresaRepository {
+  return {
+    salvar: vi.fn(),
+    buscarPorId: vi.fn().mockResolvedValue(
+      new Empresa({
+        id: 'empresa-1',
+        razaoSocial: 'Empresa Teste Ltda',
+        cnpj: '12345678000199',
+        regimeTributario: RegimeTributario.SIMPLES_NACIONAL,
+        cidade: 'Uberlandia',
+        uf: 'MG',
+      }),
+    ),
+    buscarPorCnpj: vi.fn(),
   };
 }

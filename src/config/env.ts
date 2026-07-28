@@ -19,6 +19,7 @@ const envSchema = z
       .enum(['development', 'test', 'production'])
       .default('development'),
     DATABASE_URL: z.string().trim().min(1),
+    DIRECT_URL: stringOpcional,
     JWT_SECRET: z.string().trim().min(1),
     PORT: z.coerce.number().int().min(1).max(65_535).default(3333),
     CORS_ORIGIN: z.string().trim().min(1).default('*'),
@@ -28,11 +29,6 @@ const envSchema = z
       z.string().optional(),
     ),
     NFSE_CERTIFICADO_CRYPTO_KEY: stringOpcional,
-    NFSE_CERTIFICADO_STORAGE_DIR: z
-      .string()
-      .trim()
-      .min(1)
-      .default('storage/certificados'),
     NFSE_XSD_DPS_PATH: stringOpcional,
     NFSE_XSD_EVENTO_PATH: stringOpcional,
     NFSE_SEFIN_BASE_URL: z.preprocess(

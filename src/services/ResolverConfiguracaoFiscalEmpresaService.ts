@@ -1,23 +1,31 @@
 import { AmbienteFiscal } from '../entities/NotaServico';
+import { RegimeTributario } from '../entities/Empresa';
+import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
 import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
+import { RegimeTributarioProducaoNaoSuportadoError } from '../errors/RegimeTributarioProducaoNaoSuportadoError';
 import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
+import { EmpresaRepository } from '../repositories/EmpresaRepository';
 import { CifradorTexto } from '../security/CifradorTexto';
 
 export interface ConfiguracaoFiscalEmpresaResolvida {
   ambienteFiscalPadrao: AmbienteFiscal;
   serieDpsPadrao: string;
   certificadoA1Path?: string;
+  certificadoA1NomeArquivo?: string;
+  certificadoA1Conteudo?: string;
   certificadoA1Senha?: string;
 }
 
 export interface ConfiguracaoCertificadoA1EmpresaResolvida {
-  caminho: string;
+  caminho?: string;
+  conteudoBase64?: string;
   senha: string;
 }
 
 export class ResolverConfiguracaoFiscalEmpresaService {
   constructor(
     private readonly configuracaoFiscalRepository: ConfiguracaoFiscalEmpresaRepository,
+    private readonly empresaRepository: EmpresaRepository,
     private readonly cifradorTexto?: CifradorTexto,
   ) {}
 
@@ -35,6 +43,8 @@ export class ResolverConfiguracaoFiscalEmpresaService {
       ambienteFiscalPadrao: configuracao.ambienteFiscalPadrao,
       serieDpsPadrao: configuracao.serieDpsPadrao,
       certificadoA1Path: configuracao.certificadoA1Path,
+      certificadoA1NomeArquivo: configuracao.certificadoA1NomeArquivo,
+      certificadoA1Conteudo: configuracao.certificadoA1Conteudo,
       certificadoA1Senha: configuracao.certificadoA1Senha,
     };
   }
@@ -44,12 +54,18 @@ export class ResolverConfiguracaoFiscalEmpresaService {
   ): Promise<ConfiguracaoCertificadoA1EmpresaResolvida | undefined> {
     const configuracao = await this.executar(empresaId);
 
-    if (!configuracao.certificadoA1Path || !configuracao.certificadoA1Senha) {
+    if (
+      !configuracao.certificadoA1Senha ||
+      (!configuracao.certificadoA1Conteudo && !configuracao.certificadoA1Path)
+    ) {
       return undefined;
     }
 
     return {
       caminho: configuracao.certificadoA1Path,
+      conteudoBase64: configuracao.certificadoA1Conteudo
+        ? this.obterTextoEmClaro(configuracao.certificadoA1Conteudo)
+        : undefined,
       senha: this.obterSenhaEmTexto(configuracao.certificadoA1Senha),
     };
   }
@@ -58,6 +74,10 @@ export class ResolverConfiguracaoFiscalEmpresaService {
     empresaId: string,
     ambienteFiscal: AmbienteFiscal,
   ): Promise<ConfiguracaoCertificadoA1EmpresaResolvida | undefined> {
+    if (ambienteFiscal === AmbienteFiscal.PRODUCAO) {
+      await this.validarRegimeProducaoReal(empresaId);
+    }
+
     const certificado = await this.obterCertificadoA1(empresaId);
 
     if (certificado) {
@@ -71,12 +91,28 @@ export class ResolverConfiguracaoFiscalEmpresaService {
     return undefined;
   }
 
-  private obterSenhaEmTexto(senha: string): string {
-    if (!this.cifradorTexto?.estaCriptografado(senha)) {
-      return senha;
+  private async validarRegimeProducaoReal(empresaId: string): Promise<void> {
+    const empresa = await this.empresaRepository.buscarPorId(empresaId);
+
+    if (!empresa) {
+      throw new AutenticacaoInvalidaError();
     }
 
-    return this.cifradorTexto.descriptografar(senha);
+    if (empresa.regimeTributario !== RegimeTributario.SIMPLES_NACIONAL) {
+      throw new RegimeTributarioProducaoNaoSuportadoError();
+    }
+  }
+
+  private obterSenhaEmTexto(senha: string): string {
+    return this.obterTextoEmClaro(senha);
+  }
+
+  private obterTextoEmClaro(texto: string): string {
+    if (!this.cifradorTexto?.estaCriptografado(texto)) {
+      return texto;
+    }
+
+    return this.cifradorTexto.descriptografar(texto);
   }
 
   private criarConfiguracaoPadrao(): ConfiguracaoFiscalEmpresaResolvida {

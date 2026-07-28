@@ -60,9 +60,10 @@ recursos carregados por ela apontam para `/SefinNacional`. Por isso:
 - o body enviado para a SEFIN deve ser JSON no formato
   `{ "dpsXmlGZipB64": "..." }`, com a DPS assinada compactada em GZip e
   codificada em Base64.
-- o mesmo certificado A1 configurado em `NFSE_CERTIFICADO_PATH` e
-  `NFSE_CERTIFICADO_SENHA` tambem e apresentado na conexao HTTPS com
-  autenticacao mutua TLS.
+- o certificado A1 configurado para a empresa tambem e apresentado na conexao
+  HTTPS com autenticacao mutua TLS. Em desenvolvimento, as variaveis
+  `NFSE_CERTIFICADO_PATH` e `NFSE_CERTIFICADO_SENHA` ainda funcionam como
+  fallback de homologacao.
 
 Observacao: o banco ja possui a tabela de configuracao fiscal por empresa. O
 fluxo fiscal ja usa essa configuracao para ambiente fiscal padrao, serie padrao
@@ -82,8 +83,22 @@ Body:
 ```json
 {
   "ambienteFiscalPadrao": "HOMOLOGACAO",
-  "serieDpsPadrao": "1",
-  "certificadoA1Path": "C:/caminho/certificados/empresa.pfx",
+  "serieDpsPadrao": "1"
+}
+```
+
+Para cadastrar o certificado A1 da empresa autenticada, use:
+
+```http
+POST /empresa/configuracao-fiscal/certificado-a1
+```
+
+Body:
+
+```json
+{
+  "certificadoA1NomeArquivo": "empresa.pfx",
+  "certificadoA1Base64": "BASE64_DO_ARQUIVO_PFX",
   "certificadoA1Senha": "senha-do-certificado"
 }
 ```
@@ -94,13 +109,13 @@ Para consultar:
 GET /empresa/configuracao-fiscal
 ```
 
-A senha do certificado nao e retornada pela API.
+A senha e o conteudo do certificado nao sao retornados pela API.
 
-Quando `certificadoA1Path` e `certificadoA1Senha` forem enviados, a API tenta
-abrir o arquivo A1, valida a senha, confere a validade do certificado e compara
-o CNPJ do certificado com o CNPJ da empresa autenticada. Se houver erro, a
-configuracao fiscal nao e salva. Se estiver tudo correto, a senha do
-certificado e criptografada antes de ser gravada no banco.
+No upload, a API abre o A1 em memoria, valida a senha, confere a validade do
+certificado e compara o CNPJ do certificado com o CNPJ da empresa autenticada.
+Se houver erro, a configuracao fiscal nao e salva. Se estiver tudo correto, o
+conteudo do certificado e a senha sao criptografados antes de serem gravados no
+banco.
 
 ## Protecao contra producao real
 
@@ -118,9 +133,15 @@ real, com certificado correto, dados fiscais revisados e decisao consciente de
 ativar o ambiente oficial.
 
 Mesmo com essa variavel habilitada, producao real exige certificado A1
-configurado na propria empresa pela rota `PUT /empresa/configuracao-fiscal`.
+configurado na propria empresa pela rota
+`POST /empresa/configuracao-fiscal/certificado-a1`.
 O certificado global do `.env` nao e usado como fallback para notas em
 `PRODUCAO`.
+
+Nesta versao, producao real tambem esta liberada apenas para empresas com
+`regimeTributario` igual a `SIMPLES_NACIONAL`. Empresas `MEI`,
+`LUCRO_PRESUMIDO` e `LUCRO_REAL` podem ser cadastradas, mas operacoes fiscais
+reais ficam bloqueadas ate validacao especifica desses regimes.
 
 ## 3. Checagem local
 
@@ -167,7 +188,8 @@ A empresa autenticada precisa ter:
 
 - CNPJ igual ao certificado A1;
 - razao social;
-- regime tributario;
+- regime tributario; em producao real, apenas `SIMPLES_NACIONAL` esta liberado
+  nesta versao;
 - codigo IBGE do municipio;
 - cidade;
 - UF;

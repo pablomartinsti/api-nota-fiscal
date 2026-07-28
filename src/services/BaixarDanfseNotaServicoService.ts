@@ -48,6 +48,7 @@ export class BaixarDanfseNotaServicoService {
       ambienteFiscal: nota.ambienteFiscal,
       chaveAcesso: nota.chaveAcesso,
       certificadoPath: certificado?.caminho,
+      certificadoConteudoBase64: certificado?.conteudoBase64,
       certificadoSenha: certificado?.senha,
     });
   }

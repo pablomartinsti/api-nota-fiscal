@@ -1,4 +1,5 @@
 import { AmbienteFiscal } from '../entities/NotaServico';
+import { RegimeTributario } from '../entities/Empresa';
 import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
 import { ClienteNaoEncontradoError } from '../errors/ClienteNaoEncontradoError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
@@ -13,6 +14,7 @@ import { TokenPayload } from '../security/GerenciadorToken';
 
 export interface ChecklistProducaoReal {
   habilitada: boolean;
+  regimeTributarioSuportado: boolean;
   urlSefinProducaoConfigurada: boolean;
   xsdDpsConfigurado: boolean;
   xsdEventoConfigurado: boolean;
@@ -88,6 +90,7 @@ export class ValidarProntidaoFiscalNotaServicoService {
       nota.ambienteFiscal === AmbienteFiscal.PRODUCAO
         ? await this.validarChecklistProducaoReal(
             autenticacao.empresaId,
+            empresa.regimeTributario,
             pendencias,
           )
         : undefined;
@@ -101,6 +104,7 @@ export class ValidarProntidaoFiscalNotaServicoService {
 
   private async validarChecklistProducaoReal(
     empresaId: string,
+    regimeTributario: RegimeTributario,
     pendencias: string[],
   ): Promise<ChecklistProducaoReal> {
     const configuracaoFiscal =
@@ -109,6 +113,8 @@ export class ValidarProntidaoFiscalNotaServicoService {
       );
     const checklist: ChecklistProducaoReal = {
       habilitada: this.options.permitirProducaoReal === true,
+      regimeTributarioSuportado:
+        regimeTributario === RegimeTributario.SIMPLES_NACIONAL,
       urlSefinProducaoConfigurada: this.urlProducaoValida(),
       xsdDpsConfigurado: this.textoConfigurado(this.options.xsdDpsPath),
       xsdEventoConfigurado: this.textoConfigurado(
@@ -116,13 +122,16 @@ export class ValidarProntidaoFiscalNotaServicoService {
       ),
       certificadoA1EmpresaConfigurado: Boolean(
         configuracaoFiscal?.ativo &&
-          configuracaoFiscal.certificadoA1Path &&
-          configuracaoFiscal.certificadoA1Senha,
+          configuracaoFiscal.possuiCertificadoA1(),
       ),
     };
 
     if (!checklist.habilitada) {
       pendencias.push('producaoReal.permissao');
+    }
+
+    if (!checklist.regimeTributarioSuportado) {
+      pendencias.push('empresa.regimeTributario');
     }
 
     if (!checklist.urlSefinProducaoConfigurada) {

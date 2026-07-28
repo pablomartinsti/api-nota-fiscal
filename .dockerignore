@@ -1,0 +1,16 @@
+.git
+.github
+build
+coverage
+node_modules
+npm-debug.log
+.env
+.env.*
+!.env.example
+storage
+*.pfx
+*.p12
+*.pem
+*.key
+*.crt
+*.log

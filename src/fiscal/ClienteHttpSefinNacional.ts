@@ -27,6 +27,7 @@ export interface ConfiguracaoClienteHttpSefinNacional {
   endpointEnvioDps?: string;
   timeoutMs?: number;
   certificadoPath?: string;
+  certificadoConteudoBase64?: string;
   certificadoSenha?: string;
 }
 
@@ -274,6 +275,7 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
     configuracao: ConfiguracaoClienteHttpSefinNacional,
     input: {
       certificadoPath?: string;
+      certificadoConteudoBase64?: string;
       certificadoSenha?: string;
     },
   ): ConfiguracaoClienteHttpSefinNacional {
@@ -281,6 +283,9 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
       ...configuracao,
       certificadoPath:
         input.certificadoPath ?? configuracao.certificadoPath,
+      certificadoConteudoBase64:
+        input.certificadoConteudoBase64 ??
+        configuracao.certificadoConteudoBase64,
       certificadoSenha:
         input.certificadoSenha ?? configuracao.certificadoSenha,
     };
@@ -344,13 +349,18 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
     configuracao: ConfiguracaoClienteHttpSefinNacional,
   ): Promise<CertificadoA1> {
     const caminho = configuracao.certificadoPath?.trim();
+    const conteudoBase64 = configuracao.certificadoConteudoBase64?.trim();
 
-    if (!caminho || configuracao.certificadoSenha === undefined) {
+    if (
+      (!caminho && !conteudoBase64) ||
+      configuracao.certificadoSenha === undefined
+    ) {
       throw new ConfiguracaoFiscalAusenteError();
     }
 
     return new ProvedorCertificadoA1Arquivo(() => ({
       caminho,
+      conteudoBase64,
       senha: configuracao.certificadoSenha,
     })).obter();
   }

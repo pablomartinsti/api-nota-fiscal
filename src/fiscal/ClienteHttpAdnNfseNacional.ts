@@ -21,6 +21,7 @@ export interface ConfiguracaoClienteHttpAdnNfseNacional {
   baseUrlProducao?: string;
   timeoutMs?: number;
   certificadoPath?: string;
+  certificadoConteudoBase64?: string;
   certificadoSenha?: string;
 }
 
@@ -140,6 +141,7 @@ export class ClienteHttpAdnNfseNacional
     configuracao: ConfiguracaoClienteHttpAdnNfseNacional,
     input: {
       certificadoPath?: string;
+      certificadoConteudoBase64?: string;
       certificadoSenha?: string;
     },
   ): ConfiguracaoClienteHttpAdnNfseNacional {
@@ -147,6 +149,9 @@ export class ClienteHttpAdnNfseNacional
       ...configuracao,
       certificadoPath:
         input.certificadoPath ?? configuracao.certificadoPath,
+      certificadoConteudoBase64:
+        input.certificadoConteudoBase64 ??
+        configuracao.certificadoConteudoBase64,
       certificadoSenha:
         input.certificadoSenha ?? configuracao.certificadoSenha,
     };
@@ -193,13 +198,18 @@ export class ClienteHttpAdnNfseNacional
     configuracao: ConfiguracaoClienteHttpAdnNfseNacional,
   ): Promise<CertificadoA1> {
     const caminho = configuracao.certificadoPath?.trim();
+    const conteudoBase64 = configuracao.certificadoConteudoBase64?.trim();
 
-    if (!caminho || configuracao.certificadoSenha === undefined) {
+    if (
+      (!caminho && !conteudoBase64) ||
+      configuracao.certificadoSenha === undefined
+    ) {
       throw new ConfiguracaoFiscalAusenteError();
     }
 
     return new ProvedorCertificadoA1Arquivo(() => ({
       caminho,
+      conteudoBase64,
       senha: configuracao.certificadoSenha,
     })).obter();
   }

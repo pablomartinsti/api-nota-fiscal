@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { Cliente } from '../entities/Cliente';
+import { Empresa, RegimeTributario } from '../entities/Empresa';
 import { AmbienteFiscal } from '../entities/NotaServico';
 import { ClienteNaoEncontradoError } from '../errors/ClienteNaoEncontradoError';
 import { ClienteDistribuicaoNfseNacional } from '../fiscal/ClienteDistribuicaoNfseNacional';
 import { ClienteRepository } from '../repositories/ClienteRepository';
 import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
+import { EmpresaRepository } from '../repositories/EmpresaRepository';
 import { PerfilUsuario } from '../entities/Usuario';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
@@ -85,9 +87,27 @@ function criarService(
     clienteDistribuicao,
     new ResolverConfiguracaoFiscalEmpresaService(
       criarConfiguracaoFiscalRepository(),
+      criarEmpresaRepository(),
     ),
     new ValidarPermissaoProducaoRealService(false),
   );
+}
+
+function criarEmpresaRepository(): EmpresaRepository {
+  return {
+    salvar: vi.fn(),
+    buscarPorId: vi.fn().mockResolvedValue(
+      new Empresa({
+        id: 'empresa-1',
+        razaoSocial: 'Empresa Teste Ltda',
+        cnpj: '12345678000199',
+        regimeTributario: RegimeTributario.SIMPLES_NACIONAL,
+        cidade: 'Uberlandia',
+        uf: 'MG',
+      }),
+    ),
+    buscarPorCnpj: vi.fn(),
+  };
 }
 
 function criarClienteRepository(cliente: Cliente | null): ClienteRepository {

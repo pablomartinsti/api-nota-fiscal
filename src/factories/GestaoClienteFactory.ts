@@ -2,6 +2,7 @@ import { GestaoClienteController } from '../controllers/GestaoClienteController'
 import { env } from '../config/env';
 import { PrismaConfiguracaoFiscalEmpresaRepository } from '../database/repositories/PrismaConfiguracaoFiscalEmpresaRepository';
 import { PrismaClienteRepository } from '../database/repositories/PrismaClienteRepository';
+import { PrismaEmpresaRepository } from '../database/repositories/PrismaEmpresaRepository';
 import { ClienteHttpAdnNfseNacional } from '../fiscal/ClienteHttpAdnNfseNacional';
 import { AesGcmCifradorTexto } from '../security/AesGcmCifradorTexto';
 import { AlterarStatusClienteService } from '../services/AlterarStatusClienteService';
@@ -17,9 +18,11 @@ export function criarGestaoClienteController(): GestaoClienteController {
   const repository = new PrismaClienteRepository();
   const configuracaoFiscalRepository =
     new PrismaConfiguracaoFiscalEmpresaRepository();
+  const empresaRepository = new PrismaEmpresaRepository();
   const resolverConfiguracaoFiscal =
     new ResolverConfiguracaoFiscalEmpresaService(
       configuracaoFiscalRepository,
+      empresaRepository,
       new AesGcmCifradorTexto(env.NFSE_CERTIFICADO_CRYPTO_KEY),
     );
 

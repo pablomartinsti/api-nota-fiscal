@@ -19,6 +19,7 @@ export interface ConfiguracaoClienteHttpDanfseNfseNacional {
   baseUrlProducao?: string;
   timeoutMs?: number;
   certificadoPath?: string;
+  certificadoConteudoBase64?: string;
   certificadoSenha?: string;
 }
 
@@ -147,6 +148,7 @@ export class ClienteHttpDanfseNfseNacional
     configuracao: ConfiguracaoClienteHttpDanfseNfseNacional,
     input: {
       certificadoPath?: string;
+      certificadoConteudoBase64?: string;
       certificadoSenha?: string;
     },
   ): ConfiguracaoClienteHttpDanfseNfseNacional {
@@ -154,6 +156,9 @@ export class ClienteHttpDanfseNfseNacional
       ...configuracao,
       certificadoPath:
         input.certificadoPath ?? configuracao.certificadoPath,
+      certificadoConteudoBase64:
+        input.certificadoConteudoBase64 ??
+        configuracao.certificadoConteudoBase64,
       certificadoSenha:
         input.certificadoSenha ?? configuracao.certificadoSenha,
     };
@@ -201,13 +206,18 @@ export class ClienteHttpDanfseNfseNacional
     configuracao: ConfiguracaoClienteHttpDanfseNfseNacional,
   ): Promise<CertificadoA1 | undefined> {
     const caminho = configuracao.certificadoPath?.trim();
+    const conteudoBase64 = configuracao.certificadoConteudoBase64?.trim();
 
-    if (!caminho || configuracao.certificadoSenha === undefined) {
+    if (
+      (!caminho && !conteudoBase64) ||
+      configuracao.certificadoSenha === undefined
+    ) {
       return undefined;
     }
 
     return new ProvedorCertificadoA1Arquivo(() => ({
       caminho,
+      conteudoBase64,
       senha: configuracao.certificadoSenha,
     })).obter();
   }

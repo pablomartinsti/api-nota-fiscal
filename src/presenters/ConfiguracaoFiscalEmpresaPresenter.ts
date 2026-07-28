@@ -11,7 +11,8 @@ export class ConfiguracaoFiscalEmpresaPresenter {
       configurada,
       ambienteFiscalPadrao: configuracao.ambienteFiscalPadrao,
       serieDpsPadrao: configuracao.serieDpsPadrao,
-      certificadoA1Path: configuracao.certificadoA1Path,
+      certificadoA1NomeArquivo: configuracao.certificadoA1NomeArquivo,
+      certificadoA1Configurado: configuracao.possuiCertificadoA1(),
       certificadoA1SenhaConfigurada: Boolean(
         configuracao.certificadoA1Senha,
       ),

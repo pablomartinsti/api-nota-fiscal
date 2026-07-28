@@ -37,8 +37,15 @@ describe('GeradorXmlDpsNacional', () => {
       empresaId: 'empresa-1',
       nomeRazaoSocial: 'Cliente & Parceiro',
       cpfCnpj: '12345678901',
+      email: 'cliente@parceiro.com.br',
+      telefone: '(19) 99999-8888',
+      cep: '13010-000',
+      endereco: 'Rua Central',
+      numero: '123',
+      bairro: 'Centro',
       cidade: 'Campinas',
       uf: 'SP',
+      codigoMunicipioIbge: '3509502',
     });
     const servico = new Servico({
       id: 'servico-1',
@@ -90,6 +97,15 @@ describe('GeradorXmlDpsNacional', () => {
     expect(xml).toContain('<CPF>12345678901</CPF>');
     expect(xml).not.toContain('<xNome>Empresa &amp; Tecnologia Ltda</xNome>');
     expect(xml).toContain('<xNome>Cliente &amp; Parceiro</xNome>');
+    expect(xml).toContain('<end>');
+    expect(xml).toContain('<endNac>');
+    expect(xml).toContain('<cMun>3509502</cMun>');
+    expect(xml).toContain('<CEP>13010000</CEP>');
+    expect(xml).toContain('<xLgr>Rua Central</xLgr>');
+    expect(xml).toContain('<nro>123</nro>');
+    expect(xml).toContain('<xBairro>Centro</xBairro>');
+    expect(xml).toContain('<fone>19999998888</fone>');
+    expect(xml).toContain('<email>cliente@parceiro.com.br</email>');
     expect(xml).toContain('<opSimpNac>3</opSimpNac>');
     expect(xml).toContain('<regApTribSN>1</regApTribSN>');
     expect(xml).toContain('<regEspTrib>6</regEspTrib>');

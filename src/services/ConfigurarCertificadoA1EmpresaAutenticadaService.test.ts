@@ -11,7 +11,6 @@ import { ProvedorCertificadoA1 } from '../fiscal/CertificadoA1';
 import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
 import { EmpresaRepository } from '../repositories/EmpresaRepository';
 import { CifradorTexto } from '../security/CifradorTexto';
-import { ArmazenadorCertificadoA1 } from '../storage/ArmazenadorCertificadoA1';
 import { ConfigurarCertificadoA1EmpresaAutenticadaService } from './ConfigurarCertificadoA1EmpresaAutenticadaService';
 
 const autenticacao = {
@@ -27,28 +26,25 @@ const input = {
 };
 
 describe('ConfigurarCertificadoA1EmpresaAutenticadaService', () => {
-  it('deve salvar certificado validado e criptografar senha', async () => {
-    const { service, salvar, armazenador, criarProvedorCertificado } =
-      criarService();
+  it('deve salvar certificado validado no banco com conteudo e senha criptografados', async () => {
+    const { service, salvar, criarProvedorCertificado } = criarService();
 
     const configuracao = await service.executar(autenticacao, input);
 
-    expect(armazenador.salvar).toHaveBeenCalledWith({
-      empresaId: 'empresa-1',
-      nomeArquivo: 'empresa.pfx',
-      conteudoBase64: input.certificadoA1Base64,
-    });
     expect(criarProvedorCertificado).toHaveBeenCalledWith({
-      caminho: 'storage/certificados/empresa-1.pfx',
+      conteudoBase64: input.certificadoA1Base64,
       senha: 'senha-certificado',
     });
     expect(salvar).toHaveBeenCalledOnce();
-    expect(configuracao.certificadoA1Path).toBe(
-      'storage/certificados/empresa-1.pfx',
+    expect(configuracao.certificadoA1Path).toBeUndefined();
+    expect(configuracao.certificadoA1NomeArquivo).toBe('empresa.pfx');
+    expect(configuracao.certificadoA1Conteudo).toBe(
+      `criptografado:${input.certificadoA1Base64}`,
     );
     expect(configuracao.certificadoA1Senha).toBe(
       'criptografado:senha-certificado',
     );
+    expect(configuracao.possuiCertificadoA1()).toBe(true);
   });
 
   it('deve preservar ambiente fiscal e serie ja configurados', async () => {
@@ -57,10 +53,11 @@ describe('ConfigurarCertificadoA1EmpresaAutenticadaService', () => {
       empresaId: 'empresa-1',
       ambienteFiscalPadrao: AmbienteFiscal.PRODUCAO,
       serieDpsPadrao: '9',
-      certificadoA1Path: 'storage/certificados/antigo.pfx',
+      certificadoA1NomeArquivo: 'antigo.pfx',
+      certificadoA1Conteudo: 'criptografado:base64-antigo',
       certificadoA1Senha: 'criptografado:senha-antiga',
     });
-    const { service, armazenador } = criarService({
+    const { service } = criarService({
       configuracaoExistente: existente,
     });
 
@@ -69,57 +66,50 @@ describe('ConfigurarCertificadoA1EmpresaAutenticadaService', () => {
     expect(configuracao.id).toBe('configuracao-1');
     expect(configuracao.ambienteFiscalPadrao).toBe(AmbienteFiscal.PRODUCAO);
     expect(configuracao.serieDpsPadrao).toBe('9');
-    expect(armazenador.remover).not.toHaveBeenCalled();
+    expect(configuracao.certificadoA1NomeArquivo).toBe('empresa.pfx');
   });
 
-  it('deve remover arquivo novo quando certificado for de outro CNPJ', async () => {
-    const { service, salvar, armazenador } = criarService({
+  it('nao deve salvar quando certificado for de outro CNPJ', async () => {
+    const { service, salvar } = criarService({
       certificadoCnpj: '99999999000199',
     });
 
     await expect(
       service.executar(autenticacao, input),
     ).rejects.toBeInstanceOf(CertificadoA1CnpjDivergenteError);
-    expect(armazenador.remover).toHaveBeenCalledWith(
-      'storage/certificados/empresa-1.pfx',
-    );
     expect(salvar).not.toHaveBeenCalled();
   });
 
-  it('deve remover arquivo novo quando certificado for invalido', async () => {
-    const { service, salvar, armazenador } = criarService({
+  it('nao deve salvar quando certificado for invalido', async () => {
+    const { service, salvar } = criarService({
       erroCertificado: new CertificadoA1InvalidoError(),
     });
 
     await expect(
       service.executar(autenticacao, input),
     ).rejects.toBeInstanceOf(CertificadoA1InvalidoError);
-    expect(armazenador.remover).toHaveBeenCalledWith(
-      'storage/certificados/empresa-1.pfx',
-    );
     expect(salvar).not.toHaveBeenCalled();
   });
 
-  it('deve remover arquivo novo quando nao conseguir salvar configuracao fiscal', async () => {
-    const { service, armazenador } = criarService({
+  it('deve propagar erro quando nao conseguir salvar configuracao fiscal', async () => {
+    const { service } = criarService({
       erroSalvar: new Error('falha no banco'),
     });
 
     await expect(service.executar(autenticacao, input)).rejects.toThrow(
       'falha no banco',
     );
-    expect(armazenador.remover).toHaveBeenCalledWith(
-      'storage/certificados/empresa-1.pfx',
-    );
   });
 
   it('deve rejeitar quando empresa autenticada nao existir', async () => {
-    const { service, armazenador } = criarService({ empresa: null });
+    const { service, criarProvedorCertificado } = criarService({
+      empresa: null,
+    });
 
     await expect(
       service.executar(autenticacao, input),
     ).rejects.toBeInstanceOf(AutenticacaoInvalidaError);
-    expect(armazenador.salvar).not.toHaveBeenCalled();
+    expect(criarProvedorCertificado).not.toHaveBeenCalled();
   });
 });
 
@@ -157,13 +147,6 @@ function criarService(props?: {
       texto.startsWith('criptografado:'),
     ),
   };
-  const armazenador: ArmazenadorCertificadoA1 = {
-    salvar: vi.fn().mockResolvedValue({
-      caminho: 'storage/certificados/empresa-1.pfx',
-      tamanhoBytes: 100,
-    }),
-    remover: vi.fn().mockResolvedValue(undefined),
-  };
   const provedorCertificado: ProvedorCertificadoA1 = {
     obter: props?.erroCertificado
       ? vi.fn().mockRejectedValue(props.erroCertificado)
@@ -182,11 +165,9 @@ function criarService(props?: {
       repository,
       empresaRepository,
       cifradorTexto,
-      armazenador,
       criarProvedorCertificado,
     ),
     salvar,
-    armazenador,
     criarProvedorCertificado,
   };
 }

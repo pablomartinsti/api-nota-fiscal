@@ -6,6 +6,8 @@ export interface ConfiguracaoFiscalEmpresaProps {
   ambienteFiscalPadrao?: AmbienteFiscal;
   serieDpsPadrao?: string;
   certificadoA1Path?: string;
+  certificadoA1NomeArquivo?: string;
+  certificadoA1Conteudo?: string;
   certificadoA1Senha?: string;
   ativo?: boolean;
   createdAt?: Date;
@@ -16,6 +18,8 @@ export interface AlterarConfiguracaoFiscalEmpresaProps {
   ambienteFiscalPadrao: AmbienteFiscal;
   serieDpsPadrao: string;
   certificadoA1Path?: string;
+  certificadoA1NomeArquivo?: string;
+  certificadoA1Conteudo?: string;
   certificadoA1Senha?: string;
 }
 
@@ -25,6 +29,8 @@ export class ConfiguracaoFiscalEmpresa {
   private _ambienteFiscalPadrao: AmbienteFiscal;
   private _serieDpsPadrao: string;
   private _certificadoA1Path?: string;
+  private _certificadoA1NomeArquivo?: string;
+  private _certificadoA1Conteudo?: string;
   private _certificadoA1Senha?: string;
   private _ativo: boolean;
   private readonly _createdAt: Date;
@@ -38,6 +44,14 @@ export class ConfiguracaoFiscalEmpresa {
     const certificadoA1Path = ConfiguracaoFiscalEmpresa.normalizarTextoOpcional(
       props.certificadoA1Path,
     );
+    const certificadoA1NomeArquivo =
+      ConfiguracaoFiscalEmpresa.normalizarTextoOpcional(
+        props.certificadoA1NomeArquivo,
+      );
+    const certificadoA1Conteudo =
+      ConfiguracaoFiscalEmpresa.normalizarTextoOpcional(
+        props.certificadoA1Conteudo,
+      );
     const certificadoA1Senha =
       ConfiguracaoFiscalEmpresa.normalizarTextoOpcional(
         props.certificadoA1Senha,
@@ -52,6 +66,8 @@ export class ConfiguracaoFiscalEmpresa {
     this._ambienteFiscalPadrao = ambienteFiscalPadrao;
     this._serieDpsPadrao = serieDpsPadrao;
     this._certificadoA1Path = certificadoA1Path;
+    this._certificadoA1NomeArquivo = certificadoA1NomeArquivo;
+    this._certificadoA1Conteudo = certificadoA1Conteudo;
     this._certificadoA1Senha = certificadoA1Senha;
     this._ativo = props.ativo ?? true;
     this._createdAt = props.createdAt ?? new Date();
@@ -78,6 +94,14 @@ export class ConfiguracaoFiscalEmpresa {
     return this._certificadoA1Path;
   }
 
+  get certificadoA1NomeArquivo(): string | undefined {
+    return this._certificadoA1NomeArquivo;
+  }
+
+  get certificadoA1Conteudo(): string | undefined {
+    return this._certificadoA1Conteudo;
+  }
+
   get certificadoA1Senha(): string | undefined {
     return this._certificadoA1Senha;
   }
@@ -98,6 +122,14 @@ export class ConfiguracaoFiscalEmpresa {
     const certificadoA1Path = ConfiguracaoFiscalEmpresa.normalizarTextoOpcional(
       props.certificadoA1Path,
     );
+    const certificadoA1NomeArquivo =
+      ConfiguracaoFiscalEmpresa.normalizarTextoOpcional(
+        props.certificadoA1NomeArquivo,
+      );
+    const certificadoA1Conteudo =
+      ConfiguracaoFiscalEmpresa.normalizarTextoOpcional(
+        props.certificadoA1Conteudo,
+      );
     const certificadoA1Senha =
       ConfiguracaoFiscalEmpresa.normalizarTextoOpcional(
         props.certificadoA1Senha,
@@ -111,8 +143,17 @@ export class ConfiguracaoFiscalEmpresa {
     this._ambienteFiscalPadrao = props.ambienteFiscalPadrao;
     this._serieDpsPadrao = props.serieDpsPadrao;
     this._certificadoA1Path = certificadoA1Path;
+    this._certificadoA1NomeArquivo = certificadoA1NomeArquivo;
+    this._certificadoA1Conteudo = certificadoA1Conteudo;
     this._certificadoA1Senha = certificadoA1Senha;
     this.atualizarDataDeAlteracao();
+  }
+
+  possuiCertificadoA1(): boolean {
+    return Boolean(
+      this._certificadoA1Senha &&
+        (this._certificadoA1Conteudo || this._certificadoA1Path),
+    );
   }
 
   ativar(): void {
