@@ -18,7 +18,7 @@ export class NotaServicoPresenter {
       ambienteFiscal: nota.ambienteFiscal,
       serieDps: nota.serieDps,
       numeroDps: nota.numeroDps,
-      dataCompetencia: nota.dataCompetencia,
+      dataCompetencia: this.formatarDataSemHora(nota.dataCompetencia),
       codigoMunicipioPrestacao: nota.codigoMunicipioPrestacao,
       tributacaoIssqn: nota.tributacaoIssqn,
       tipoRetencaoIssqn: nota.tipoRetencaoIssqn,
@@ -39,5 +39,9 @@ export class NotaServicoPresenter {
       createdAt: nota.createdAt,
       updatedAt: nota.updatedAt,
     };
+  }
+
+  private static formatarDataSemHora(data?: Date) {
+    return data ? data.toISOString().slice(0, 10) : undefined;
   }
 }
