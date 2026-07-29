@@ -85,6 +85,7 @@ export class ConfigurarCertificadoA1EmpresaAutenticadaService {
       certificadoA1Senha: this.cifradorTexto.criptografar(
         input.certificadoA1Senha,
       ),
+      certificadoA1ValidoAte: certificado.validoAte,
     });
     configuracao.ativar();
 

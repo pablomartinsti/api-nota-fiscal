@@ -9,6 +9,7 @@ export interface ConfiguracaoFiscalEmpresaProps {
   certificadoA1NomeArquivo?: string;
   certificadoA1Conteudo?: string;
   certificadoA1Senha?: string;
+  certificadoA1ValidoAte?: Date;
   ativo?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -21,6 +22,7 @@ export interface AlterarConfiguracaoFiscalEmpresaProps {
   certificadoA1NomeArquivo?: string;
   certificadoA1Conteudo?: string;
   certificadoA1Senha?: string;
+  certificadoA1ValidoAte?: Date;
 }
 
 export class ConfiguracaoFiscalEmpresa {
@@ -32,6 +34,7 @@ export class ConfiguracaoFiscalEmpresa {
   private _certificadoA1NomeArquivo?: string;
   private _certificadoA1Conteudo?: string;
   private _certificadoA1Senha?: string;
+  private _certificadoA1ValidoAte?: Date;
   private _ativo: boolean;
   private readonly _createdAt: Date;
   private _updatedAt: Date;
@@ -56,6 +59,7 @@ export class ConfiguracaoFiscalEmpresa {
       ConfiguracaoFiscalEmpresa.normalizarTextoOpcional(
         props.certificadoA1Senha,
       );
+    const certificadoA1ValidoAte = props.certificadoA1ValidoAte;
 
     ConfiguracaoFiscalEmpresa.validarEmpresaId(empresaId);
     ConfiguracaoFiscalEmpresa.validarAmbienteFiscal(ambienteFiscalPadrao);
@@ -69,6 +73,7 @@ export class ConfiguracaoFiscalEmpresa {
     this._certificadoA1NomeArquivo = certificadoA1NomeArquivo;
     this._certificadoA1Conteudo = certificadoA1Conteudo;
     this._certificadoA1Senha = certificadoA1Senha;
+    this._certificadoA1ValidoAte = certificadoA1ValidoAte;
     this._ativo = props.ativo ?? true;
     this._createdAt = props.createdAt ?? new Date();
     this._updatedAt = props.updatedAt ?? new Date();
@@ -106,6 +111,10 @@ export class ConfiguracaoFiscalEmpresa {
     return this._certificadoA1Senha;
   }
 
+  get certificadoA1ValidoAte(): Date | undefined {
+    return this._certificadoA1ValidoAte;
+  }
+
   get ativo(): boolean {
     return this._ativo;
   }
@@ -134,6 +143,7 @@ export class ConfiguracaoFiscalEmpresa {
       ConfiguracaoFiscalEmpresa.normalizarTextoOpcional(
         props.certificadoA1Senha,
       );
+    const certificadoA1ValidoAte = props.certificadoA1ValidoAte;
 
     ConfiguracaoFiscalEmpresa.validarAmbienteFiscal(
       props.ambienteFiscalPadrao,
@@ -146,6 +156,7 @@ export class ConfiguracaoFiscalEmpresa {
     this._certificadoA1NomeArquivo = certificadoA1NomeArquivo;
     this._certificadoA1Conteudo = certificadoA1Conteudo;
     this._certificadoA1Senha = certificadoA1Senha;
+    this._certificadoA1ValidoAte = certificadoA1ValidoAte;
     this.atualizarDataDeAlteracao();
   }
 

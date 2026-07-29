@@ -117,6 +117,7 @@ model ConfiguracaoFiscalEmpresa {
   certificadoA1NomeArquivo String?
   certificadoA1Conteudo    String?
   certificadoA1Senha   String?
+  certificadoA1ValidoAte DateTime?
   ativo                Boolean        @default(true)
 
   empresa Empresa @relation(fields: [empresaId], references: [id])

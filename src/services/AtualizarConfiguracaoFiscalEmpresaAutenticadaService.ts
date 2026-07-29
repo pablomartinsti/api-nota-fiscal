@@ -61,6 +61,9 @@ export class AtualizarConfiguracaoFiscalEmpresaAutenticadaService {
       certificadoA1Senha: removerCertificado
         ? undefined
         : configuracaoExistente?.certificadoA1Senha,
+      certificadoA1ValidoAte: removerCertificado
+        ? undefined
+        : configuracaoExistente?.certificadoA1ValidoAte,
     };
   }
 }
