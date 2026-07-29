@@ -5,4 +5,11 @@ export const autenticarUsuarioSchema = z.object({
   senha: z.string().min(1),
 });
 
+export const autenticarUsuarioGoogleSchema = z.object({
+  credential: z.string().trim().min(1),
+});
+
 export type AutenticarUsuarioDto = z.infer<typeof autenticarUsuarioSchema>;
+export type AutenticarUsuarioGoogleDto = z.infer<
+  typeof autenticarUsuarioGoogleSchema
+>;

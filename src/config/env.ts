@@ -23,6 +23,7 @@ const envSchema = z
     JWT_SECRET: z.string().trim().min(1),
     PORT: z.coerce.number().int().min(1).max(65_535).default(3333),
     CORS_ORIGIN: z.string().trim().min(1).default('*'),
+    GOOGLE_CLIENT_ID: stringOpcional,
     NFSE_CERTIFICADO_PATH: stringOpcional,
     NFSE_CERTIFICADO_SENHA: z.preprocess(
       (valor) => (valor === '' ? undefined : valor),

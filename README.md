@@ -72,6 +72,7 @@ DATABASE_URL="postgresql://usuario:senha@localhost:5432/banco"
 JWT_SECRET="substitua-por-uma-chave-secreta-forte"
 PORT=3333
 CORS_ORIGIN="http://localhost:3000"
+GOOGLE_CLIENT_ID=""
 NODE_ENV="development"
 ```
 
@@ -348,6 +349,7 @@ antes de subir:
 - `JWT_SECRET` deve ser forte e ter pelo menos 32 caracteres
 - `CORS_ORIGIN` nao pode permitir `*`
 - `NFSE_CERTIFICADO_CRYPTO_KEY` deve ser uma chave valida de 32 bytes
+- `GOOGLE_CLIENT_ID` deve receber o Client ID OAuth quando o login Google for usado
 - quando `NFSE_PERMITIR_PRODUCAO_REAL="true"`,
   `NFSE_SEFIN_PRODUCAO_BASE_URL` nao pode apontar para Producao Restrita e os
   XSDs de DPS/evento precisam estar configurados
