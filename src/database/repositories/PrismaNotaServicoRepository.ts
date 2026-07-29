@@ -89,4 +89,19 @@ export class PrismaNotaServicoRepository implements NotaServicoRepository {
 
     return numeros.length ? Math.max(...numeros) : null;
   }
+
+  async excluirRascunhoPorIdEEmpresaId(
+    id: string,
+    empresaId: string,
+  ): Promise<boolean> {
+    const resultado = await prisma.notaServico.deleteMany({
+      where: {
+        id,
+        empresaId,
+        status: StatusNota.RASCUNHO,
+      },
+    });
+
+    return resultado.count === 1;
+  }
 }

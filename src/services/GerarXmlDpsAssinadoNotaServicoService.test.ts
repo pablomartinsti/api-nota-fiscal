@@ -135,6 +135,7 @@ function criarService(
           iniciarProcessamentoEnvio: vi.fn(),
           listarPorEmpresaId: vi.fn(),
           buscarMaiorNumeroDpsPorEmpresaAmbienteESerie: vi.fn(),
+    excluirRascunhoPorIdEEmpresaId: vi.fn(),
           buscarPorIdEEmpresaId: vi.fn().mockResolvedValue(
             new NotaServico({
               id: 'nota-1',

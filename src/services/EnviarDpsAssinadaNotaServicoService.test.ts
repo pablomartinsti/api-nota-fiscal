@@ -362,6 +362,7 @@ function criarService(
     buscarPorIdEEmpresaId,
     listarPorEmpresaId: vi.fn(),
     buscarMaiorNumeroDpsPorEmpresaAmbienteESerie: vi.fn(),
+    excluirRascunhoPorIdEEmpresaId: vi.fn(),
   };
   const gerarXml = {
     executar: vi.fn().mockResolvedValue('<DPS>assinado</DPS>'),

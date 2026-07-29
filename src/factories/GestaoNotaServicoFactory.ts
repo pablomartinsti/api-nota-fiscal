@@ -26,6 +26,7 @@ import { ConsultarNfseEmitidaNotaServicoService } from '../services/ConsultarNfs
 import { CriarRascunhoSubstituicaoNotaServicoService } from '../services/CriarRascunhoSubstituicaoNotaServicoService';
 import { EmitirNotaServicoService } from '../services/EmitirNotaServicoService';
 import { EnviarDpsAssinadaNotaServicoService } from '../services/EnviarDpsAssinadaNotaServicoService';
+import { ExcluirRascunhoNotaServicoService } from '../services/ExcluirRascunhoNotaServicoService';
 import { GerarProximoNumeroDpsService } from '../services/GerarProximoNumeroDpsService';
 import { GerarXmlDpsNotaServicoService } from '../services/GerarXmlDpsNotaServicoService';
 import { GerarXmlDpsAssinadoNotaServicoService } from '../services/GerarXmlDpsAssinadoNotaServicoService';
@@ -127,6 +128,7 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       notaRepository,
       validarReferencias,
     ),
+    new ExcluirRascunhoNotaServicoService(notaRepository),
     new EmitirNotaServicoService(
       notaRepository,
       new EmissorNotaServicoSimulado(),

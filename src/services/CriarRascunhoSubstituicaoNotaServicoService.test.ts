@@ -139,6 +139,7 @@ function criarService(
     listarPorEmpresaId: vi.fn(),
     buscarMaiorNumeroDpsPorEmpresaAmbienteESerie:
       vi.fn().mockResolvedValue(1),
+    excluirRascunhoPorIdEEmpresaId: vi.fn(),
   };
   const validarReferencias = {
     executar: vi.fn().mockResolvedValue({

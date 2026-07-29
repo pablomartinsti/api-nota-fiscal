@@ -51,6 +51,7 @@ function criarService(
     buscarPorIdEEmpresaId: vi.fn().mockResolvedValue(nota),
     listarPorEmpresaId: vi.fn(),
     buscarMaiorNumeroDpsPorEmpresaAmbienteESerie: vi.fn(),
+    excluirRascunhoPorIdEEmpresaId: vi.fn(),
   };
   const listarPorNotaEEmpresa = vi.fn().mockResolvedValue(eventos);
   const eventoFiscalRepository: NotaServicoEventoFiscalRepository = {

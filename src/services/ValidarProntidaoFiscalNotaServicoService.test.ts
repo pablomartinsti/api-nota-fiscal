@@ -165,6 +165,7 @@ function criarService(props?: {
       .mockResolvedValue(props?.nota ?? criarNota(AmbienteFiscal.HOMOLOGACAO)),
     listarPorEmpresaId: vi.fn(),
     buscarMaiorNumeroDpsPorEmpresaAmbienteESerie: vi.fn(),
+    excluirRascunhoPorIdEEmpresaId: vi.fn(),
   };
   const configuracaoFiscalRepository: ConfiguracaoFiscalEmpresaRepository = {
     salvar: vi.fn(),

@@ -68,6 +68,7 @@ function criarService(
     buscarPorIdEEmpresaId,
     listarPorEmpresaId: vi.fn(),
     buscarMaiorNumeroDpsPorEmpresaAmbienteESerie: vi.fn(),
+    excluirRascunhoPorIdEEmpresaId: vi.fn(),
   };
 
   return {

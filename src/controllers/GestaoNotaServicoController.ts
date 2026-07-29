@@ -21,6 +21,7 @@ import { ConsultarNfseEmitidaNotaServicoService } from '../services/ConsultarNfs
 import { CriarRascunhoSubstituicaoNotaServicoService } from '../services/CriarRascunhoSubstituicaoNotaServicoService';
 import { EmitirNotaServicoService } from '../services/EmitirNotaServicoService';
 import { EnviarDpsAssinadaNotaServicoService } from '../services/EnviarDpsAssinadaNotaServicoService';
+import { ExcluirRascunhoNotaServicoService } from '../services/ExcluirRascunhoNotaServicoService';
 import { GerarXmlDpsNotaServicoService } from '../services/GerarXmlDpsNotaServicoService';
 import { GerarXmlDpsAssinadoNotaServicoService } from '../services/GerarXmlDpsAssinadoNotaServicoService';
 import { ListarEventosFiscaisNotaServicoService } from '../services/ListarEventosFiscaisNotaServicoService';
@@ -35,6 +36,7 @@ export class GestaoNotaServicoController {
     private readonly listarService: ListarNotasServicoService,
     private readonly buscarService: BuscarNotaServicoService,
     private readonly atualizarService: AtualizarRascunhoNotaServicoService,
+    private readonly excluirRascunhoService: ExcluirRascunhoNotaServicoService,
     private readonly emitirService: EmitirNotaServicoService,
     private readonly retornarParaRascunhoService: RetornarNotaServicoParaRascunhoService,
     private readonly cancelarService: CancelarNotaServicoService,
@@ -86,6 +88,20 @@ export class GestaoNotaServicoController {
     );
 
     return response.status(200).json(NotaServicoPresenter.paraHttp(nota));
+  }
+
+  async excluirRascunho(
+    request: Request,
+    response: Response,
+  ): Promise<Response> {
+    const { notaId } = notaServicoParamsSchema.parse(request.params);
+
+    await this.excluirRascunhoService.executar(
+      request.autenticacao,
+      notaId,
+    );
+
+    return response.status(204).send();
   }
 
   async emitir(request: Request, response: Response): Promise<Response> {

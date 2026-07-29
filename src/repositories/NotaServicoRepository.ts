@@ -17,4 +17,5 @@ export interface NotaServicoRepository {
     ambienteFiscal: AmbienteFiscal,
     serieDps: string,
   ): Promise<number | null>;
+  excluirRascunhoPorIdEEmpresaId(id: string, empresaId: string): Promise<boolean>;
 }

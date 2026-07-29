@@ -76,6 +76,7 @@ function criarService(nota: NotaServico | null): {
     buscarPorIdEEmpresaId: vi.fn().mockResolvedValue(nota),
     listarPorEmpresaId: vi.fn(),
     buscarMaiorNumeroDpsPorEmpresaAmbienteESerie: vi.fn(),
+    excluirRascunhoPorIdEEmpresaId: vi.fn(),
   };
   const clienteDanfse: ClienteDanfseNfseNacional = {
     baixarDanfsePorChave: vi.fn().mockResolvedValue({
