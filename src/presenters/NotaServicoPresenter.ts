@@ -18,7 +18,9 @@ export class NotaServicoPresenter {
       ambienteFiscal: nota.ambienteFiscal,
       serieDps: nota.serieDps,
       numeroDps: nota.numeroDps,
-      dataCompetencia: this.formatarDataSemHora(nota.dataCompetencia),
+      dataCompetencia: NotaServicoPresenter.formatarDataSemHora(
+        nota.dataCompetencia,
+      ),
       codigoMunicipioPrestacao: nota.codigoMunicipioPrestacao,
       tributacaoIssqn: nota.tributacaoIssqn,
       tipoRetencaoIssqn: nota.tipoRetencaoIssqn,
