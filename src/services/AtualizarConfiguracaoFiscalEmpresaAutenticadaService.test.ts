@@ -64,6 +64,7 @@ describe('AtualizarConfiguracaoFiscalEmpresaAutenticadaService', () => {
       certificadoA1NomeArquivo: 'empresa.pfx',
       certificadoA1Conteudo: 'criptografado:base64',
       certificadoA1Senha: 'criptografado:senha',
+      certificadoA1ValidoAte: new Date('2027-06-17T15:47:00.000Z'),
     });
     const { service } = criarService(existente);
 
@@ -76,6 +77,7 @@ describe('AtualizarConfiguracaoFiscalEmpresaAutenticadaService', () => {
     expect(configuracao.certificadoA1NomeArquivo).toBeUndefined();
     expect(configuracao.certificadoA1Conteudo).toBeUndefined();
     expect(configuracao.certificadoA1Senha).toBeUndefined();
+    expect(configuracao.certificadoA1ValidoAte).toBeUndefined();
     expect(configuracao.possuiCertificadoA1()).toBe(false);
   });
 });
