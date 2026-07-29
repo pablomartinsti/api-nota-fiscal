@@ -238,7 +238,7 @@ describe('Gestao da Empresa autenticada HTTP', () => {
     );
   });
 
-  it('deve impedir ADMIN e OPERADOR de atualizar configuracao fiscal', async () => {
+  it('deve permitir ADMIN e impedir OPERADOR de atualizar configuracao fiscal', async () => {
     const admin = await criarContexto(PerfilUsuario.ADMIN);
     const operador = await criarContexto(PerfilUsuario.OPERADOR);
     const body = {
@@ -255,7 +255,7 @@ describe('Gestao da Empresa autenticada HTTP', () => {
       .set('Authorization', `Bearer ${operador.token}`)
       .send(body);
 
-    expect(respostaAdmin.status).toBe(403);
+    expect(respostaAdmin.status).toBe(200);
     expect(respostaOperador.status).toBe(403);
   });
 });

@@ -7,6 +7,10 @@ import { AutorizacaoPerfilMiddleware } from '../middleware/autorizacao-perfil.mi
 
 const empresaRoutes = Router();
 const autenticacaoMiddleware = criarAutenticacaoMiddleware();
+const gestoresMiddleware = new AutorizacaoPerfilMiddleware([
+  PerfilUsuario.DONO,
+  PerfilUsuario.ADMIN,
+]);
 const donoMiddleware = new AutorizacaoPerfilMiddleware([PerfilUsuario.DONO]);
 const controller = criarGestaoEmpresaController();
 
@@ -21,13 +25,15 @@ empresaRoutes.get('/empresa/configuracao-fiscal', (request, response) =>
 );
 empresaRoutes.put(
   '/empresa/configuracao-fiscal',
-  (request, response, next) => donoMiddleware.handle(request, response, next),
+  (request, response, next) =>
+    gestoresMiddleware.handle(request, response, next),
   (request, response) =>
     controller.atualizarConfiguracaoFiscal(request, response),
 );
 empresaRoutes.post(
   '/empresa/configuracao-fiscal/certificado-a1',
-  (request, response, next) => donoMiddleware.handle(request, response, next),
+  (request, response, next) =>
+    gestoresMiddleware.handle(request, response, next),
   (request, response) =>
     controller.configurarCertificadoA1(request, response),
 );
