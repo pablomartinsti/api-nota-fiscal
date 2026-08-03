@@ -52,6 +52,9 @@ export class EnviarDpsAssinadaNotaServicoService {
     const notaSubstituida =
       await this.buscarNotaSubstituidaParaEmissao(autenticacao, nota);
 
+    await this.resolverConfiguracaoFiscal?.validarEmissaoHabilitada(
+      autenticacao.empresaId,
+    );
     this.validarPermissaoProducaoReal?.executar(nota.ambienteFiscal);
     await this.obterConfiguracaoCertificado(
       autenticacao.empresaId,

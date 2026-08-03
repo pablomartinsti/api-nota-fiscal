@@ -1,4 +1,5 @@
 export enum PerfilUsuario {
+  ADMIN_SISTEMA = 'ADMIN_SISTEMA',
   DONO = 'DONO',
   ADMIN = 'ADMIN',
   OPERADOR = 'OPERADOR',

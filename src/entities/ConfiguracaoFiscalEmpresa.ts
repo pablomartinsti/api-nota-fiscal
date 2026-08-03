@@ -10,6 +10,7 @@ export interface ConfiguracaoFiscalEmpresaProps {
   certificadoA1Conteudo?: string;
   certificadoA1Senha?: string;
   certificadoA1ValidoAte?: Date;
+  emissaoHabilitada?: boolean;
   ativo?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
@@ -35,6 +36,7 @@ export class ConfiguracaoFiscalEmpresa {
   private _certificadoA1Conteudo?: string;
   private _certificadoA1Senha?: string;
   private _certificadoA1ValidoAte?: Date;
+  private _emissaoHabilitada: boolean;
   private _ativo: boolean;
   private readonly _createdAt: Date;
   private _updatedAt: Date;
@@ -74,6 +76,7 @@ export class ConfiguracaoFiscalEmpresa {
     this._certificadoA1Conteudo = certificadoA1Conteudo;
     this._certificadoA1Senha = certificadoA1Senha;
     this._certificadoA1ValidoAte = certificadoA1ValidoAte;
+    this._emissaoHabilitada = props.emissaoHabilitada ?? true;
     this._ativo = props.ativo ?? true;
     this._createdAt = props.createdAt ?? new Date();
     this._updatedAt = props.updatedAt ?? new Date();
@@ -113,6 +116,10 @@ export class ConfiguracaoFiscalEmpresa {
 
   get certificadoA1ValidoAte(): Date | undefined {
     return this._certificadoA1ValidoAte;
+  }
+
+  get emissaoHabilitada(): boolean {
+    return this._emissaoHabilitada;
   }
 
   get ativo(): boolean {
@@ -174,6 +181,16 @@ export class ConfiguracaoFiscalEmpresa {
 
   desativar(): void {
     this._ativo = false;
+    this.atualizarDataDeAlteracao();
+  }
+
+  habilitarEmissao(): void {
+    this._emissaoHabilitada = true;
+    this.atualizarDataDeAlteracao();
+  }
+
+  bloquearEmissao(): void {
+    this._emissaoHabilitada = false;
     this.atualizarDataDeAlteracao();
   }
 

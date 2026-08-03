@@ -18,7 +18,7 @@ function criarUsuario(perfil: PerfilUsuario): Usuario {
 }
 
 describe('PoliticaGestaoUsuario', () => {
-  it('deve permitir que DONO gerencie ADMIN e OPERADOR, mas não DONO', () => {
+  it('deve permitir que DONO gerencie ADMIN e OPERADOR, mas não DONO ou ADMIN_SISTEMA', () => {
     expect(() =>
       politica.validarCadastro(PerfilUsuario.DONO, PerfilUsuario.ADMIN),
     ).not.toThrow();
@@ -27,6 +27,12 @@ describe('PoliticaGestaoUsuario', () => {
     ).not.toThrow();
     expect(() =>
       politica.validarCadastro(PerfilUsuario.DONO, PerfilUsuario.DONO),
+    ).toThrow(AcessoNegadoError);
+    expect(() =>
+      politica.validarCadastro(
+        PerfilUsuario.DONO,
+        PerfilUsuario.ADMIN_SISTEMA,
+      ),
     ).toThrow(AcessoNegadoError);
   });
 

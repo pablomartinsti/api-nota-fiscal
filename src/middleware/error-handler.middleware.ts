@@ -16,6 +16,8 @@ import { ConfiguracaoSefinNacionalAusenteError } from '../errors/ConfiguracaoSef
 import { CpfCnpjJaCadastradoError } from '../errors/CpfCnpjJaCadastradoError';
 import { CredenciaisInvalidasError } from '../errors/CredenciaisInvalidasError';
 import { EmailJaCadastradoError } from '../errors/EmailJaCadastradoError';
+import { EmpresaEmissaoBloqueadaError } from '../errors/EmpresaEmissaoBloqueadaError';
+import { EmpresaNaoEncontradaError } from '../errors/EmpresaNaoEncontradaError';
 import { LoginGoogleNaoConfiguradoError } from '../errors/LoginGoogleNaoConfiguradoError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { NotaServicoComPendenciasFiscaisError } from '../errors/NotaServicoComPendenciasFiscaisError';
@@ -73,6 +75,7 @@ export const errorHandler: ErrorRequestHandler = (
 
   if (
     error instanceof ClienteNaoEncontradoError ||
+    error instanceof EmpresaNaoEncontradaError ||
     error instanceof ServicoNaoEncontradoError ||
     error instanceof NotaServicoNaoEncontradaError
   ) {
@@ -127,7 +130,8 @@ export const errorHandler: ErrorRequestHandler = (
 
   if (
     error instanceof AcessoNegadoError ||
-    error instanceof OperacaoSimuladaBloqueadaError
+    error instanceof OperacaoSimuladaBloqueadaError ||
+    error instanceof EmpresaEmissaoBloqueadaError
   ) {
     response.status(403).json({
       message: error.message,

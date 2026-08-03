@@ -7,6 +7,7 @@ datasource db {
 }
 
 enum PerfilUsuario {
+  ADMIN_SISTEMA
   DONO
   ADMIN
   OPERADOR
@@ -68,6 +69,7 @@ enum TipoEventoFiscalNotaServico {
   CONSULTA_NFSE
   RECONCILIACAO_ENVIO
   CANCELAMENTO_NFSE
+  DOWNLOAD_DANFSE
 }
 
 enum StatusEventoFiscalNotaServico {
@@ -118,6 +120,7 @@ model ConfiguracaoFiscalEmpresa {
   certificadoA1Conteudo    String?
   certificadoA1Senha   String?
   certificadoA1ValidoAte DateTime?
+  emissaoHabilitada    Boolean        @default(true)
   ativo                Boolean        @default(true)
 
   empresa Empresa @relation(fields: [empresaId], references: [id])

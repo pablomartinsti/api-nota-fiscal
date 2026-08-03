@@ -14,6 +14,7 @@ import { TokenPayload } from '../security/GerenciadorToken';
 
 export interface ChecklistProducaoReal {
   habilitada: boolean;
+  emissaoHabilitada: boolean;
   regimeTributarioSuportado: boolean;
   urlSefinProducaoConfigurada: boolean;
   xsdDpsConfigurado: boolean;
@@ -86,12 +87,21 @@ export class ValidarProntidaoFiscalNotaServicoService {
       servico,
       nota,
     });
+    const configuracaoFiscal =
+      await this.options.configuracaoFiscalRepository?.buscarPorEmpresaId(
+        autenticacao.empresaId,
+      );
+
+    if (configuracaoFiscal?.emissaoHabilitada === false) {
+      pendencias.push('empresa.configuracaoFiscal.emissaoBloqueada');
+    }
+
     const producaoReal =
       nota.ambienteFiscal === AmbienteFiscal.PRODUCAO
         ? await this.validarChecklistProducaoReal(
-            autenticacao.empresaId,
             empresa.regimeTributario,
             pendencias,
+            configuracaoFiscal,
           )
         : undefined;
 
@@ -103,16 +113,15 @@ export class ValidarProntidaoFiscalNotaServicoService {
   }
 
   private async validarChecklistProducaoReal(
-    empresaId: string,
     regimeTributario: RegimeTributario,
     pendencias: string[],
+    configuracaoFiscal?: Awaited<
+      ReturnType<ConfiguracaoFiscalEmpresaRepository['buscarPorEmpresaId']>
+    >,
   ): Promise<ChecklistProducaoReal> {
-    const configuracaoFiscal =
-      await this.options.configuracaoFiscalRepository?.buscarPorEmpresaId(
-        empresaId,
-      );
     const checklist: ChecklistProducaoReal = {
       habilitada: this.options.permitirProducaoReal === true,
+      emissaoHabilitada: configuracaoFiscal?.emissaoHabilitada !== false,
       regimeTributarioSuportado:
         regimeTributario === RegimeTributario.SIMPLES_NACIONAL,
       urlSefinProducaoConfigurada: this.urlProducaoValida(),
@@ -128,6 +137,10 @@ export class ValidarProntidaoFiscalNotaServicoService {
 
     if (!checklist.habilitada) {
       pendencias.push('producaoReal.permissao');
+    }
+
+    if (!checklist.emissaoHabilitada) {
+      pendencias.push('producaoReal.emissaoBloqueada');
     }
 
     if (!checklist.regimeTributarioSuportado) {

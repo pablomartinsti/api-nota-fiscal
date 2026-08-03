@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const autenticarUsuarioSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
-  senha: z.string().min(1),
+  senha: z.string().trim().min(1),
 });
 
 export const autenticarUsuarioGoogleSchema = z.object({

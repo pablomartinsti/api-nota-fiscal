@@ -22,6 +22,7 @@ export class PrismaConfiguracaoFiscalEmpresaMapper {
       certificadoA1Conteudo: registro.certificadoA1Conteudo ?? undefined,
       certificadoA1Senha: registro.certificadoA1Senha ?? undefined,
       certificadoA1ValidoAte: registro.certificadoA1ValidoAte ?? undefined,
+      emissaoHabilitada: registro.emissaoHabilitada,
       ativo: registro.ativo,
       createdAt: registro.createdAt,
       updatedAt: registro.updatedAt,
@@ -40,6 +41,7 @@ export class PrismaConfiguracaoFiscalEmpresaMapper {
       certificadoA1Conteudo: configuracao.certificadoA1Conteudo ?? null,
       certificadoA1Senha: configuracao.certificadoA1Senha ?? null,
       certificadoA1ValidoAte: configuracao.certificadoA1ValidoAte ?? null,
+      emissaoHabilitada: configuracao.emissaoHabilitada,
       ativo: configuracao.ativo,
     };
   }

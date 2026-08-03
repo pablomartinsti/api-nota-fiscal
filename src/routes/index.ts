@@ -1,5 +1,6 @@
 import { Router } from 'express';
 
+import { adminOperacionalRoutes } from './admin-operacional.routes';
 import { autenticacaoRoutes } from './autenticacao.routes';
 import { clienteRoutes } from './cliente.routes';
 import { empresaRoutes } from './empresa.routes';
@@ -20,6 +21,7 @@ routes.get('/', (request, response) => {
 routes.use(operacionalRoutes);
 routes.use(onboardingRoutes);
 routes.use(autenticacaoRoutes);
+routes.use(adminOperacionalRoutes);
 routes.use(empresaRoutes);
 routes.use(usuarioRoutes);
 routes.use(clienteRoutes);

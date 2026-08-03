@@ -63,6 +63,7 @@ describe('ValidarProntidaoFiscalNotaServicoService', () => {
     );
     expect(resultado.producaoReal).toEqual({
       habilitada: false,
+      emissaoHabilitada: true,
       regimeTributarioSuportado: true,
       urlSefinProducaoConfigurada: false,
       xsdDpsConfigurado: false,
@@ -96,6 +97,7 @@ describe('ValidarProntidaoFiscalNotaServicoService', () => {
       pendencias: [],
       producaoReal: {
         habilitada: true,
+        emissaoHabilitada: true,
         regimeTributarioSuportado: true,
         urlSefinProducaoConfigurada: true,
         xsdDpsConfigurado: true,
@@ -129,6 +131,22 @@ describe('ValidarProntidaoFiscalNotaServicoService', () => {
     expect(resultado.pronto).toBe(false);
     expect(resultado.pendencias).toContain('empresa.regimeTributario');
     expect(resultado.producaoReal?.regimeTributarioSuportado).toBe(false);
+  });
+
+  it('deve informar pendencia quando emissao estiver bloqueada para a empresa', async () => {
+    const { service } = criarService({
+      configuracaoFiscal: new ConfiguracaoFiscalEmpresa({
+        empresaId: 'empresa-1',
+        emissaoHabilitada: false,
+      }),
+    });
+
+    const resultado = await service.executar(autenticacao, 'nota-1');
+
+    expect(resultado.pronto).toBe(false);
+    expect(resultado.pendencias).toContain(
+      'empresa.configuracaoFiscal.emissaoBloqueada',
+    );
   });
 });
 

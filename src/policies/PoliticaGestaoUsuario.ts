@@ -4,7 +4,13 @@ import { TokenPayload } from '../security/GerenciadorToken';
 
 export class PoliticaGestaoUsuario {
   validarListagem(perfilAtor: PerfilUsuario): void {
-    if (![PerfilUsuario.DONO, PerfilUsuario.ADMIN].includes(perfilAtor)) {
+    if (
+      ![
+        PerfilUsuario.ADMIN_SISTEMA,
+        PerfilUsuario.DONO,
+        PerfilUsuario.ADMIN,
+      ].includes(perfilAtor)
+    ) {
       throw new AcessoNegadoError();
     }
   }
@@ -13,7 +19,10 @@ export class PoliticaGestaoUsuario {
     perfilAtor: PerfilUsuario,
     perfilNovoUsuario: PerfilUsuario,
   ): void {
-    if (perfilNovoUsuario === PerfilUsuario.DONO) {
+    if (
+      perfilNovoUsuario === PerfilUsuario.ADMIN_SISTEMA ||
+      perfilNovoUsuario === PerfilUsuario.DONO
+    ) {
       throw new AcessoNegadoError();
     }
 
@@ -38,7 +47,9 @@ export class PoliticaGestaoUsuario {
   ): void {
     if (
       perfilAtor !== PerfilUsuario.DONO ||
+      usuarioAlvo.perfil === PerfilUsuario.ADMIN_SISTEMA ||
       usuarioAlvo.perfil === PerfilUsuario.DONO ||
+      novoPerfil === PerfilUsuario.ADMIN_SISTEMA ||
       novoPerfil === PerfilUsuario.DONO
     ) {
       throw new AcessoNegadoError();
@@ -50,7 +61,10 @@ export class PoliticaGestaoUsuario {
     usuarioAlvo: Usuario,
     ativo: boolean,
   ): void {
-    if (usuarioAlvo.perfil === PerfilUsuario.DONO) {
+    if (
+      usuarioAlvo.perfil === PerfilUsuario.ADMIN_SISTEMA ||
+      usuarioAlvo.perfil === PerfilUsuario.DONO
+    ) {
       throw new AcessoNegadoError();
     }
 

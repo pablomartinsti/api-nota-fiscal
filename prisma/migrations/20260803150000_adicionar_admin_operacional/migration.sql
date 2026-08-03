@@ -1,0 +1,3 @@
+ALTER TYPE "PerfilUsuario" ADD VALUE 'ADMIN_SISTEMA';
+
+ALTER TYPE "TipoEventoFiscalNotaServico" ADD VALUE 'DOWNLOAD_DANFSE';

@@ -20,6 +20,7 @@ describe('ResolverConfiguracaoFiscalEmpresaService', () => {
     expect(configuracao).toEqual({
       ambienteFiscalPadrao: AmbienteFiscal.HOMOLOGACAO,
       serieDpsPadrao: '1',
+      emissaoHabilitada: true,
     });
     expect(certificado).toBeUndefined();
   });
@@ -40,6 +41,7 @@ describe('ResolverConfiguracaoFiscalEmpresaService', () => {
       serieDpsPadrao: '12',
       certificadoA1Path: 'C:/certificados/empresa.pfx',
       certificadoA1Senha: 'senha',
+      emissaoHabilitada: true,
     });
     await expect(service.obterCertificadoA1('empresa-1')).resolves.toEqual({
       caminho: 'C:/certificados/empresa.pfx',

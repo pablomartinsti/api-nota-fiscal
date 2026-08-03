@@ -403,6 +403,7 @@ function criarService(
 
 function criarResolverComCertificadoEmpresa() {
   return {
+    validarEmissaoHabilitada: vi.fn().mockResolvedValue(undefined),
     obterCertificadoA1ParaAmbiente: vi.fn().mockResolvedValue({
       caminho: 'C:/certificados/empresa.pfx',
       senha: 'senha-empresa',

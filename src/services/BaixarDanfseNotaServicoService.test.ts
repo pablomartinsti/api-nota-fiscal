@@ -7,6 +7,7 @@ import {
 } from '../entities/NotaServico';
 import { Empresa, RegimeTributario } from '../entities/Empresa';
 import { PerfilUsuario } from '../entities/Usuario';
+import { TipoEventoFiscalNotaServico } from '../entities/NotaServicoEventoFiscal';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { ClienteDanfseNfseNacional } from '../fiscal/ClienteDanfseNfseNacional';
@@ -35,6 +36,7 @@ describe('BaixarDanfseNotaServicoService', () => {
     expect(clienteDanfse.baixarDanfsePorChave).toHaveBeenCalledWith({
       ambienteFiscal: AmbienteFiscal.HOMOLOGACAO,
       chaveAcesso,
+      certificadoConteudoBase64: undefined,
       certificadoPath: undefined,
       certificadoSenha: undefined,
     });
@@ -44,6 +46,30 @@ describe('BaixarDanfseNotaServicoService', () => {
       chaveAcesso,
       pdf,
       contentType: 'application/pdf',
+    });
+  });
+
+  it('deve registrar evento fiscal quando download do DANFSe falhar', async () => {
+    const nota = criarNota({ chaveAcesso });
+    const { service, clienteDanfse, registrarEventoFiscal } = criarService(nota);
+    vi.mocked(clienteDanfse.baixarDanfsePorChave).mockResolvedValue({
+      sucesso: false,
+      statusHttp: 404,
+      chaveAcesso,
+      erros: [{ codigo: 'E404', mensagem: 'DANFSe nao encontrado.' }],
+    });
+
+    const resultado = await service.executar(autenticacao, 'nota-1');
+
+    expect(resultado.sucesso).toBe(false);
+    expect(registrarEventoFiscal.erro).toHaveBeenCalledWith({
+      empresaId: autenticacao.empresaId,
+      notaServicoId: 'nota-1',
+      usuarioId: autenticacao.usuarioId,
+      tipo: TipoEventoFiscalNotaServico.DOWNLOAD_DANFSE,
+      statusHttp: 404,
+      chaveAcesso,
+      mensagem: 'E404: DANFSe nao encontrado.',
     });
   });
 
@@ -69,6 +95,10 @@ describe('BaixarDanfseNotaServicoService', () => {
 function criarService(nota: NotaServico | null): {
   service: BaixarDanfseNotaServicoService;
   clienteDanfse: ClienteDanfseNfseNacional;
+  registrarEventoFiscal: {
+    sucesso: ReturnType<typeof vi.fn>;
+    erro: ReturnType<typeof vi.fn>;
+  };
 } {
   const notaRepository: NotaServicoRepository = {
     salvar: vi.fn(),
@@ -87,6 +117,10 @@ function criarService(nota: NotaServico | null): {
       contentType: 'application/pdf',
     }),
   };
+  const registrarEventoFiscal = {
+    sucesso: vi.fn(),
+    erro: vi.fn(),
+  };
 
   return {
     service: new BaixarDanfseNotaServicoService(
@@ -97,8 +131,10 @@ function criarService(nota: NotaServico | null): {
         criarEmpresaRepository(),
       ),
       new ValidarPermissaoProducaoRealService(false),
+      registrarEventoFiscal as never,
     ),
     clienteDanfse,
+    registrarEventoFiscal,
   };
 }
 

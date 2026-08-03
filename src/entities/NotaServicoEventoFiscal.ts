@@ -3,6 +3,7 @@ export enum TipoEventoFiscalNotaServico {
   CONSULTA_NFSE = 'CONSULTA_NFSE',
   RECONCILIACAO_ENVIO = 'RECONCILIACAO_ENVIO',
   CANCELAMENTO_NFSE = 'CANCELAMENTO_NFSE',
+  DOWNLOAD_DANFSE = 'DOWNLOAD_DANFSE',
 }
 
 export enum StatusEventoFiscalNotaServico {

@@ -201,6 +201,7 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       clienteDanfse,
       resolverConfiguracaoFiscal,
       validarPermissaoProducaoReal,
+      registrarEventoFiscal,
     ),
   );
 }
