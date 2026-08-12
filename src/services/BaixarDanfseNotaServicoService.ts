@@ -1,4 +1,4 @@
-import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
+﻿import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { NotaServico } from '../entities/NotaServico';
 import { TipoEventoFiscalNotaServico } from '../entities/NotaServicoEventoFiscal';
@@ -10,6 +10,7 @@ import { RegistrarEventoFiscalNotaServicoService } from './RegistrarEventoFiscal
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
 
 const STATUS_HTTP_DANFSE_INDISPONIVEL = 409;
+const STATUS_HTTP_DANFSE_ERRO_LOCAL = 500;
 const MENSAGEM_XML_AUSENTE =
   'DANFSe indisponivel para esta nota porque o XML autorizado nao esta salvo no banco.';
 
@@ -63,7 +64,7 @@ export class BaixarDanfseNotaServicoService {
     return {
       sucesso: false,
       statusHttp: STATUS_HTTP_DANFSE_INDISPONIVEL,
-      chaveAcesso: nota.chaveAcesso,
+      chaveAcesso: nota.chaveAcesso!,
       erros: [
         {
           mensagem: MENSAGEM_XML_AUSENTE,
@@ -77,7 +78,35 @@ export class BaixarDanfseNotaServicoService {
     nota: NotaServico,
     mensagem: string,
   ): Promise<ResultadoDownloadDanfseNfse | undefined> {
-    const pdfLocal = this.geradorPdfDanfse.gerar(nota);
+    let pdfLocal: Awaited<ReturnType<GeradorPdfDanfseNacional['gerar']>>;
+
+    try {
+      pdfLocal = await this.geradorPdfDanfse.gerar(nota);
+    } catch (error) {
+      const mensagemErro =
+        error instanceof Error
+          ? error.message
+          : 'Nao foi possivel gerar o DANFSe local.';
+
+      await this.registrarErroFiscal(
+        autenticacao,
+        nota.id!,
+        mensagemErro,
+        STATUS_HTTP_DANFSE_ERRO_LOCAL,
+        nota.chaveAcesso,
+      );
+
+      return {
+        sucesso: false,
+        statusHttp: STATUS_HTTP_DANFSE_ERRO_LOCAL,
+        chaveAcesso: nota.chaveAcesso!,
+        erros: [
+          {
+            mensagem: mensagemErro,
+          },
+        ],
+      };
+    }
 
     if (!pdfLocal) {
       return undefined;
@@ -144,3 +173,5 @@ export class BaixarDanfseNotaServicoService {
     });
   }
 }
+
+

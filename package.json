@@ -22,6 +22,8 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@treeunfe/danfe": "^3.6.11",
+    "@treeunfe/nfse": "^3.2.15",
     "@xmldom/xmldom": "^0.9.10",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
