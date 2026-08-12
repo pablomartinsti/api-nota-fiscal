@@ -7,6 +7,10 @@ import { GeradorPdfDanfseNacional } from '../fiscal/GeradorPdfDanfseNacional';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
 import { RegistrarEventoFiscalNotaServicoService } from './RegistrarEventoFiscalNotaServicoService';
+import {
+  registrarErroFiscalNotaServico,
+  registrarSucessoFiscalNotaServico,
+} from './RegistrarEventoFiscalNotaServicoHelper';
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
 
 const STATUS_HTTP_DANFSE_INDISPONIVEL = 409;
@@ -136,14 +140,10 @@ export class BaixarDanfseNotaServicoService {
     statusHttp?: number,
     chaveAcesso?: string,
   ): Promise<void> {
-    if (!this.registrarEventoFiscal) {
-      return;
-    }
-
-    await this.registrarEventoFiscal.sucesso({
-      empresaId: autenticacao.empresaId,
+    await registrarSucessoFiscalNotaServico({
+      registrarEventoFiscal: this.registrarEventoFiscal,
+      autenticacao,
       notaServicoId,
-      usuarioId: autenticacao.usuarioId,
       tipo: TipoEventoFiscalNotaServico.DOWNLOAD_DANFSE,
       statusHttp,
       chaveAcesso,
@@ -158,14 +158,10 @@ export class BaixarDanfseNotaServicoService {
     statusHttp?: number,
     chaveAcesso?: string,
   ): Promise<void> {
-    if (!this.registrarEventoFiscal) {
-      return;
-    }
-
-    await this.registrarEventoFiscal.erro({
-      empresaId: autenticacao.empresaId,
+    await registrarErroFiscalNotaServico({
+      registrarEventoFiscal: this.registrarEventoFiscal,
+      autenticacao,
       notaServicoId,
-      usuarioId: autenticacao.usuarioId,
       tipo: TipoEventoFiscalNotaServico.DOWNLOAD_DANFSE,
       statusHttp,
       chaveAcesso,
@@ -173,5 +169,4 @@ export class BaixarDanfseNotaServicoService {
     });
   }
 }
-
 
