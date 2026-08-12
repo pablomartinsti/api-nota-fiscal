@@ -74,6 +74,12 @@ describe('GeradorPdfDanfseNacional', () => {
     expect(resultado?.chaveAcesso).toBe(chaveAcesso);
     expect(resultado?.pdf.subarray(0, 8).toString('latin1')).toBe('%PDF-1.4');
     expect(resultado?.pdf.length).toBeGreaterThan(1000);
+
+    const conteudoPdf = resultado?.pdf.toString('latin1') ?? '';
+    expect(conteudoPdf).toContain('EMITENTE DA NFS-e');
+    expect(conteudoPdf).toContain('SITUACAO DA NFS-e');
+    expect(conteudoPdf).toContain('FINALIDADE');
+    expect(conteudoPdf).toContain('DATA CIENTIFICACAO');
   });
 
   it('nao deve gerar PDF quando a nota nao tiver XML autorizado', () => {
