@@ -153,11 +153,18 @@ export const errorHandler: ErrorRequestHandler = (
 
   if (
     error instanceof CertificadoA1InvalidoError ||
-    error instanceof CertificadoA1CnpjDivergenteError ||
-    error instanceof XmlDpsInvalidoError
+    error instanceof CertificadoA1CnpjDivergenteError
   ) {
     response.status(422).json({
       message: error.message,
+    });
+    return;
+  }
+
+  if (error instanceof XmlDpsInvalidoError) {
+    response.status(422).json({
+      message: error.message,
+      erros: error.erros,
     });
     return;
   }

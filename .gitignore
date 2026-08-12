@@ -12,3 +12,4 @@ certificados/
 /backups/
 
 /generated/prisma
+.tmp_nfse_schema/

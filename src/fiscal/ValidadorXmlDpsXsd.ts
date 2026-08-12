@@ -58,8 +58,22 @@ export class ValidadorXmlDpsXsd implements ValidadorXmlDps {
         throw error;
       }
 
+      if (this.isErroArquivo(error)) {
+        throw new XmlDpsInvalidoError([
+          `Arquivo XSD nao encontrado ou inacessivel: ${caminhoXsd}`,
+        ]);
+      }
+
       throw new XmlDpsInvalidoError();
     }
+  }
+
+  private isErroArquivo(error: unknown): boolean {
+    if (!(error instanceof Error) || !('code' in error)) {
+      return false;
+    }
+
+    return ['ENOENT', 'ENOTDIR', 'EACCES'].includes(String(error.code));
   }
 
   private normalizarSchema(schema: string): string {

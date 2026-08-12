@@ -150,6 +150,21 @@ describe('Seguranca do XML da DPS', () => {
     ).rejects.toBeInstanceOf(XmlDpsInvalidoError);
   });
 
+  it('deve informar quando o XSD configurado nao existir', async () => {
+    const validador = new ValidadorXmlDpsXsd(() =>
+      join(tmpdir(), 'nfse-xsd-inexistente', 'DPS_v1.01.xsd'),
+    );
+
+    try {
+      await validador.validar('<DPS/>');
+      throw new Error('Validacao deveria falhar.');
+    } catch (error) {
+      expect(error).toBeInstanceOf(XmlDpsInvalidoError);
+      expect((error as XmlDpsInvalidoError).erros[0]).toContain(
+        'Arquivo XSD nao encontrado ou inacessivel',
+      );
+    }
+  });
   it('deve normalizar anchors de regex usados no XSD oficial', async () => {
     const pasta = await mkdtemp(join(tmpdir(), 'nfse-xsd-regex-teste-'));
     const caminhoXsd = join(pasta, 'DPS_teste.xsd');

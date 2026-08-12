@@ -10,6 +10,7 @@ import {
 import { PerfilUsuario } from '../entities/Usuario';
 import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
 import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
+import { XmlDpsInvalidoError } from '../errors/XmlDpsInvalidoError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { ProducaoRealBloqueadaError } from '../errors/ProducaoRealBloqueadaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
@@ -129,6 +130,34 @@ describe('EnviarDpsAssinadaNotaServicoService', () => {
         tipo: 'ENVIO_DPS',
         statusHttp: 400,
         mensagem: 'E001 infDPS: DPS rejeitada.',
+      }),
+    );
+  });
+
+  it('deve salvar erro fiscal quando o XML nao atender ao schema', async () => {
+    const nota = criarNota();
+    const { service, gerarXml, clienteNfse, salvar, registrarEventoFiscal } =
+      criarService(nota);
+
+    gerarXml.executar = vi
+      .fn()
+      .mockRejectedValue(
+        new XmlDpsInvalidoError(['Elemento cTribNac invalido.']),
+      );
+
+    const resultado = await service.executar(autenticacao, 'nota-1');
+
+    expect(resultado.status).toBe(StatusNota.ERRO);
+    expect(resultado.mensagemErroFiscal).toBe(
+      'O XML da DPS nao atende ao schema configurado. Elemento cTribNac invalido.',
+    );
+    expect(salvar).toHaveBeenCalledOnce();
+    expect(clienteNfse.enviarDpsAssinada).not.toHaveBeenCalled();
+    expect(registrarEventoFiscal.erro).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tipo: 'ENVIO_DPS',
+        mensagem:
+          'O XML da DPS nao atende ao schema configurado. Elemento cTribNac invalido.',
       }),
     );
   });

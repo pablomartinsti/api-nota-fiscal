@@ -11,6 +11,7 @@ import {
 } from '../fiscal/ClienteNfseNacional';
 import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
 import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
+import { XmlDpsInvalidoError } from '../errors/XmlDpsInvalidoError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
@@ -61,10 +62,26 @@ export class EnviarDpsAssinadaNotaServicoService {
       nota.ambienteFiscal,
     );
 
-    const xmlAssinado = await this.gerarXmlDpsAssinadoService.executar(
-      autenticacao,
-      notaId,
-    );
+    let xmlAssinado: string;
+
+    try {
+      xmlAssinado = await this.gerarXmlDpsAssinadoService.executar(
+        autenticacao,
+        notaId,
+      );
+    } catch (error) {
+      if (error instanceof XmlDpsInvalidoError) {
+        const mensagemErro = this.criarMensagemErroXml(error);
+        nota.registrarErroFiscal(mensagemErro);
+
+        const notaComErro = await this.notaRepository.salvar(nota);
+        await this.registrarErroFiscal(autenticacao, notaComErro, mensagemErro);
+
+        return notaComErro;
+      }
+
+      throw error;
+    }
     const inputEnvio = await this.criarInputEnvioDps(
       autenticacao.empresaId,
       nota.ambienteFiscal,
@@ -190,6 +207,14 @@ export class EnviarDpsAssinadaNotaServicoService {
     }
 
     return notaSubstituida;
+  }
+
+  private criarMensagemErroXml(error: XmlDpsInvalidoError): string {
+    if (!error.erros.length) {
+      return error.message;
+    }
+
+    return error.message + ' ' + error.erros.join('; ');
   }
 
   private criarMensagemErroFiscal(erros?: ErroEnvioDpsNfse[]): string {
