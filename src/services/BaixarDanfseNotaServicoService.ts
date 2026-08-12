@@ -1,24 +1,23 @@
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
+import { NotaServico } from '../entities/NotaServico';
 import { TipoEventoFiscalNotaServico } from '../entities/NotaServicoEventoFiscal';
-import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
-import {
-  ClienteDanfseNfseNacional,
-  ResultadoDownloadDanfseNfse,
-} from '../fiscal/ClienteDanfseNfseNacional';
-import { ErroEnvioDpsNfse } from '../fiscal/ClienteNfseNacional';
+import { ResultadoDownloadDanfseNfse } from '../fiscal/ResultadoDownloadDanfseNfse';
+import { GeradorPdfDanfseNacional } from '../fiscal/GeradorPdfDanfseNacional';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
 import { RegistrarEventoFiscalNotaServicoService } from './RegistrarEventoFiscalNotaServicoService';
-import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
+
+const STATUS_HTTP_DANFSE_INDISPONIVEL = 409;
+const MENSAGEM_XML_AUSENTE =
+  'DANFSe indisponivel para esta nota porque o XML autorizado nao esta salvo no banco.';
 
 export class BaixarDanfseNotaServicoService {
   constructor(
     private readonly notaRepository: NotaServicoRepository,
-    private readonly clienteDanfse: ClienteDanfseNfseNacional,
-    private readonly resolverConfiguracaoFiscal: ResolverConfiguracaoFiscalEmpresaService,
     private readonly validarPermissaoProducaoReal: ValidarPermissaoProducaoRealService,
+    private readonly geradorPdfDanfse: GeradorPdfDanfseNacional,
     private readonly registrarEventoFiscal?: RegistrarEventoFiscalNotaServicoService,
   ) {}
 
@@ -43,72 +42,62 @@ export class BaixarDanfseNotaServicoService {
 
     this.validarPermissaoProducaoReal.executar(nota.ambienteFiscal);
 
-    const certificado =
-      await this.resolverConfiguracaoFiscal.obterCertificadoA1ParaAmbiente(
-        autenticacao.empresaId,
-        nota.ambienteFiscal,
-      );
+    const pdfLocal = await this.tentarGerarDanfseLocal(
+      autenticacao,
+      nota,
+      'DANFSe gerado localmente a partir do XML autorizado.',
+    );
 
-    try {
-      const resultado = await this.clienteDanfse.baixarDanfsePorChave({
-        ambienteFiscal: nota.ambienteFiscal,
-        chaveAcesso: nota.chaveAcesso,
-        certificadoPath: certificado?.caminho,
-        certificadoConteudoBase64: certificado?.conteudoBase64,
-        certificadoSenha: certificado?.senha,
-      });
-
-      if (!resultado.sucesso) {
-        await this.registrarErroFiscal(
-          autenticacao,
-          nota.id!,
-          this.criarMensagemErroFiscal(resultado.erros),
-          resultado.statusHttp,
-          resultado.chaveAcesso,
-        );
-
-        return resultado;
-      }
-
-      await this.registrarSucessoFiscal(
-        autenticacao,
-        nota.id!,
-        'DANFSe baixado com sucesso.',
-        resultado.statusHttp,
-        resultado.chaveAcesso,
-      );
-
-      return resultado;
-    } catch (error) {
-      const mensagem =
-        error instanceof ComunicacaoNfseError || error instanceof Error
-          ? error.message
-          : 'Nao foi possivel baixar o DANFSe.';
-
-      await this.registrarErroFiscal(
-        autenticacao,
-        nota.id!,
-        mensagem,
-        undefined,
-        nota.chaveAcesso,
-      );
-
-      throw error;
-    }
-  }
-
-  private criarMensagemErroFiscal(erros?: ErroEnvioDpsNfse[]): string {
-    if (!erros?.length) {
-      return 'Falha ao baixar o DANFSe.';
+    if (pdfLocal) {
+      return pdfLocal;
     }
 
-    return erros.map((erro) => this.formatarErro(erro)).join('; ');
+    await this.registrarErroFiscal(
+      autenticacao,
+      nota.id!,
+      MENSAGEM_XML_AUSENTE,
+      STATUS_HTTP_DANFSE_INDISPONIVEL,
+      nota.chaveAcesso,
+    );
+
+    return {
+      sucesso: false,
+      statusHttp: STATUS_HTTP_DANFSE_INDISPONIVEL,
+      chaveAcesso: nota.chaveAcesso,
+      erros: [
+        {
+          mensagem: MENSAGEM_XML_AUSENTE,
+        },
+      ],
+    };
   }
 
-  private formatarErro(erro: ErroEnvioDpsNfse): string {
-    const prefixos = [erro.codigo, erro.campo].filter(Boolean).join(' ');
+  private async tentarGerarDanfseLocal(
+    autenticacao: TokenPayload,
+    nota: NotaServico,
+    mensagem: string,
+  ): Promise<ResultadoDownloadDanfseNfse | undefined> {
+    const pdfLocal = this.geradorPdfDanfse.gerar(nota);
 
-    return prefixos ? `${prefixos}: ${erro.mensagem}` : erro.mensagem;
+    if (!pdfLocal) {
+      return undefined;
+    }
+
+    await this.registrarSucessoFiscal(
+      autenticacao,
+      nota.id!,
+      mensagem,
+      200,
+      pdfLocal.chaveAcesso,
+    );
+
+    return {
+      sucesso: true,
+      statusHttp: 200,
+      chaveAcesso: pdfLocal.chaveAcesso,
+      pdf: pdfLocal.pdf,
+      contentType: 'application/pdf',
+    };
   }
 
   private async registrarSucessoFiscal(

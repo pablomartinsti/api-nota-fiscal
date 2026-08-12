@@ -7,12 +7,12 @@ import { PrismaNotaServicoEventoFiscalRepository } from '../database/repositorie
 import { PrismaNotaServicoRepository } from '../database/repositories/PrismaNotaServicoRepository';
 import { PrismaServicoRepository } from '../database/repositories/PrismaServicoRepository';
 import { ClienteHttpSefinNacional } from '../fiscal/ClienteHttpSefinNacional';
-import { ClienteHttpDanfseNfseNacional } from '../fiscal/ClienteHttpDanfseNfseNacional';
 import { EmissorNotaServicoSimulado } from '../fiscal/EmissorNotaServicoSimulado';
 import { GeradorXmlDpsNacional } from '../fiscal/GeradorXmlDpsNacional';
 import { AssinadorXmlDpsXmlDsig } from '../fiscal/AssinadorXmlDpsXmlDsig';
 import { AssinadorXmlPedRegEventoXmlDsig } from '../fiscal/AssinadorXmlPedRegEventoXmlDsig';
 import { GeradorXmlPedidoCancelamentoNfseNacional } from '../fiscal/GeradorXmlPedidoCancelamentoNfseNacional';
+import { GeradorPdfDanfseNacional } from '../fiscal/GeradorPdfDanfseNacional';
 import { ProvedorCertificadoA1Arquivo } from '../fiscal/ProvedorCertificadoA1Arquivo';
 import { ValidadorXmlDpsXsd } from '../fiscal/ValidadorXmlDpsXsd';
 import { AesGcmCifradorTexto } from '../security/AesGcmCifradorTexto';
@@ -104,13 +104,7 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     certificadoPath: env.NFSE_CERTIFICADO_PATH,
     certificadoSenha: env.NFSE_CERTIFICADO_SENHA,
   }));
-  const clienteDanfse = new ClienteHttpDanfseNfseNacional(() => ({
-    baseUrlHomologacao: env.NFSE_DANFSE_HOMOLOGACAO_BASE_URL,
-    baseUrlProducao: env.NFSE_DANFSE_PRODUCAO_BASE_URL,
-    timeoutMs: env.NFSE_DANFSE_TIMEOUT_MS,
-    certificadoPath: env.NFSE_CERTIFICADO_PATH,
-    certificadoSenha: env.NFSE_CERTIFICADO_SENHA,
-  }));
+
   const provedorCertificado = new ProvedorCertificadoA1Arquivo(() => ({
     caminho: env.NFSE_CERTIFICADO_PATH,
     senha: env.NFSE_CERTIFICADO_SENHA,
@@ -200,9 +194,8 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     ),
     new BaixarDanfseNotaServicoService(
       notaRepository,
-      clienteDanfse,
-      resolverConfiguracaoFiscal,
       validarPermissaoProducaoReal,
+      new GeradorPdfDanfseNacional(),
       registrarEventoFiscal,
     ),
   );
