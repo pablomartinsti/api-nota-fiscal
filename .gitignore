@@ -13,3 +13,4 @@ certificados/
 
 /generated/prisma
 .tmp_nfse_schema/
+.tmp_danfse/

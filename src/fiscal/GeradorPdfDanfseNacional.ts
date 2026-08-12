@@ -1,4 +1,5 @@
 import { DOMParser, Element as XmlElement } from '@xmldom/xmldom';
+import { create as criarQrCode } from 'qrcode';
 
 import { AmbienteFiscal, NotaServico, StatusNota } from '../entities/NotaServico';
 
@@ -14,6 +15,7 @@ interface CampoDanfse {
 
 interface DadosDanfse {
   chaveAcesso: string;
+  qrCode: string;
   numeroNfse: string;
   numeroDps: string;
   serieDps: string;
@@ -48,6 +50,7 @@ interface PessoaDanfse {
   nome: string;
   email: string;
   telefone: string;
+  codigoMunicipio: string;
   endereco: string;
   municipio: string;
   cep: string;
@@ -89,6 +92,7 @@ export class GeradorPdfDanfseNacional {
 
     return {
       chaveAcesso,
+      qrCode: this.buscarTexto(elementos, ['QRCode', 'qrCode', 'xQRCode']) ?? chaveAcesso,
       numeroNfse:
         nota.numeroNfse ??
         this.buscarTexto(elementos, ['nNFSe', 'numeroNfse']) ??
@@ -167,195 +171,432 @@ export class GeradorPdfDanfseNacional {
   }
 
   private desenharPagina(pdf: PdfSimples, dados: DadosDanfse): void {
-    pdf.rect(MARGEM, MARGEM, LARGURA_A4 - MARGEM * 2, ALTURA_A4 - MARGEM * 2);
-    pdf.text('NFS-e', 24, 20, { size: 20, bold: true });
-    pdf.text('DANFSe v2.0', 245, 22, { size: 11, bold: true });
-    pdf.text('Documento Auxiliar da NFS-e', 220, 36, {
-      size: 11,
+    const esquerda = MARGEM;
+    const largura = LARGURA_A4 - MARGEM * 2;
+    const direita = esquerda + largura;
+
+    pdf.rect(esquerda, 6, largura, ALTURA_A4 - 12);
+    this.desenharCabecalho(pdf, dados, esquerda, direita);
+    this.desenharIdentificacao(pdf, dados, esquerda, 58, largura);
+
+    let y = 128;
+    y = this.secaoPessoaCompacta(
+      pdf,
+      esquerda,
+      y,
+      largura,
+      'EMITENTE DA NFS-e / PRESTADOR / FORNECEDOR',
+      dados.prestador,
+    );
+    y = this.secaoPessoaCompacta(
+      pdf,
+      esquerda,
+      y,
+      largura,
+      'TOMADOR / ADQUIRENTE',
+      dados.tomador,
+    );
+
+    this.tituloTabela(
+      pdf,
+      esquerda,
+      y,
+      largura,
+      'DESTINATARIO DA OPERACAO NAO IDENTIFICADO NA NFS-e',
+    );
+    y += 11;
+    this.tituloTabela(
+      pdf,
+      esquerda,
+      y,
+      largura,
+      'INTERMEDIARIO DA OPERACAO NAO IDENTIFICADO NA NFS-e',
+    );
+    y += 11;
+
+    y = this.secaoServicoCompacta(pdf, esquerda, y, largura, dados);
+    y = this.secaoTributacaoMunicipal(pdf, esquerda, y, largura, dados);
+    y = this.secaoTributacaoFederal(pdf, esquerda, y, largura);
+    y = this.secaoTributacaoIbsCbs(pdf, esquerda, y, largura);
+    y = this.secaoValorTotal(pdf, esquerda, y, largura, dados);
+    y = this.secaoInformacoesComplementares(pdf, esquerda, y, largura, dados);
+
+    this.desenharRodape(pdf, dados, esquerda, direita);
+    this.desenharMarcaStatus(pdf, dados);
+  }
+
+  private desenharCabecalho(
+    pdf: PdfSimples,
+    dados: DadosDanfse,
+    esquerda: number,
+    direita: number,
+  ): void {
+    pdf.fillRect(esquerda, 8, direita - esquerda, 44, 'F2F2F2');
+    pdf.rect(esquerda, 8, direita - esquerda, 44);
+    pdf.text('NFS', esquerda + 8, 17, {
+      size: 22,
+      bold: true,
+      colorHex: '1A9C5B',
+    });
+    pdf.text('e', esquerda + 50, 25, { size: 11, bold: true, colorHex: '2D74B9' });
+    pdf.text('Nota Fiscal de', esquerda + 68, 20, { size: 5.5 });
+    pdf.text('Servico eletronica', esquerda + 68, 28, { size: 5.5 });
+
+    pdf.text('DANFSe v2.0', 260, 18, { size: 8, bold: true });
+    pdf.text('Documento Auxiliar da NFS-e', 242, 29, {
+      size: 8,
       bold: true,
     });
-    pdf.text('Portal Nacional da NFS-e', 430, 25, { size: 8, align: 'right' });
-    pdf.line(24, 58, 571, 58);
+
+    pdf.text(`Municipio: ${dados.prestador.municipio}`, direita - 132, 15, {
+      size: 5.5,
+      bold: true,
+      maxWidth: 125,
+    });
+    pdf.text(`Ambiente Gerador: ${this.formatarAmbiente(dados.ambienteFiscal)}`, direita - 132, 24, {
+      size: 5.5,
+      maxWidth: 125,
+    });
+    pdf.text(`Tipo de Ambiente: ${dados.ambienteFiscal === AmbienteFiscal.PRODUCAO ? '1' : '2'}`, direita - 132, 32, {
+      size: 5.5,
+      maxWidth: 125,
+    });
 
     if (dados.ambienteFiscal === AmbienteFiscal.HOMOLOGACAO) {
-      pdf.text('NFS-e SEM VALIDADE JURIDICA', 175, 63, {
-        size: 11,
+      pdf.text('NFS-e SEM VALIDADE JURIDICA', 221, 42, {
+        size: 6.5,
         bold: true,
       });
     }
+  }
 
-    this.secaoCampos(pdf, 24, 72, 382, [
-      { titulo: 'Chave de Acesso da NFS-e', valor: dados.chaveAcesso },
-      { titulo: 'Numero da NFS-e', valor: dados.numeroNfse },
-      { titulo: 'Numero da DPS', valor: dados.numeroDps },
-    ]);
-    this.secaoCampos(pdf, 255, 72, 170, [
-      { titulo: 'Competencia da NFS-e', valor: dados.competencia },
-      { titulo: 'Serie da DPS', valor: dados.serieDps },
-      { titulo: 'Data e hora da emissao da NFS-e', valor: dados.dataEmissaoNfse },
-      { titulo: 'Data e hora da emissao da DPS', valor: dados.dataEmissaoDps },
-    ]);
-    this.desenharQrPlaceholder(pdf, 462, 72, dados.chaveAcesso);
+  private desenharIdentificacao(
+    pdf: PdfSimples,
+    dados: DadosDanfse,
+    esquerda: number,
+    y: number,
+    largura: number,
+  ): void {
+    const qrX = esquerda + largura - 96;
+    const qrY = y + 2;
+    const areaCampos = largura - 110;
+    const col = areaCampos / 3;
 
-    this.secaoPessoa(pdf, 24, 160, 'EMITENTE DA NFS-e', dados.prestador);
-    this.secaoPessoa(pdf, 24, 270, 'TOMADOR DO SERVICO', dados.tomador);
+    this.campoCompacto(pdf, esquerda + 4, y + 4, col * 1.42, 'CHAVE DE ACESSO DA NFS-e', dados.chaveAcesso, true);
+    this.campoCompacto(pdf, esquerda + 4, y + 28, col, 'NUMERO DA NFS-e', dados.numeroNfse, true);
+    this.campoCompacto(pdf, esquerda + 4, y + 52, col, 'NUMERO DA DPS', dados.numeroDps, true);
 
-    this.tituloSecao(pdf, 24, 376, 'SERVICO PRESTADO');
-    this.secaoCamposEmLinha(pdf, 24, 392, [
-      {
-        titulo: 'Codigo de Tributacao Nacional',
-        valor: dados.servico.codigoTributacaoNacional,
-      },
-      {
-        titulo: 'Codigo de Tributacao Municipal',
-        valor: dados.servico.codigoTributacaoMunicipal,
-      },
-      { titulo: 'Local da Prestacao', valor: dados.servico.localPrestacao },
-      { titulo: 'Pais da Prestacao', valor: dados.servico.paisPrestacao },
-    ]);
-    this.caixaTexto(pdf, 24, 448, 547, 64, [
-      { titulo: 'Descricao do Servico', valor: dados.servico.descricao },
-    ]);
+    this.campoCompacto(pdf, esquerda + col + 12, y + 28, col - 4, 'COMPETENCIA DA NFS-e', dados.competencia, true);
+    this.campoCompacto(pdf, esquerda + col + 12, y + 52, col - 4, 'SERIE DA DPS', dados.serieDps, true);
 
-    this.tituloSecao(pdf, 24, 526, 'TRIBUTACAO MUNICIPAL');
-    this.secaoCamposEmLinha(pdf, 24, 542, [
-      { titulo: 'Tributacao do ISSQN', valor: dados.valores.tributacaoIssqn },
-      { titulo: 'Tipo de Retencao do ISSQN', valor: dados.valores.tipoRetencaoIssqn },
-      { titulo: 'Aliquota ISSQN', valor: dados.valores.aliquotaIss },
-      { titulo: 'Valor ISSQN', valor: dados.valores.valorIss },
-    ]);
+    this.campoCompacto(pdf, esquerda + col * 2 + 10, y + 28, col - 8, 'DATA E HORA DA EMISSAO DA NFS-e', dados.dataEmissaoNfse, true);
+    this.campoCompacto(pdf, esquerda + col * 2 + 10, y + 52, col - 8, 'DATA E HORA DA EMISSAO DA DPS', dados.dataEmissaoDps, true);
 
-    this.tituloSecao(pdf, 24, 606, 'VALOR TOTAL DA NFS-e');
-    this.secaoCamposEmLinha(pdf, 24, 622, [
-      { titulo: 'Valor do Servico', valor: dados.valores.valorServico },
-      { titulo: 'Desconto Condicionado', valor: '-' },
-      { titulo: 'Desconto Incondicionado', valor: '-' },
-      { titulo: 'Valor Liquido da NFS-e', valor: dados.valores.valorTotal },
-    ]);
+    this.desenharQrCode(pdf, qrX, qrY, 66, dados.qrCode);
+    pdf.text(
+      'A autenticidade desta NFS-e pode ser verificada pela leitura deste codigo QR ou pela consulta da chave de acesso no portal nacional da NFS-e',
+      qrX - 3,
+      qrY + 70,
+      { size: 4.8, maxWidth: 92 },
+    );
+    pdf.line(esquerda, y + 96, esquerda + largura, y + 96);
+  }
 
-    this.caixaTexto(pdf, 24, 692, 547, 70, [
-      {
-        titulo: 'Informacoes Complementares',
-        valor: dados.informacoesComplementares,
-      },
-    ]);
+  private secaoPessoaCompacta(
+    pdf: PdfSimples,
+    x: number,
+    y: number,
+    largura: number,
+    titulo: string,
+    pessoa: PessoaDanfse,
+  ): number {
+    this.tituloTabela(pdf, x, y, largura, titulo);
+    const conteudoY = y + 11;
+    const col = largura / 4;
 
+    this.campoCompacto(pdf, x + 4, conteudoY, col, 'CNPJ / CPF / NIF', pessoa.cpfCnpj, true);
+    this.campoCompacto(pdf, x + col + 4, conteudoY, col - 8, 'Inscricao Municipal', pessoa.inscricaoMunicipal, true);
+    this.campoCompacto(pdf, x + col * 2 + 4, conteudoY, col - 8, 'Telefone', pessoa.telefone, true);
+    this.campoCompacto(pdf, x + col * 3 + 4, conteudoY, col - 8, 'Codigo IBGE / CEP', this.extrairCodigoIbgeCep(pessoa), true);
+
+    this.campoCompacto(pdf, x + 4, conteudoY + 19, col * 1.85, 'Nome / Nome Empresarial', pessoa.nome, true);
+    this.campoCompacto(pdf, x + col * 2 + 4, conteudoY + 19, col - 8, 'Municipio / Sigla UF', pessoa.municipio, true);
+    this.campoCompacto(pdf, x + col * 3 + 4, conteudoY + 19, col - 8, 'E-mail', pessoa.email, true);
+
+    this.campoCompacto(pdf, x + 4, conteudoY + 39, col * 2 - 8, 'Endereco', pessoa.endereco, true);
+    this.campoCompacto(pdf, x + col * 2 + 4, conteudoY + 39, col - 8, 'CEP', pessoa.cep, true);
+
+    pdf.line(x, y + 65, x + largura, y + 65);
+    return y + 65;
+  }
+
+  private secaoServicoCompacta(
+    pdf: PdfSimples,
+    x: number,
+    y: number,
+    largura: number,
+    dados: DadosDanfse,
+  ): number {
+    this.tituloTabela(pdf, x, y, largura, 'SERVICO PRESTADO');
+    const col = largura / 4;
+    const conteudoY = y + 11;
+
+    this.campoCompacto(pdf, x + 4, conteudoY, col - 6, 'Codigo de Tributacao Nacional', dados.servico.codigoTributacaoNacional, true);
+    this.campoCompacto(pdf, x + col + 4, conteudoY, col - 6, 'Codigo de Tributacao Municipal', dados.servico.codigoTributacaoMunicipal, true);
+    this.campoCompacto(pdf, x + col * 2 + 4, conteudoY, col - 6, 'Codigo da NBS', '-', true);
+    this.campoCompacto(pdf, x + col * 3 + 4, conteudoY, col - 6, 'Local da Prestacao / Sigla UF / Pais', dados.servico.localPrestacao, true);
+
+    this.campoCompacto(pdf, x + 4, conteudoY + 22, largura - 8, 'Descricao do Servico', dados.servico.descricao, false, 5);
+    pdf.line(x, y + 62, x + largura, y + 62);
+    return y + 62;
+  }
+
+  private secaoTributacaoMunicipal(
+    pdf: PdfSimples,
+    x: number,
+    y: number,
+    largura: number,
+    dados: DadosDanfse,
+  ): number {
+    this.tituloTabela(pdf, x, y, largura, 'TRIBUTACAO MUNICIPAL (ISSQN)');
+    const col = largura / 4;
+    const conteudoY = y + 11;
+
+    this.campoCompacto(pdf, x + 4, conteudoY, col - 6, 'Tipo de Tributacao do ISSQN', dados.valores.tributacaoIssqn, true);
+    this.campoCompacto(pdf, x + col + 4, conteudoY, col - 6, 'Municipio / Sigla UF / Pais de Incidencia do ISSQN', dados.servico.localPrestacao, true);
+    this.campoCompacto(pdf, x + col * 2 + 4, conteudoY, col - 6, 'BC ISSQN', dados.valores.valorServico, true);
+    this.campoCompacto(pdf, x + col * 3 + 4, conteudoY, col - 6, 'ISSQN Apurado', dados.valores.valorIss, true);
+
+    this.campoCompacto(pdf, x + 4, conteudoY + 20, col - 6, 'Aliquota Aplicada', dados.valores.aliquotaIss, true);
+    this.campoCompacto(pdf, x + col + 4, conteudoY + 20, col - 6, 'Tipo de Retencao do ISSQN', dados.valores.tipoRetencaoIssqn, true);
+    pdf.line(x, y + 43, x + largura, y + 43);
+    return y + 43;
+  }
+
+  private secaoTributacaoFederal(
+    pdf: PdfSimples,
+    x: number,
+    y: number,
+    largura: number,
+  ): number {
+    this.tituloTabela(pdf, x, y, largura, 'TRIBUTACAO FEDERAL (EXCETO CBS)');
+    const col = largura / 4;
+    const conteudoY = y + 11;
+
+    this.campoCompacto(pdf, x + 4, conteudoY, col - 6, 'IRRF', '-', true);
+    this.campoCompacto(pdf, x + col + 4, conteudoY, col - 6, 'Contribuicao Previdenciaria - Retida', '-', true);
+    this.campoCompacto(pdf, x + col * 2 + 4, conteudoY, col - 6, 'Contribuicoes Sociais - Retidas', '-', true);
+    this.campoCompacto(pdf, x + 4, conteudoY + 19, col - 6, 'PIS - Debito Apuracao Propria', '-', true);
+    this.campoCompacto(pdf, x + col + 4, conteudoY + 19, col - 6, 'COFINS - Debito Apuracao Propria', '-', true);
+    this.campoCompacto(pdf, x + col * 2 + 4, conteudoY + 19, col - 6, 'Descricao Contrib. Sociais - Retidas', '-', true);
+    pdf.line(x, y + 42, x + largura, y + 42);
+    return y + 42;
+  }
+
+  private secaoTributacaoIbsCbs(
+    pdf: PdfSimples,
+    x: number,
+    y: number,
+    largura: number,
+  ): number {
+    this.tituloTabela(pdf, x, y, largura, 'TRIBUTACAO IBS/CBS');
+    const col = largura / 4;
+    const conteudoY = y + 11;
+
+    const campos = [
+      'CST / cClassTrib',
+      'Indicador de Operacao / Codigo IBGE Incidencia / Municipio Incidencia / Sigla UF',
+      'Exclusoes e Reducoes da Base de Calculo',
+      'Base de Calculo Apos Exclusoes e Reducoes',
+      'Red. Aliquota IBS / Red. Aliquota CBS',
+      'Aliquota - IBS UF / IBS Mun',
+      'Aliq. Efetiva Municipal - IBS',
+      'Valor Apurado Municipal - IBS',
+      'Aliq. Efetiva Estadual - IBS',
+      'Valor Apurado Estadual - IBS',
+      'Valor Total Apurado - IBS',
+      'Aliquota - CBS',
+      'Aliquota Efetiva - CBS',
+      'Valor Total Apurado - CBS',
+    ];
+
+    campos.forEach((campo, indice) => {
+      const linha = Math.floor(indice / 4);
+      const coluna = indice % 4;
+      this.campoCompacto(pdf, x + coluna * col + 4, conteudoY + linha * 18, col - 6, campo, '-', true);
+    });
+
+    pdf.line(x, y + 79, x + largura, y + 79);
+    return y + 79;
+  }
+
+  private secaoValorTotal(
+    pdf: PdfSimples,
+    x: number,
+    y: number,
+    largura: number,
+    dados: DadosDanfse,
+  ): number {
+    this.tituloTabela(pdf, x, y, largura, 'VALOR TOTAL DA NFS-e');
+    const col = largura / 4;
+    const conteudoY = y + 11;
+
+    this.campoCompacto(pdf, x + 4, conteudoY, col - 6, 'VALOR DA OPERACAO / SERVICO', dados.valores.valorServico, true);
+    this.campoCompacto(pdf, x + col + 4, conteudoY, col - 6, 'Desconto Incondicionado', '-', true);
+    this.campoCompacto(pdf, x + col * 2 + 4, conteudoY, col - 6, 'Desconto Condicionado', '-', true);
+    this.campoCompacto(pdf, x + col * 3 + 4, conteudoY, col - 6, 'VALOR LIQUIDO DA NFS-e + IBS/CBS', dados.valores.valorTotal, true);
+
+    this.campoCompacto(pdf, x + 4, conteudoY + 20, col - 6, 'Total das Retencoes (ISSQN / Federais)', '-', true);
+    this.campoCompacto(pdf, x + col + 4, conteudoY + 20, col - 6, 'VALOR LIQUIDO DA NFS-e', dados.valores.valorTotal, true);
+    this.campoCompacto(pdf, x + col * 2 + 4, conteudoY + 20, col - 6, 'Total do IBS/CBS', '0,00', true);
+    this.campoCompacto(pdf, x + col * 3 + 4, conteudoY + 20, col - 6, 'VALOR LIQUIDO DA NFS-e + IBS/CBS', dados.valores.valorTotal, true);
+    pdf.line(x, y + 47, x + largura, y + 47);
+    return y + 47;
+  }
+
+  private secaoInformacoesComplementares(
+    pdf: PdfSimples,
+    x: number,
+    y: number,
+    largura: number,
+    dados: DadosDanfse,
+  ): number {
+    this.tituloTabela(pdf, x, y, largura, 'INFORMACOES COMPLEMENTARES');
+    const texto = dados.informacoesComplementares === '-' ?
+      'Totais aproximados dos Tributos cf. Lei n 12.741/2012: Federais: -; Estaduais: -; Municipais: -;' :
+      dados.informacoesComplementares;
+
+    pdf.text(texto, x + 4, y + 17, { size: 5.5, maxWidth: largura - 8 });
+    pdf.line(x, 795, x + largura, 795);
+    return 795;
+  }
+
+  private desenharRodape(
+    pdf: PdfSimples,
+    dados: DadosDanfse,
+    esquerda: number,
+    direita: number,
+  ): void {
+    const y = 804;
+    const altura = 24;
+    const largura = direita - esquerda;
+    const larguraData = 126;
+    const larguraAssinatura = 126;
+    const xAssinatura = esquerda + larguraData;
+    const xChave = xAssinatura + larguraAssinatura;
+
+    pdf.rect(esquerda, y, largura, altura);
+    pdf.line(xAssinatura, y, xAssinatura, y + altura);
+    pdf.line(xChave, y, xChave, y + altura);
+
+    pdf.text('DATA CERTIFICACAO', esquerda + 4, y + 3, { size: 5, bold: true });
+    pdf.text(dados.dataEmissaoNfse, esquerda + 4, y + 13, {
+      size: 5.5,
+      maxWidth: larguraData - 8,
+    });
+
+    pdf.text('IDENTIFICACAO E ASSINATURA', xAssinatura + 4, y + 3, {
+      size: 5,
+      bold: true,
+    });
+    pdf.text('-', xAssinatura + 4, y + 13, {
+      size: 5.5,
+      maxWidth: larguraAssinatura - 8,
+    });
+
+    pdf.text('NFS-e / CHAVE NFS-e', xChave + 4, y + 3, { size: 5, bold: true });
+    pdf.text(`${dados.numeroNfse} / ${dados.chaveAcesso}`, xChave + 4, y + 13, {
+      size: 5.2,
+      maxWidth: direita - xChave - 8,
+    });
+  }
+  private desenharMarcaStatus(pdf: PdfSimples, dados: DadosDanfse): void {
     if (dados.status === StatusNota.CANCELADA) {
-      pdf.text('CANCELADA', 170, 405, { size: 48, bold: true });
+      pdf.text('CANCELADA', 145, 410, { size: 50, bold: true, colorHex: '666666' });
     }
 
     if (dados.status === StatusNota.SUBSTITUIDA) {
-      pdf.text('SUBSTITUIDA', 130, 405, { size: 44, bold: true });
+      pdf.text('SUBSTITUIDA', 112, 410, { size: 46, bold: true, colorHex: '666666' });
     }
-
-    pdf.text(
-      'A autenticidade desta NFS-e pode ser consultada no Portal Nacional da NFS-e pela chave de acesso.',
-      24,
-      790,
-      { size: 7 },
-    );
   }
 
-  private secaoPessoa(
-    pdf: PdfSimples,
-    x: number,
-    y: number,
-    titulo: string,
-    pessoa: PessoaDanfse,
-  ): void {
-    this.tituloSecao(pdf, x, y, titulo);
-    this.secaoCamposEmLinha(pdf, x, y + 16, [
-      { titulo: 'CNPJ / CPF / NIF', valor: pessoa.cpfCnpj },
-      { titulo: 'Inscricao Municipal', valor: pessoa.inscricaoMunicipal },
-      { titulo: 'Telefone', valor: pessoa.telefone },
-    ]);
-    this.secaoCamposEmLinha(pdf, x, y + 50, [
-      { titulo: 'Nome / Nome Empresarial', valor: pessoa.nome },
-      { titulo: 'E-mail', valor: pessoa.email },
-    ]);
-    this.secaoCamposEmLinha(pdf, x, y + 84, [
-      { titulo: 'Endereco', valor: pessoa.endereco },
-      { titulo: 'Municipio', valor: pessoa.municipio },
-      { titulo: 'CEP', valor: pessoa.cep },
-    ]);
-  }
-
-  private secaoCampos(
+  private tituloTabela(
     pdf: PdfSimples,
     x: number,
     y: number,
     largura: number,
-    campos: CampoDanfse[],
+    texto: string,
   ): void {
-    let atualY = y;
-
-    for (const campo of campos) {
-      pdf.text(campo.titulo, x, atualY, { size: 7, bold: true });
-      pdf.text(campo.valor || '-', x, atualY + 10, {
-        size: 8,
-        maxWidth: largura,
-      });
-      atualY += 34;
-    }
+    pdf.fillRect(x, y, largura, 10, 'EEEEEE');
+    pdf.rect(x, y, largura, 10);
+    pdf.text(texto, x + 4, y + 2.3, { size: 6.2, bold: true, maxWidth: largura - 8 });
   }
 
-  private secaoCamposEmLinha(
+  private campoCompacto(
     pdf: PdfSimples,
     x: number,
     y: number,
-    campos: CampoDanfse[],
+    largura: number,
+    titulo: string,
+    valor: string,
+    boldValor = false,
+    maxLinhas = 2,
   ): void {
-    const largura = 547 / campos.length;
-
-    campos.forEach((campo, indice) => {
-      const campoX = x + largura * indice;
-      pdf.text(campo.titulo, campoX, y, { size: 7, bold: true });
-      pdf.text(campo.valor || '-', campoX, y + 12, {
-        size: 8,
-        maxWidth: largura - 8,
-      });
+    pdf.text(titulo, x, y, { size: 5.2, bold: true, maxWidth: largura });
+    pdf.text(valor || '-', x, y + 7.2, {
+      size: 5.8,
+      bold: boldValor,
+      maxWidth: largura,
+      maxLines: maxLinhas,
     });
   }
 
-  private caixaTexto(
+  private desenharQrCode(
     pdf: PdfSimples,
     x: number,
     y: number,
-    largura: number,
-    altura: number,
-    campos: CampoDanfse[],
+    tamanho: number,
+    conteudo: string,
   ): void {
-    pdf.fillRect(x, y, largura, altura, 'F3F5FA');
-    pdf.rect(x, y, largura, altura);
-    let atualY = y + 12;
+    pdf.rect(x, y, tamanho, tamanho);
 
-    for (const campo of campos) {
-      pdf.text(campo.titulo, x + 10, atualY, { size: 8, bold: true });
-      atualY += 16;
-      pdf.text(campo.valor || '-', x + 10, atualY, {
-        size: 9,
-        maxWidth: largura - 20,
-      });
-      atualY += 22;
+    try {
+      const qr = criarQrCode(conteudo || '-', {
+        errorCorrectionLevel: 'M',
+      }) as unknown as { modules: { size: number; data: boolean[] } };
+      const modulos = qr.modules.size;
+      const celula = (tamanho - 8) / modulos;
+      const inicioX = x + 4;
+      const inicioY = y + 4;
+
+      for (let linha = 0; linha < modulos; linha += 1) {
+        for (let coluna = 0; coluna < modulos; coluna += 1) {
+          if (!qr.modules.data[linha * modulos + coluna]) {
+            continue;
+          }
+
+          pdf.fillRect(
+            inicioX + coluna * celula,
+            inicioY + linha * celula,
+            Math.max(celula, 0.9),
+            Math.max(celula, 0.9),
+            '000000',
+          );
+        }
+      }
+    } catch {
+      pdf.text('QR Code', x + 17, y + 26, { size: 7, bold: true });
+      pdf.text(conteudo.slice(-8), x + 16, y + 38, { size: 5.5 });
     }
   }
 
-  private tituloSecao(pdf: PdfSimples, x: number, y: number, texto: string): void {
-    pdf.line(x, y, 571, y);
-    pdf.text(texto, x, y + 4, { size: 8, bold: true });
+  private extrairCodigoIbgeCep(pessoa: PessoaDanfse): string {
+    return `${pessoa.codigoMunicipio || '-'} / ${pessoa.cep}`;
   }
 
-  private desenharQrPlaceholder(
-    pdf: PdfSimples,
-    x: number,
-    y: number,
-    chaveAcesso: string,
-  ): void {
-    pdf.rect(x, y, 70, 70);
-    pdf.text('QR Code', x + 18, y + 24, { size: 8, bold: true });
-    pdf.text(chaveAcesso.slice(-8), x + 14, y + 38, { size: 7 });
+  private formatarAmbiente(ambiente: AmbienteFiscal): string {
+    return ambiente === AmbienteFiscal.PRODUCAO ? '1' : '2';
   }
-
   private extrairPessoa(elementos: XmlElement[], nomesSecao: string[]): PessoaDanfse {
     const secao = this.buscarPrimeiroElemento(elementos, nomesSecao);
     const filhos = secao ? Array.from(secao.getElementsByTagName('*')) : [];
@@ -373,6 +614,8 @@ export class GeradorPdfDanfseNacional {
       nome: this.buscarTexto(filhos, ['xNome', 'nome', 'razaoSocial']) ?? '-',
       email: this.buscarTexto(filhos, ['email', 'xEmail']) ?? '-',
       telefone: this.buscarTexto(filhos, ['fone', 'telefone']) ?? '-',
+      codigoMunicipio:
+        this.buscarTexto(filhosEndereco, ['cMun', 'cMunNac', 'codigoMunicipio']) ?? '-',
       endereco: this.formatarEndereco(filhosEndereco),
       municipio: this.formatarMunicipioUf(
         this.buscarTexto(filhosEndereco, ['cMun', 'cMunNac', 'codigoMunicipio']),
@@ -585,6 +828,8 @@ interface TextoOptions {
   bold?: boolean;
   align?: 'left' | 'right';
   maxWidth?: number;
+  maxLines?: number;
+  colorHex?: string;
 }
 
 class PdfSimples {
@@ -600,7 +845,7 @@ class PdfSimples {
 
   text(texto: string, x: number, y: number, options: TextoOptions = {}): void {
     const tamanho = options.size ?? 9;
-    const linhas = this.quebrarTexto(texto, options.maxWidth, tamanho);
+    const linhas = this.quebrarTexto(texto, options.maxWidth, tamanho, options.maxLines);
     let atualY = y;
 
     for (const linha of linhas) {
@@ -609,10 +854,13 @@ class PdfSimples {
           ? x + options.maxWidth - this.estimarLarguraTexto(linha, tamanho)
           : x;
 
+      const cor = options.colorHex ? `${this.corTexto(options.colorHex)} ` : '';
+      const resetCor = options.colorHex ? ' 0 0 0 rg' : '';
+
       this.conteudo.push(
-        `BT /${options.bold ? 'F2' : 'F1'} ${tamanho} Tf ${textoX.toFixed(2)} ${this.converterY(
+        `${cor}BT /${options.bold ? 'F2' : 'F1'} ${tamanho} Tf ${textoX.toFixed(2)} ${this.converterY(
           atualY,
-        ).toFixed(2)} Td (${this.escapar(linha)}) Tj ET`,
+        ).toFixed(2)} Td (${this.escapar(linha)}) Tj ET${resetCor}`,
       );
       atualY += tamanho + 3;
     }
@@ -716,6 +964,7 @@ class PdfSimples {
     texto: string,
     larguraMaxima: number | undefined,
     tamanho: number,
+    maxLines = 4,
   ): string[] {
     const textoNormalizado = texto.replace(/\s+/g, ' ').trim() || '-';
 
@@ -746,7 +995,7 @@ class PdfSimples {
       linhas.push(linhaAtual);
     }
 
-    return linhas.slice(0, 4);
+    return linhas.slice(0, maxLines);
   }
 
   private estimarLarguraTexto(texto: string, tamanho: number): number {
@@ -764,6 +1013,12 @@ class PdfSimples {
     return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   }
 
+  private corTexto(hex: string): string {
+    const [r, g, b] = this.hexParaRgb(hex);
+
+    return `${r} ${g} ${b} rg`;
+  }
+
   private hexParaRgb(hex: string): [string, string, string] {
     const normalizado = hex.replace('#', '');
     const r = parseInt(normalizado.slice(0, 2), 16) / 255;
@@ -773,3 +1028,4 @@ class PdfSimples {
     return [r.toFixed(3), g.toFixed(3), b.toFixed(3)];
   }
 }
+
