@@ -6,11 +6,10 @@ import {
 import { TipoEventoFiscalNotaServico } from '../entities/NotaServicoEventoFiscal';
 import {
   ClienteNfseNacional,
-  ErroEnvioDpsNfse,
   ResultadoEnvioDpsNfse,
 } from '../fiscal/ClienteNfseNacional';
+import { formatarErrosFiscaisNfse } from '../fiscal/FormatadorErroFiscalNfse';
 import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
-import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
 import { XmlDpsInvalidoError } from '../errors/XmlDpsInvalidoError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
@@ -20,6 +19,10 @@ import { GerarXmlDpsAssinadoNotaServicoService } from './GerarXmlDpsAssinadoNota
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { RegistrarEventoFiscalNotaServicoService } from './RegistrarEventoFiscalNotaServicoService';
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
+import {
+  obterConfiguracaoCertificadoClienteNfse,
+  prepararInputClienteNfse,
+} from './PrepararInputClienteNfseService';
 
 export class EnviarDpsAssinadaNotaServicoService {
   constructor(
@@ -57,7 +60,8 @@ export class EnviarDpsAssinadaNotaServicoService {
       autenticacao.empresaId,
     );
     this.validarPermissaoProducaoReal?.executar(nota.ambienteFiscal);
-    await this.obterConfiguracaoCertificado(
+    await obterConfiguracaoCertificadoClienteNfse(
+      this.resolverConfiguracaoFiscal,
       autenticacao.empresaId,
       nota.ambienteFiscal,
     );
@@ -124,7 +128,10 @@ export class EnviarDpsAssinadaNotaServicoService {
     }
 
     if (!resultado.sucesso) {
-      const mensagemErro = this.criarMensagemErroFiscal(resultado.erros);
+      const mensagemErro = formatarErrosFiscaisNfse(
+        resultado.erros,
+        'DPS rejeitada pela SEFIN Nacional.',
+      );
       notaEmProcessamento.registrarErroFiscal(mensagemErro);
 
       const notaComErro = await this.notaRepository.salvar(notaEmProcessamento);
@@ -217,20 +224,6 @@ export class EnviarDpsAssinadaNotaServicoService {
     return error.message + ' ' + error.erros.join('; ');
   }
 
-  private criarMensagemErroFiscal(erros?: ErroEnvioDpsNfse[]): string {
-    if (!erros?.length) {
-      return 'DPS rejeitada pela SEFIN Nacional.';
-    }
-
-    return erros.map((erro) => this.formatarErro(erro)).join('; ');
-  }
-
-  private formatarErro(erro: ErroEnvioDpsNfse): string {
-    const prefixos = [erro.codigo, erro.campo].filter(Boolean).join(' ');
-
-    return prefixos ? `${prefixos}: ${erro.mensagem}` : erro.mensagem;
-  }
-
   private async registrarSucessoFiscal(
     autenticacao: TokenPayload,
     nota: NotaServico,
@@ -280,42 +273,12 @@ export class EnviarDpsAssinadaNotaServicoService {
     ambienteFiscal: AmbienteFiscal,
     xmlAssinado: string,
   ) {
-    const configuracaoCertificado = await this.obterConfiguracaoCertificado(
+    return prepararInputClienteNfse(
+      this.resolverConfiguracaoFiscal,
       empresaId,
       ambienteFiscal,
-    );
-
-    if (!configuracaoCertificado) {
-      return {
-        ambienteFiscal,
-        xmlAssinado,
-      };
-    }
-
-    return {
-      ambienteFiscal,
-      xmlAssinado,
-      certificadoPath: configuracaoCertificado.caminho,
-      certificadoConteudoBase64: configuracaoCertificado.conteudoBase64,
-      certificadoSenha: configuracaoCertificado.senha,
-    };
-  }
-
-  private async obterConfiguracaoCertificado(
-    empresaId: string,
-    ambienteFiscal: AmbienteFiscal,
-  ) {
-    if (!this.resolverConfiguracaoFiscal) {
-      if (ambienteFiscal === AmbienteFiscal.PRODUCAO) {
-        throw new CertificadoA1EmpresaProducaoAusenteError();
-      }
-
-      return undefined;
-    }
-
-    return this.resolverConfiguracaoFiscal.obterCertificadoA1ParaAmbiente(
-      empresaId,
-      ambienteFiscal,
+      { xmlAssinado },
     );
   }
+
 }

@@ -1,17 +1,18 @@
 import { AmbienteFiscal, StatusNota } from '../entities/NotaServico';
 import { TipoEventoFiscalNotaServico } from '../entities/NotaServicoEventoFiscal';
-import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import {
   ClienteNfseNacional,
   ErroEnvioDpsNfse,
 } from '../fiscal/ClienteNfseNacional';
+import { formatarErrosFiscaisNfse } from '../fiscal/FormatadorErroFiscalNfse';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
 import { RegistrarEventoFiscalNotaServicoService } from './RegistrarEventoFiscalNotaServicoService';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
+import { prepararInputClienteNfse } from './PrepararInputClienteNfseService';
 
 export interface ConsultaNfseEmitidaResultado {
   notaId?: string;
@@ -70,7 +71,10 @@ export class ConsultarNfseEmitidaNotaServicoService {
     );
     const mensagem = resultado.sucesso
       ? 'NFS-e consultada na SEFIN Nacional.'
-      : this.criarMensagemErroFiscal(resultado.erros);
+      : formatarErrosFiscaisNfse(
+          resultado.erros,
+          'Consulta da NFS-e nao retornou sucesso.',
+        );
 
     if (resultado.sucesso) {
       await this.registrarSucessoFiscal(
@@ -101,20 +105,6 @@ export class ConsultarNfseEmitidaNotaServicoService {
       xmlAutorizado: resultado.xmlAutorizado,
       erros: resultado.erros,
     };
-  }
-
-  private criarMensagemErroFiscal(erros?: ErroEnvioDpsNfse[]): string {
-    if (!erros?.length) {
-      return 'Consulta da NFS-e nao retornou sucesso.';
-    }
-
-    return erros.map((erro) => this.formatarErro(erro)).join('; ');
-  }
-
-  private formatarErro(erro: ErroEnvioDpsNfse): string {
-    const prefixos = [erro.codigo, erro.campo].filter(Boolean).join(' ');
-
-    return prefixos ? `${prefixos}: ${erro.mensagem}` : erro.mensagem;
   }
 
   private async registrarSucessoFiscal(
@@ -166,42 +156,12 @@ export class ConsultarNfseEmitidaNotaServicoService {
     ambienteFiscal: AmbienteFiscal,
     chaveAcesso: string,
   ) {
-    const configuracaoCertificado = await this.obterConfiguracaoCertificado(
+    return prepararInputClienteNfse(
+      this.resolverConfiguracaoFiscal,
       empresaId,
       ambienteFiscal,
-    );
-
-    if (!configuracaoCertificado) {
-      return {
-        ambienteFiscal,
-        chaveAcesso,
-      };
-    }
-
-    return {
-      ambienteFiscal,
-      chaveAcesso,
-      certificadoPath: configuracaoCertificado.caminho,
-      certificadoConteudoBase64: configuracaoCertificado.conteudoBase64,
-      certificadoSenha: configuracaoCertificado.senha,
-    };
-  }
-
-  private async obterConfiguracaoCertificado(
-    empresaId: string,
-    ambienteFiscal: AmbienteFiscal,
-  ) {
-    if (!this.resolverConfiguracaoFiscal) {
-      if (ambienteFiscal === AmbienteFiscal.PRODUCAO) {
-        throw new CertificadoA1EmpresaProducaoAusenteError();
-      }
-
-      return undefined;
-    }
-
-    return this.resolverConfiguracaoFiscal.obterCertificadoA1ParaAmbiente(
-      empresaId,
-      ambienteFiscal,
+      { chaveAcesso },
     );
   }
+
 }

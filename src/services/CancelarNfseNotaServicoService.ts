@@ -6,7 +6,6 @@ import {
 import { TipoEventoFiscalNotaServico } from '../entities/NotaServicoEventoFiscal';
 import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
 import { CertificadoA1CnpjDivergenteError } from '../errors/CertificadoA1CnpjDivergenteError';
-import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { AssinadorXmlDps } from '../fiscal/AssinadorXmlDps';
@@ -15,6 +14,7 @@ import {
   ClienteNfseNacional,
   ErroEnvioDpsNfse,
 } from '../fiscal/ClienteNfseNacional';
+import { formatarErrosFiscaisNfse } from '../fiscal/FormatadorErroFiscalNfse';
 import {
   CodigoMotivoCancelamentoNfse,
   GeradorXmlPedidoCancelamentoNfseNacional,
@@ -27,6 +27,10 @@ import { TokenPayload } from '../security/GerenciadorToken';
 import { RegistrarEventoFiscalNotaServicoService } from './RegistrarEventoFiscalNotaServicoService';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
+import {
+  obterConfiguracaoCertificadoClienteNfse,
+  prepararInputClienteNfse,
+} from './PrepararInputClienteNfseService';
 
 export interface CancelarNfseNotaServicoInput {
   codigoMotivo: CodigoMotivoCancelamentoNfse;
@@ -85,7 +89,8 @@ export class CancelarNfseNotaServicoService {
     }
 
     this.validarPermissaoProducaoReal?.executar(nota.ambienteFiscal);
-    await this.obterConfiguracaoCertificado(
+    await obterConfiguracaoCertificadoClienteNfse(
+      this.resolverConfiguracaoFiscal,
       autenticacao.empresaId,
       nota.ambienteFiscal,
     );
@@ -136,7 +141,10 @@ export class CancelarNfseNotaServicoService {
       await this.registrarErroFiscal(
         autenticacao,
         nota,
-        this.criarMensagemErroFiscal(resultado.erros),
+        formatarErrosFiscaisNfse(
+          resultado.erros,
+          'Cancelamento da NFS-e recusado pela SEFIN Nacional.',
+        ),
         resultado.statusHttp,
       );
 
@@ -167,20 +175,6 @@ export class CancelarNfseNotaServicoService {
       dataHoraProcessamento: resultado.dataHoraProcessamento,
       xmlEvento: resultado.xmlEvento,
     };
-  }
-
-  private criarMensagemErroFiscal(erros?: ErroEnvioDpsNfse[]): string {
-    if (!erros?.length) {
-      return 'Cancelamento da NFS-e recusado pela SEFIN Nacional.';
-    }
-
-    return erros.map((erro) => this.formatarErro(erro)).join('; ');
-  }
-
-  private formatarErro(erro: ErroEnvioDpsNfse): string {
-    const prefixos = [erro.codigo, erro.campo].filter(Boolean).join(' ');
-
-    return prefixos ? `${prefixos}: ${erro.mensagem}` : erro.mensagem;
   }
 
   private async registrarSucessoFiscal(
@@ -229,10 +223,12 @@ export class CancelarNfseNotaServicoService {
     empresaId: string,
     ambienteFiscal: AmbienteFiscal,
   ): Promise<CertificadoA1> {
-    const configuracaoCertificado = await this.obterConfiguracaoCertificado(
-      empresaId,
-      ambienteFiscal,
-    );
+    const configuracaoCertificado =
+      await obterConfiguracaoCertificadoClienteNfse(
+        this.resolverConfiguracaoFiscal,
+        empresaId,
+        ambienteFiscal,
+      );
 
     if (!configuracaoCertificado) {
       return this.provedorCertificado.obter();
@@ -251,44 +247,12 @@ export class CancelarNfseNotaServicoService {
     chaveAcesso: string,
     xmlPedidoEventoAssinado: string,
   ) {
-    const configuracaoCertificado = await this.obterConfiguracaoCertificado(
+    return prepararInputClienteNfse(
+      this.resolverConfiguracaoFiscal,
       empresaId,
       ambienteFiscal,
-    );
-
-    if (!configuracaoCertificado) {
-      return {
-        ambienteFiscal,
-        chaveAcesso,
-        xmlPedidoEventoAssinado,
-      };
-    }
-
-    return {
-      ambienteFiscal,
-      chaveAcesso,
-      xmlPedidoEventoAssinado,
-      certificadoPath: configuracaoCertificado.caminho,
-      certificadoConteudoBase64: configuracaoCertificado.conteudoBase64,
-      certificadoSenha: configuracaoCertificado.senha,
-    };
-  }
-
-  private async obterConfiguracaoCertificado(
-    empresaId: string,
-    ambienteFiscal: AmbienteFiscal,
-  ) {
-    if (!this.resolverConfiguracaoFiscal) {
-      if (ambienteFiscal === AmbienteFiscal.PRODUCAO) {
-        throw new CertificadoA1EmpresaProducaoAusenteError();
-      }
-
-      return undefined;
-    }
-
-    return this.resolverConfiguracaoFiscal.obterCertificadoA1ParaAmbiente(
-      empresaId,
-      ambienteFiscal,
+      { chaveAcesso, xmlPedidoEventoAssinado },
     );
   }
+
 }

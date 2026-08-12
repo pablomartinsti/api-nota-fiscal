@@ -1,7 +1,6 @@
 import { AmbienteFiscal } from '../entities/NotaServico';
 import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
 import { CertificadoA1CnpjDivergenteError } from '../errors/CertificadoA1CnpjDivergenteError';
-import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { AssinadorXmlDps } from '../fiscal/AssinadorXmlDps';
 import { CertificadoA1, ProvedorCertificadoA1 } from '../fiscal/CertificadoA1';
@@ -12,6 +11,7 @@ import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
 import { GerarXmlDpsNotaServicoService } from './GerarXmlDpsNotaServicoService';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
+import { obterConfiguracaoCertificadoNotaServico } from './PrepararInputClienteNfseService';
 
 export class GerarXmlDpsAssinadoNotaServicoService {
   constructor(
@@ -30,7 +30,8 @@ export class GerarXmlDpsAssinadoNotaServicoService {
       notaId,
     );
     if (ambienteFiscal) {
-      await this.obterConfiguracaoCertificado(
+      await obterConfiguracaoCertificadoNotaServico(
+        this.resolverConfiguracaoFiscal,
         autenticacao.empresaId,
         ambienteFiscal,
       );
@@ -87,10 +88,12 @@ export class GerarXmlDpsAssinadoNotaServicoService {
     empresaId: string,
     ambienteFiscal?: AmbienteFiscal,
   ): Promise<CertificadoA1> {
-    const configuracaoCertificado = await this.obterConfiguracaoCertificado(
-      empresaId,
-      ambienteFiscal,
-    );
+    const configuracaoCertificado =
+      await obterConfiguracaoCertificadoNotaServico(
+        this.resolverConfiguracaoFiscal,
+        empresaId,
+        ambienteFiscal,
+      );
 
     if (!configuracaoCertificado) {
       return this.provedorCertificado.obter();
@@ -103,25 +106,4 @@ export class GerarXmlDpsAssinadoNotaServicoService {
     })).obter();
   }
 
-  private async obterConfiguracaoCertificado(
-    empresaId: string,
-    ambienteFiscal?: AmbienteFiscal,
-  ) {
-    if (!ambienteFiscal) {
-      return this.resolverConfiguracaoFiscal?.obterCertificadoA1(empresaId);
-    }
-
-    if (!this.resolverConfiguracaoFiscal) {
-      if (ambienteFiscal === AmbienteFiscal.PRODUCAO) {
-        throw new CertificadoA1EmpresaProducaoAusenteError();
-      }
-
-      return undefined;
-    }
-
-    return this.resolverConfiguracaoFiscal.obterCertificadoA1ParaAmbiente(
-      empresaId,
-      ambienteFiscal,
-    );
-  }
 }
