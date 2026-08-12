@@ -25,6 +25,10 @@ import { EmpresaRepository } from '../repositories/EmpresaRepository';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
 import { RegistrarEventoFiscalNotaServicoService } from './RegistrarEventoFiscalNotaServicoService';
+import {
+  registrarErroFiscalNotaServico,
+  registrarSucessoFiscalNotaServico,
+} from './RegistrarEventoFiscalNotaServicoHelper';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
 import {
@@ -183,14 +187,10 @@ export class CancelarNfseNotaServicoService {
     mensagem: string,
     statusHttp?: number,
   ): Promise<void> {
-    if (!this.registrarEventoFiscal || !nota.id) {
-      return;
-    }
-
-    await this.registrarEventoFiscal.sucesso({
-      empresaId: autenticacao.empresaId,
+    await registrarSucessoFiscalNotaServico({
+      registrarEventoFiscal: this.registrarEventoFiscal,
+      autenticacao,
       notaServicoId: nota.id,
-      usuarioId: autenticacao.usuarioId,
       tipo: TipoEventoFiscalNotaServico.CANCELAMENTO_NFSE,
       statusHttp,
       chaveAcesso: nota.chaveAcesso,
@@ -204,14 +204,10 @@ export class CancelarNfseNotaServicoService {
     mensagem: string,
     statusHttp?: number,
   ): Promise<void> {
-    if (!this.registrarEventoFiscal || !nota.id) {
-      return;
-    }
-
-    await this.registrarEventoFiscal.erro({
-      empresaId: autenticacao.empresaId,
+    await registrarErroFiscalNotaServico({
+      registrarEventoFiscal: this.registrarEventoFiscal,
+      autenticacao,
       notaServicoId: nota.id,
-      usuarioId: autenticacao.usuarioId,
       tipo: TipoEventoFiscalNotaServico.CANCELAMENTO_NFSE,
       statusHttp,
       chaveAcesso: nota.chaveAcesso,

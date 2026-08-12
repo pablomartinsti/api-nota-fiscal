@@ -11,6 +11,10 @@ import { formatarErrosFiscaisNfse } from '../fiscal/FormatadorErroFiscalNfse';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
 import { RegistrarEventoFiscalNotaServicoService } from './RegistrarEventoFiscalNotaServicoService';
+import {
+  registrarErroFiscalNotaServico,
+  registrarSucessoFiscalNotaServico,
+} from './RegistrarEventoFiscalNotaServicoHelper';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';
 import { prepararInputClienteNfse } from './PrepararInputClienteNfseService';
@@ -212,14 +216,10 @@ export class ReconciliarEnvioDpsNotaServicoService {
     statusHttp?: number,
     chaveAcesso?: string,
   ): Promise<void> {
-    if (!this.registrarEventoFiscal || !nota.id) {
-      return;
-    }
-
-    await this.registrarEventoFiscal.sucesso({
-      empresaId: autenticacao.empresaId,
+    await registrarSucessoFiscalNotaServico({
+      registrarEventoFiscal: this.registrarEventoFiscal,
+      autenticacao,
       notaServicoId: nota.id,
-      usuarioId: autenticacao.usuarioId,
       tipo: TipoEventoFiscalNotaServico.RECONCILIACAO_ENVIO,
       statusHttp,
       chaveAcesso,
@@ -234,14 +234,10 @@ export class ReconciliarEnvioDpsNotaServicoService {
     statusHttp?: number,
     chaveAcesso?: string,
   ): Promise<void> {
-    if (!this.registrarEventoFiscal || !nota.id) {
-      return;
-    }
-
-    await this.registrarEventoFiscal.erro({
-      empresaId: autenticacao.empresaId,
+    await registrarErroFiscalNotaServico({
+      registrarEventoFiscal: this.registrarEventoFiscal,
+      autenticacao,
       notaServicoId: nota.id,
-      usuarioId: autenticacao.usuarioId,
       tipo: TipoEventoFiscalNotaServico.RECONCILIACAO_ENVIO,
       statusHttp,
       chaveAcesso,
