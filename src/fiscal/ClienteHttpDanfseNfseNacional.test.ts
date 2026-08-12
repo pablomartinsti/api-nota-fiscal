@@ -45,6 +45,47 @@ describe('ClienteHttpDanfseNfseNacional', () => {
     });
   });
 
+  it('deve tentar novamente quando o Portal Nacional retornar indisponibilidade temporaria', async () => {
+    const transportador = vi
+      .fn()
+      .mockResolvedValueOnce({
+        status: 503,
+        headers: {
+          'content-type': 'text/html',
+        },
+        body: Buffer.from(
+          '<html><body><h1>503 Service Unavailable</h1>No server is available to handle this request.</body></html>',
+        ),
+      })
+      .mockResolvedValueOnce({
+        status: 200,
+        headers: {
+          'content-type': 'application/pdf',
+        },
+        body: pdf,
+      });
+    const cliente = new ClienteHttpDanfseNfseNacional(
+      () => ({
+        baseUrlProducao: 'https://adn.nfse.gov.br/danfse',
+      }),
+      transportador,
+    );
+
+    const resultado = await cliente.baixarDanfsePorChave({
+      ambienteFiscal: AmbienteFiscal.PRODUCAO,
+      chaveAcesso,
+    });
+
+    expect(transportador).toHaveBeenCalledTimes(2);
+    expect(resultado).toEqual({
+      sucesso: true,
+      statusHttp: 200,
+      chaveAcesso,
+      pdf,
+      contentType: 'application/pdf',
+    });
+  });
+
   it('deve retornar erro quando a API DANFSe rejeitar a chave', async () => {
     const transportador = vi.fn().mockResolvedValue({
       status: 404,
@@ -80,6 +121,41 @@ describe('ClienteHttpDanfseNfseNacional', () => {
           codigo: 'E404',
           campo: undefined,
           mensagem: 'DANFSe nao encontrada.',
+        },
+      ],
+    });
+  });
+
+  it('deve simplificar erro HTML de indisponibilidade do DANFSe', async () => {
+    const transportador = vi.fn().mockResolvedValue({
+      status: 503,
+      headers: {
+        'content-type': 'text/html',
+      },
+      body: Buffer.from(
+        '<html><body><h1>503 Service Unavailable</h1>No server is available to handle this request.</body></html>',
+      ),
+    });
+    const cliente = new ClienteHttpDanfseNfseNacional(
+      () => ({
+        baseUrlProducao: 'https://adn.nfse.gov.br/danfse',
+      }),
+      transportador,
+    );
+
+    const resultado = await cliente.baixarDanfsePorChave({
+      ambienteFiscal: AmbienteFiscal.PRODUCAO,
+      chaveAcesso,
+    });
+
+    expect(resultado).toEqual({
+      sucesso: false,
+      statusHttp: 503,
+      chaveAcesso,
+      erros: [
+        {
+          mensagem:
+            'Servico DANFSe indisponivel no Portal Nacional. Tente novamente mais tarde.',
         },
       ],
     });

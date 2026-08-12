@@ -264,6 +264,37 @@ describe('ClienteHttpSefinNacional', () => {
       certificado.limpar();
     }
   });
+  it('deve orientar nova tentativa quando a SEFIN estiver indisponivel', async () => {
+    const certificado = criarCertificadoTeste();
+    const transportador = vi.fn<TransportadorHttpSefinNacional>().mockResolvedValue({
+      status: 503,
+      body: '<html><body><h1>503 Service Unavailable</h1></body></html>',
+    });
+    const cliente = criarClienteTeste(transportador, {
+      certificadoPath: certificado.caminho,
+      certificadoSenha: 'senha-teste',
+    });
+
+    try {
+      const resultado = await cliente.enviarDpsAssinada({
+        ambienteFiscal: AmbienteFiscal.PRODUCAO,
+        xmlAssinado,
+      });
+
+      expect(resultado).toEqual({
+        sucesso: false,
+        statusHttp: 503,
+        erros: [
+          {
+            mensagem:
+              'Portal Nacional da NFS-e indisponivel no momento (HTTP 503). Tente novamente em alguns minutos.',
+          },
+        ],
+      });
+    } finally {
+      certificado.limpar();
+    }
+  });
 
   it('deve normalizar erros da SEFIN com descricao e complemento', async () => {
     const certificado = criarCertificadoTeste();

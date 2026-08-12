@@ -36,6 +36,7 @@ import { ReconciliarEnvioDpsNotaServicoService } from '../services/ReconciliarEn
 import { RegistrarEventoFiscalNotaServicoService } from '../services/RegistrarEventoFiscalNotaServicoService';
 import { ResolverConfiguracaoFiscalEmpresaService } from '../services/ResolverConfiguracaoFiscalEmpresaService';
 import { RetornarNotaServicoParaRascunhoService } from '../services/RetornarNotaServicoParaRascunhoService';
+import { MarcarErroNotaServicoComoResolvidoService } from '../services/MarcarErroNotaServicoComoResolvidoService';
 import { ValidarReferenciasNotaServicoService } from '../services/ValidarReferenciasNotaServicoService';
 import { ValidarProntidaoFiscalNotaServicoService } from '../services/ValidarProntidaoFiscalNotaServicoService';
 import { ValidarPermissaoProducaoRealService } from '../services/ValidarPermissaoProducaoRealService';
@@ -135,6 +136,7 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       validarOperacaoSimulada,
     ),
     new RetornarNotaServicoParaRascunhoService(notaRepository),
+    new MarcarErroNotaServicoComoResolvidoService(notaRepository),
     new CancelarNotaServicoService(notaRepository, validarOperacaoSimulada),
     new ValidarProntidaoFiscalNotaServicoService(
       empresaRepository,

@@ -445,6 +445,20 @@ describe('NotaServico', () => {
     );
   });
 
+  it('deve marcar erro como resolvido mantendo mensagem para historico', () => {
+    const nota = criarNota();
+
+    nota.registrarErroFiscal('CEP do tomador invalido');
+    nota.marcarErroComoResolvido();
+
+    expect(nota.status).toBe(StatusNota.ERRO_RESOLVIDO);
+    expect(nota.mensagemErro).toBe('CEP do tomador invalido');
+    expect(nota.mensagemErroFiscal).toBe('CEP do tomador invalido');
+    expect(() => nota.retornarParaRascunho()).toThrow(
+      'Somente uma nota com erro pode retornar para rascunho.',
+    );
+  });
+
   it('deve reconstruir uma nota emitida com dados fiscais', () => {
     const dataEmissao = new Date('2026-06-09T12:00:00.000Z');
     const dataAutorizacao = new Date('2026-06-09T12:30:00.000Z');

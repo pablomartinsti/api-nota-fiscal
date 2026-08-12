@@ -28,6 +28,7 @@ import { ListarEventosFiscaisNotaServicoService } from '../services/ListarEvento
 import { ListarNotasServicoService } from '../services/ListarNotasServicoService';
 import { ReconciliarEnvioDpsNotaServicoService } from '../services/ReconciliarEnvioDpsNotaServicoService';
 import { RetornarNotaServicoParaRascunhoService } from '../services/RetornarNotaServicoParaRascunhoService';
+import { MarcarErroNotaServicoComoResolvidoService } from '../services/MarcarErroNotaServicoComoResolvidoService';
 import { ValidarProntidaoFiscalNotaServicoService } from '../services/ValidarProntidaoFiscalNotaServicoService';
 
 export class GestaoNotaServicoController {
@@ -39,6 +40,7 @@ export class GestaoNotaServicoController {
     private readonly excluirRascunhoService: ExcluirRascunhoNotaServicoService,
     private readonly emitirService: EmitirNotaServicoService,
     private readonly retornarParaRascunhoService: RetornarNotaServicoParaRascunhoService,
+    private readonly marcarErroComoResolvidoService: MarcarErroNotaServicoComoResolvidoService,
     private readonly cancelarService: CancelarNotaServicoService,
     private readonly validarProntidaoFiscalService: ValidarProntidaoFiscalNotaServicoService,
     private readonly gerarXmlDpsService: GerarXmlDpsNotaServicoService,
@@ -122,6 +124,19 @@ export class GestaoNotaServicoController {
   ): Promise<Response> {
     const { notaId } = notaServicoParamsSchema.parse(request.params);
     const nota = await this.retornarParaRascunhoService.executar(
+      request.autenticacao,
+      notaId,
+    );
+
+    return response.status(200).json(NotaServicoPresenter.paraHttp(nota));
+  }
+
+  async marcarErroComoResolvido(
+    request: Request,
+    response: Response,
+  ): Promise<Response> {
+    const { notaId } = notaServicoParamsSchema.parse(request.params);
+    const nota = await this.marcarErroComoResolvidoService.executar(
       request.autenticacao,
       notaId,
     );

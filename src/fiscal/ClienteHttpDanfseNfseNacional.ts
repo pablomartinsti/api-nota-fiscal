@@ -43,6 +43,7 @@ export type TransportadorHttpDanfseNfseNacional = (
 ) => Promise<RespostaHttpDanfseNfseNacional>;
 
 const TIMEOUT_PADRAO_MS = 15_000;
+const MAX_TENTATIVAS_DOWNLOAD_DANFSE = 3;
 const BASE_URL_HOMOLOGACAO_PADRAO =
   'https://adn.producaorestrita.nfse.gov.br/danfse';
 const BASE_URL_PRODUCAO_PADRAO = 'https://adn.nfse.gov.br/danfse';
@@ -70,38 +71,7 @@ export class ClienteHttpDanfseNfseNacional
         input,
         timeoutMs,
       );
-      const resposta = await this.transportador(requisicao);
-      const contentType = this.obterContentType(resposta.headers);
-
-      if (resposta.status < 200 || resposta.status >= 300) {
-        return {
-          sucesso: false,
-          statusHttp: resposta.status,
-          chaveAcesso: input.chaveAcesso,
-          erros: this.extrairErros(resposta.body),
-        };
-      }
-
-      if (!this.ehPdf(resposta.body, contentType)) {
-        return {
-          sucesso: false,
-          statusHttp: resposta.status,
-          chaveAcesso: input.chaveAcesso,
-          erros: [
-            {
-              mensagem: 'A API DANFSe nao retornou um arquivo PDF.',
-            },
-          ],
-        };
-      }
-
-      return {
-        sucesso: true,
-        statusHttp: resposta.status,
-        chaveAcesso: input.chaveAcesso,
-        pdf: resposta.body,
-        contentType: contentType ?? 'application/pdf',
-      };
+      return this.baixarComTentativas(requisicao, input);
     } catch (error) {
       if (
         error instanceof ConfiguracaoSefinNacionalAusenteError ||
@@ -122,6 +92,66 @@ export class ClienteHttpDanfseNfseNacional
     }
   }
 
+  private async baixarComTentativas(
+    requisicao: RequisicaoHttpDanfseNfseNacional,
+    input: BaixarDanfsePorChaveInput,
+  ): Promise<ResultadoDownloadDanfseNfse> {
+    let ultimoResultado: ResultadoDownloadDanfseNfse | undefined;
+
+    for (let tentativa = 1; tentativa <= MAX_TENTATIVAS_DOWNLOAD_DANFSE; tentativa += 1) {
+      const resposta = await this.transportador(requisicao);
+      const resultado = this.processarRespostaDanfse(input, resposta);
+
+      if (resultado.sucesso || !this.deveTentarNovamente(resultado.statusHttp)) {
+        return resultado;
+      }
+
+      ultimoResultado = resultado;
+    }
+
+    return ultimoResultado!;
+  }
+
+  private processarRespostaDanfse(
+    input: BaixarDanfsePorChaveInput,
+    resposta: RespostaHttpDanfseNfseNacional,
+  ): ResultadoDownloadDanfseNfse {
+    const contentType = this.obterContentType(resposta.headers);
+
+    if (resposta.status < 200 || resposta.status >= 300) {
+      return {
+        sucesso: false,
+        statusHttp: resposta.status,
+        chaveAcesso: input.chaveAcesso,
+        erros: this.extrairErros(resposta.body),
+      };
+    }
+
+    if (!this.ehPdf(resposta.body, contentType)) {
+      return {
+        sucesso: false,
+        statusHttp: resposta.status,
+        chaveAcesso: input.chaveAcesso,
+        erros: [
+          {
+            mensagem: 'A API DANFSe nao retornou um arquivo PDF.',
+          },
+        ],
+      };
+    }
+
+    return {
+      sucesso: true,
+      statusHttp: resposta.status,
+      chaveAcesso: input.chaveAcesso,
+      pdf: resposta.body,
+      contentType: contentType ?? 'application/pdf',
+    };
+  }
+
+  private deveTentarNovamente(statusHttp: number): boolean {
+    return [502, 503, 504].includes(statusHttp);
+  }
   private async criarRequisicaoDanfse(
     configuracao: ConfiguracaoClienteHttpDanfseNfseNacional,
     input: BaixarDanfsePorChaveInput,
@@ -247,6 +277,12 @@ export class ClienteHttpDanfseNfseNacional
       return [{ mensagem: 'Erro retornado pela API DANFSe.' }];
     }
 
+    const erroHtml = this.normalizarErroHtml(texto);
+
+    if (erroHtml) {
+      return [{ mensagem: erroHtml }];
+    }
+
     try {
       const json = JSON.parse(texto) as unknown;
       const erros = this.extrairArrayErros(json);
@@ -255,6 +291,29 @@ export class ClienteHttpDanfseNfseNacional
     } catch {
       return [{ mensagem: texto.slice(0, 500) }];
     }
+  }
+
+  private normalizarErroHtml(texto: string): string | undefined {
+    if (!texto.startsWith('<')) {
+      return undefined;
+    }
+
+    const textoSemTags = texto
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (/503 Service Unavailable/i.test(textoSemTags)) {
+      return 'Servico DANFSe indisponivel no Portal Nacional. Tente novamente mais tarde.';
+    }
+
+    if (/502 Bad Gateway/i.test(textoSemTags)) {
+      return 'Servico DANFSe instavel no Portal Nacional. Tente novamente mais tarde.';
+    }
+
+    return textoSemTags
+      ? textoSemTags.slice(0, 500)
+      : 'Erro retornado pela API DANFSe.';
   }
 
   private extrairArrayErros(corpo: unknown): unknown[] {

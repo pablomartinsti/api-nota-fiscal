@@ -5,6 +5,7 @@ export enum StatusNota {
   SUBSTITUIDA = 'SUBSTITUIDA',
   CANCELADA = 'CANCELADA',
   ERRO = 'ERRO',
+  ERRO_RESOLVIDO = 'ERRO_RESOLVIDO',
 }
 
 export enum AmbienteFiscal {
@@ -558,6 +559,15 @@ export class NotaServico {
     this.atualizarDataDeAlteracao();
   }
 
+  marcarErroComoResolvido(): void {
+    if (this._status !== StatusNota.ERRO) {
+      throw new Error('Somente uma nota com erro pode ser marcada como resolvida.');
+    }
+
+    this._status = StatusNota.ERRO_RESOLVIDO;
+    this.atualizarDataDeAlteracao();
+  }
+
   cancelar(): void {
     if (this._status !== StatusNota.EMITIDA) {
       throw new Error('Somente uma nota emitida pode ser cancelada.');
@@ -786,7 +796,10 @@ export class NotaServico {
       }
     }
 
-    if (this._status === StatusNota.ERRO) {
+    if (
+      this._status === StatusNota.ERRO ||
+      this._status === StatusNota.ERRO_RESOLVIDO
+    ) {
       NotaServico.validarTextoObrigatorio(
         this._mensagemErro?.trim() ?? '',
         'Mensagem de erro',

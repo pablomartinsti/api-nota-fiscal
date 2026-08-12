@@ -53,6 +53,8 @@ export type TransportadorHttpSefinNacional = (
 const TIMEOUT_PADRAO_MS = 15_000;
 const ENDPOINT_ENVIO_DPS_PADRAO = '/nfse';
 const TAMANHO_MAXIMO_MENSAGEM_ERRO = 500;
+const MENSAGEM_SEFIN_INDISPONIVEL =
+  'Portal Nacional da NFS-e indisponivel no momento (HTTP 503). Tente novamente em alguns minutos.';
 
 export class ClienteHttpSefinNacional implements ClienteNfseNacional {
   constructor(
@@ -478,6 +480,10 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
   }
 
   private extrairErros(corpo: unknown, statusHttp: number): ErroEnvioDpsNfse[] {
+    if (statusHttp === 503) {
+      return [{ mensagem: MENSAGEM_SEFIN_INDISPONIVEL }];
+    }
+
     const objeto = this.comoObjeto(corpo);
     const erros = objeto
       ? this.buscarValor(objeto, [

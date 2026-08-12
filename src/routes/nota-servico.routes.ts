@@ -70,6 +70,10 @@ notaServicoRoutes.post(
   '/notas-servico/:notaId/retornar-rascunho',
   (request, response) => controller.retornarParaRascunho(request, response),
 );
+notaServicoRoutes.post(
+  '/notas-servico/:notaId/resolver-erro',
+  (request, response) => controller.marcarErroComoResolvido(request, response),
+);
 notaServicoRoutes.post('/notas-servico/:notaId/cancelar', (request, response) =>
   controller.cancelar(request, response),
 );
