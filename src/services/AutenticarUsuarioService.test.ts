@@ -5,8 +5,8 @@ import { PerfilUsuario, Usuario } from '../entities/Usuario';
 import { CredenciaisInvalidasError } from '../errors/CredenciaisInvalidasError';
 import { EmpresaRepository } from '../repositories/EmpresaRepository';
 import { UsuarioRepository } from '../repositories/UsuarioRepository';
-import { FakeComparadorHash } from '../security/in-memory/FakeComparadorHash';
-import { FakeGerenciadorToken } from '../security/in-memory/FakeGerenciadorToken';
+import { ComparadorHash } from '../security/ComparadorHash';
+import { GerenciadorToken, TokenPayload } from '../security/GerenciadorToken';
 import { AutenticarUsuarioService } from './AutenticarUsuarioService';
 
 async function criarContexto({
@@ -16,8 +16,17 @@ async function criarContexto({
   empresaAtiva?: boolean;
   usuarioAtivo?: boolean;
 } = {}) {
-  const comparadorHash = new FakeComparadorHash();
-  const gerenciadorToken = new FakeGerenciadorToken();
+  const compararSenha = vi.fn(async (valor: string, hash: string) =>
+    hash === `hash:${valor}`,
+  );
+  const gerarToken = vi.fn(async (_payload: TokenPayload) => 'token-valido');
+  const comparadorHash: ComparadorHash = {
+    comparar: compararSenha,
+  };
+  const gerenciadorToken: GerenciadorToken = {
+    gerar: gerarToken,
+    verificar: vi.fn(),
+  };
   const empresa = new Empresa({
     id: 'empresa-1',
     razaoSocial: 'Empresa Autenticacao Ltda',
@@ -46,9 +55,9 @@ async function criarContexto({
   );
 
   return {
-    comparadorHash,
     empresa,
-    gerenciadorToken,
+    compararSenha,
+    gerarToken,
     service,
     usuario,
   };
@@ -79,7 +88,7 @@ function criarUsuarioRepository(usuario: Usuario): UsuarioRepository {
 
 describe('AutenticarUsuarioService', () => {
   it('deve autenticar usuario ativo de empresa ativa', async () => {
-    const { comparadorHash, empresa, gerenciadorToken, service, usuario } =
+    const { compararSenha, empresa, gerarToken, service, usuario } =
       await criarContexto();
 
     const resultado = await service.executar({
@@ -89,19 +98,15 @@ describe('AutenticarUsuarioService', () => {
 
     expect(resultado.usuario).toBe(usuario);
     expect(resultado.token).toBe('token-valido');
-    expect(comparadorHash.valoresRecebidos).toEqual([
-      {
-        valor: 'senha-segura',
-        hash: 'hash:senha-segura',
-      },
-    ]);
-    expect(gerenciadorToken.payloadsGerados).toEqual([
-      {
+    expect(compararSenha).toHaveBeenCalledWith(
+      'senha-segura',
+      'hash:senha-segura',
+    );
+    expect(gerarToken).toHaveBeenCalledWith({
         usuarioId: usuario.id,
         empresaId: empresa.id,
         perfil: PerfilUsuario.DONO,
-      },
-    ]);
+    });
   });
 
   it('deve rejeitar email inexistente com erro generico', async () => {
