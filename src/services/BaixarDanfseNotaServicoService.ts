@@ -1,9 +1,9 @@
-﻿import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
+import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { NotaServico } from '../entities/NotaServico';
 import { TipoEventoFiscalNotaServico } from '../entities/NotaServicoEventoFiscal';
-import { ResultadoDownloadDanfseNfse } from '../fiscal/ResultadoDownloadDanfseNfse';
-import { GeradorPdfDanfseNacional } from '../fiscal/GeradorPdfDanfseNacional';
+import { ResultadoDownloadDanfseNfse } from '../fiscal/danfse/ResultadoDownloadDanfseNfse';
+import { GeradorPdfDanfseNacional } from '../fiscal/danfse/GeradorPdfDanfseNacional';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
 import { RegistrarEventoFiscalNotaServicoService } from './RegistrarEventoFiscalNotaServicoService';

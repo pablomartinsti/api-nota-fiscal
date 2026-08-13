@@ -2,9 +2,9 @@ import { readFile } from 'node:fs/promises';
 
 import forge from 'node-forge';
 
-import { CertificadoA1InvalidoError } from '../errors/CertificadoA1InvalidoError';
-import { ConfiguracaoFiscalAusenteError } from '../errors/ConfiguracaoFiscalAusenteError';
-import { CertificadoA1, ProvedorCertificadoA1 } from './CertificadoA1';
+import { CertificadoA1InvalidoError } from '../../errors/CertificadoA1InvalidoError';
+import { ConfiguracaoFiscalAusenteError } from '../../errors/ConfiguracaoFiscalAusenteError';
+import { CertificadoA1, ProvedorCertificadoA1 } from '../certificados-a1/CertificadoA1';
 
 export interface ConfiguracaoCertificadoA1 {
   caminho?: string;

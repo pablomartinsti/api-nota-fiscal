@@ -9,19 +9,19 @@ import { CertificadoA1CnpjDivergenteError } from '../errors/CertificadoA1CnpjDiv
 import { ConfiguracaoFiscalAusenteError } from '../errors/ConfiguracaoFiscalAusenteError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
-import { AssinadorXmlDps } from '../fiscal/AssinadorXmlDps';
-import { CertificadoA1, ProvedorCertificadoA1 } from '../fiscal/CertificadoA1';
+import { AssinadorXmlDps } from '../fiscal/xml/AssinadorXmlDps';
+import { CertificadoA1, ProvedorCertificadoA1 } from '../fiscal/certificados-a1/CertificadoA1';
 import {
   ClienteNfseNacional,
   ErroEnvioDpsNfse,
-} from '../fiscal/ClienteNfseNacional';
-import { formatarErrosFiscaisNfse } from '../fiscal/FormatadorErroFiscalNfse';
+} from '../fiscal/clientes/ClienteNfseNacional';
+import { formatarErrosFiscaisNfse } from '../fiscal/respostas/FormatadorErroFiscalNfse';
 import {
   CodigoMotivoCancelamentoNfse,
   GeradorXmlPedidoCancelamentoNfseNacional,
-} from '../fiscal/GeradorXmlPedidoCancelamentoNfseNacional';
-import { ProvedorCertificadoA1Arquivo } from '../fiscal/ProvedorCertificadoA1Arquivo';
-import { ValidadorXmlDps } from '../fiscal/ValidadorXmlDps';
+} from '../fiscal/xml/GeradorXmlPedidoCancelamentoNfseNacional';
+import { ProvedorCertificadoA1Arquivo } from '../fiscal/certificados-a1/ProvedorCertificadoA1Arquivo';
+import { ValidadorXmlDps } from '../fiscal/xml/ValidadorXmlDps';
 import { EmpresaRepository } from '../repositories/EmpresaRepository';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';

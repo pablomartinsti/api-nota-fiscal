@@ -6,10 +6,10 @@ import { gzipSync, gunzipSync } from 'node:zlib';
 import forge from 'node-forge';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
-import { ConfiguracaoFiscalAusenteError } from '../errors/ConfiguracaoFiscalAusenteError';
-import { ConfiguracaoSefinNacionalAusenteError } from '../errors/ConfiguracaoSefinNacionalAusenteError';
-import { AmbienteFiscal } from '../entities/NotaServico';
+import { ComunicacaoNfseError } from '../../errors/ComunicacaoNfseError';
+import { ConfiguracaoFiscalAusenteError } from '../../errors/ConfiguracaoFiscalAusenteError';
+import { ConfiguracaoSefinNacionalAusenteError } from '../../errors/ConfiguracaoSefinNacionalAusenteError';
+import { AmbienteFiscal } from '../../entities/NotaServico';
 import {
   ClienteHttpSefinNacional,
   ConfiguracaoClienteHttpSefinNacional,

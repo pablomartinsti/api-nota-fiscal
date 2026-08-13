@@ -2,11 +2,11 @@ import { request as httpsRequest } from 'node:https';
 import { URL } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
-import { CertificadoA1InvalidoError } from '../errors/CertificadoA1InvalidoError';
-import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
-import { ConfiguracaoFiscalAusenteError } from '../errors/ConfiguracaoFiscalAusenteError';
-import { ConfiguracaoSefinNacionalAusenteError } from '../errors/ConfiguracaoSefinNacionalAusenteError';
-import { AmbienteFiscal } from '../entities/NotaServico';
+import { CertificadoA1InvalidoError } from '../../errors/CertificadoA1InvalidoError';
+import { ComunicacaoNfseError } from '../../errors/ComunicacaoNfseError';
+import { ConfiguracaoFiscalAusenteError } from '../../errors/ConfiguracaoFiscalAusenteError';
+import { ConfiguracaoSefinNacionalAusenteError } from '../../errors/ConfiguracaoSefinNacionalAusenteError';
+import { AmbienteFiscal } from '../../entities/NotaServico';
 import {
   ClienteNfseNacional,
   ConsultarNfsePorChaveInput,
@@ -16,9 +16,9 @@ import {
   ResultadoEnvioDpsNfse,
   ResultadoRegistroEventoNfse,
 } from './ClienteNfseNacional';
-import { CertificadoA1 } from './CertificadoA1';
-import { ProvedorCertificadoA1Arquivo } from './ProvedorCertificadoA1Arquivo';
-import { RespostaSefinNacionalParser } from './RespostaSefinNacionalParser';
+import { CertificadoA1 } from '../certificados-a1/CertificadoA1';
+import { ProvedorCertificadoA1Arquivo } from '../certificados-a1/ProvedorCertificadoA1Arquivo';
+import { RespostaSefinNacionalParser } from '../respostas/RespostaSefinNacionalParser';
 
 export interface ConfiguracaoClienteHttpSefinNacional {
   baseUrlHomologacao?: string;

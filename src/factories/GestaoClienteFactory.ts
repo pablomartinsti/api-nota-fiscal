@@ -3,7 +3,7 @@ import { env } from '../config/env';
 import { PrismaConfiguracaoFiscalEmpresaRepository } from '../database/repositories/PrismaConfiguracaoFiscalEmpresaRepository';
 import { PrismaClienteRepository } from '../database/repositories/PrismaClienteRepository';
 import { PrismaEmpresaRepository } from '../database/repositories/PrismaEmpresaRepository';
-import { ClienteHttpAdnNfseNacional } from '../fiscal/ClienteHttpAdnNfseNacional';
+import { ClienteHttpAdnNfseNacional } from '../fiscal/clientes/ClienteHttpAdnNfseNacional';
 import { AesGcmCifradorTexto } from '../security/AesGcmCifradorTexto';
 import { AlterarStatusClienteService } from '../services/AlterarStatusClienteService';
 import { AtualizarClienteService } from '../services/AtualizarClienteService';

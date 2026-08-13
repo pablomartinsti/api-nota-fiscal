@@ -1,6 +1,6 @@
-﻿import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { AmbienteFiscal, NotaServico, StatusNota } from '../entities/NotaServico';
+import { AmbienteFiscal, NotaServico, StatusNota } from '../../entities/NotaServico';
 import { GeradorPdfDanfseNacional } from './GeradorPdfDanfseNacional';
 
 const chaveAcesso = '12345678901234567890123456789012345678901234567890';

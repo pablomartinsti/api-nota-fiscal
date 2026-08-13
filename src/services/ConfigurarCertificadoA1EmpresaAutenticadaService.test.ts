@@ -7,7 +7,7 @@ import { PerfilUsuario } from '../entities/Usuario';
 import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
 import { CertificadoA1CnpjDivergenteError } from '../errors/CertificadoA1CnpjDivergenteError';
 import { CertificadoA1InvalidoError } from '../errors/CertificadoA1InvalidoError';
-import { ProvedorCertificadoA1 } from '../fiscal/CertificadoA1';
+import { ProvedorCertificadoA1 } from '../fiscal/certificados-a1/CertificadoA1';
 import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
 import { EmpresaRepository } from '../repositories/EmpresaRepository';
 import { CifradorTexto } from '../security/CifradorTexto';

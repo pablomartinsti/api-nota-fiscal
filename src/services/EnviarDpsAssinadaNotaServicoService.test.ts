@@ -14,7 +14,7 @@ import { XmlDpsInvalidoError } from '../errors/XmlDpsInvalidoError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { ProducaoRealBloqueadaError } from '../errors/ProducaoRealBloqueadaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
-import { ClienteNfseNacional } from '../fiscal/ClienteNfseNacional';
+import { ClienteNfseNacional } from '../fiscal/clientes/ClienteNfseNacional';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { GerarXmlDpsAssinadoNotaServicoService } from './GerarXmlDpsAssinadoNotaServicoService';
 import { EnviarDpsAssinadaNotaServicoService } from './EnviarDpsAssinadaNotaServicoService';

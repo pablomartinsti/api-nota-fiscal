@@ -1,6 +1,6 @@
 import { AmbienteFiscal } from '../entities/NotaServico';
 import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
-import { ConfiguracaoCertificadoClienteNfseInput } from '../fiscal/ClienteNfseNacional';
+import { ConfiguracaoCertificadoClienteNfseInput } from '../fiscal/clientes/ClienteNfseNacional';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 
 type ConfiguracaoCertificadoFiscal = {

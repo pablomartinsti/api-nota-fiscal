@@ -4,12 +4,12 @@ import {
   RegimeApuracaoSimplesNacional,
   RegimeEspecialTributacao,
   RegimeTributario,
-} from '../entities/Empresa';
+} from '../../entities/Empresa';
 import {
   AmbienteFiscal,
   TipoRetencaoIssqn,
   TributacaoIssqn,
-} from '../entities/NotaServico';
+} from '../../entities/NotaServico';
 import { GeradorXmlDps, GerarXmlDpsInput } from './GeradorXmlDps';
 import { listarPendenciasFiscaisDps } from './ProntidaoFiscalDps';
 

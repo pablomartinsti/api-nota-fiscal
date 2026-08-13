@@ -1,4 +1,4 @@
-import { AmbienteFiscal } from '../entities/NotaServico';
+import { AmbienteFiscal } from '../../entities/NotaServico';
 
 export interface ConfiguracaoCertificadoClienteNfseInput {
   certificadoPath?: string;

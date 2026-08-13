@@ -9,7 +9,7 @@ import { PerfilUsuario } from '../entities/Usuario';
 import { TipoEventoFiscalNotaServico } from '../entities/NotaServicoEventoFiscal';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
-import { GeradorPdfDanfseNacional } from '../fiscal/GeradorPdfDanfseNacional';
+import { GeradorPdfDanfseNacional } from '../fiscal/danfse/GeradorPdfDanfseNacional';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { BaixarDanfseNotaServicoService } from './BaixarDanfseNotaServicoService';
 import { ValidarPermissaoProducaoRealService } from './ValidarPermissaoProducaoRealService';

@@ -2,8 +2,8 @@ import { DOMParser, Element as XmlElement } from '@xmldom/xmldom';
 
 import { AmbienteFiscal } from '../entities/NotaServico';
 import { ClienteNaoEncontradoError } from '../errors/ClienteNaoEncontradoError';
-import { ClienteDistribuicaoNfseNacional } from '../fiscal/ClienteDistribuicaoNfseNacional';
-import { ErroEnvioDpsNfse } from '../fiscal/ClienteNfseNacional';
+import { ClienteDistribuicaoNfseNacional } from '../fiscal/clientes/ClienteDistribuicaoNfseNacional';
+import { ErroEnvioDpsNfse } from '../fiscal/clientes/ClienteNfseNacional';
 import { ClienteRepository } from '../repositories/ClienteRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';

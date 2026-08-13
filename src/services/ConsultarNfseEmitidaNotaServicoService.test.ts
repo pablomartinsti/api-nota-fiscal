@@ -10,7 +10,7 @@ import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { ProducaoRealBloqueadaError } from '../errors/ProducaoRealBloqueadaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
-import { ClienteNfseNacional } from '../fiscal/ClienteNfseNacional';
+import { ClienteNfseNacional } from '../fiscal/clientes/ClienteNfseNacional';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { ConsultarNfseEmitidaNotaServicoService } from './ConsultarNfseEmitidaNotaServicoService';
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';

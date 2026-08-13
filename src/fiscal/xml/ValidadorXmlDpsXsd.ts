@@ -4,8 +4,8 @@ import { basename, dirname, extname } from 'node:path';
 import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
 import { validateXML, XMLFileInfo } from 'xmllint-wasm';
 
-import { ConfiguracaoFiscalAusenteError } from '../errors/ConfiguracaoFiscalAusenteError';
-import { XmlDpsInvalidoError } from '../errors/XmlDpsInvalidoError';
+import { ConfiguracaoFiscalAusenteError } from '../../errors/ConfiguracaoFiscalAusenteError';
+import { XmlDpsInvalidoError } from '../../errors/XmlDpsInvalidoError';
 import { ValidadorXmlDps } from './ValidadorXmlDps';
 
 export class ValidadorXmlDpsXsd implements ValidadorXmlDps {

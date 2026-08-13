@@ -13,11 +13,11 @@ import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { ProducaoRealBloqueadaError } from '../errors/ProducaoRealBloqueadaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
-import { ProvedorCertificadoA1 } from '../fiscal/CertificadoA1';
-import { ClienteNfseNacional } from '../fiscal/ClienteNfseNacional';
-import { GeradorXmlPedidoCancelamentoNfseNacional } from '../fiscal/GeradorXmlPedidoCancelamentoNfseNacional';
-import { ValidadorXmlDps } from '../fiscal/ValidadorXmlDps';
-import { AssinadorXmlDps } from '../fiscal/AssinadorXmlDps';
+import { ProvedorCertificadoA1 } from '../fiscal/certificados-a1/CertificadoA1';
+import { ClienteNfseNacional } from '../fiscal/clientes/ClienteNfseNacional';
+import { GeradorXmlPedidoCancelamentoNfseNacional } from '../fiscal/xml/GeradorXmlPedidoCancelamentoNfseNacional';
+import { ValidadorXmlDps } from '../fiscal/xml/ValidadorXmlDps';
+import { AssinadorXmlDps } from '../fiscal/xml/AssinadorXmlDps';
 import { EmpresaRepository } from '../repositories/EmpresaRepository';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { CancelarNfseNotaServicoService } from './CancelarNfseNotaServicoService';

@@ -4,7 +4,7 @@ import { Cliente } from '../entities/Cliente';
 import { Empresa, RegimeTributario } from '../entities/Empresa';
 import { AmbienteFiscal } from '../entities/NotaServico';
 import { ClienteNaoEncontradoError } from '../errors/ClienteNaoEncontradoError';
-import { ClienteDistribuicaoNfseNacional } from '../fiscal/ClienteDistribuicaoNfseNacional';
+import { ClienteDistribuicaoNfseNacional } from '../fiscal/clientes/ClienteDistribuicaoNfseNacional';
 import { ClienteRepository } from '../repositories/ClienteRepository';
 import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
 import { EmpresaRepository } from '../repositories/EmpresaRepository';

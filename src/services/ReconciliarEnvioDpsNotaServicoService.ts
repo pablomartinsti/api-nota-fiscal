@@ -6,8 +6,8 @@ import {
   ClienteNfseNacional,
   ErroEnvioDpsNfse,
   ResultadoConsultaNfseNacional,
-} from '../fiscal/ClienteNfseNacional';
-import { formatarErrosFiscaisNfse } from '../fiscal/FormatadorErroFiscalNfse';
+} from '../fiscal/clientes/ClienteNfseNacional';
+import { formatarErrosFiscaisNfse } from '../fiscal/respostas/FormatadorErroFiscalNfse';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { TokenPayload } from '../security/GerenciadorToken';
 import { RegistrarEventoFiscalNotaServicoService } from './RegistrarEventoFiscalNotaServicoService';

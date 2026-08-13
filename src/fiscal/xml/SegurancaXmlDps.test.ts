@@ -5,9 +5,9 @@ import { join } from 'node:path';
 import forge from 'node-forge';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { XmlDpsInvalidoError } from '../errors/XmlDpsInvalidoError';
+import { XmlDpsInvalidoError } from '../../errors/XmlDpsInvalidoError';
 import { AssinadorXmlDpsXmlDsig } from './AssinadorXmlDpsXmlDsig';
-import { ProvedorCertificadoA1Arquivo } from './ProvedorCertificadoA1Arquivo';
+import { ProvedorCertificadoA1Arquivo } from '../certificados-a1/ProvedorCertificadoA1Arquivo';
 import { ValidadorXmlDpsXsd } from './ValidadorXmlDpsXsd';
 
 const pastasTemporarias: string[] = [];

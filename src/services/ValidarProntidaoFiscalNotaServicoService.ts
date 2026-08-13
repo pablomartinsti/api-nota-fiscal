@@ -4,7 +4,7 @@ import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
 import { ClienteNaoEncontradoError } from '../errors/ClienteNaoEncontradoError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { ServicoNaoEncontradoError } from '../errors/ServicoNaoEncontradoError';
-import { listarPendenciasFiscaisDps } from '../fiscal/ProntidaoFiscalDps';
+import { listarPendenciasFiscaisDps } from '../fiscal/xml/ProntidaoFiscalDps';
 import { ClienteRepository } from '../repositories/ClienteRepository';
 import { ConfiguracaoFiscalEmpresaRepository } from '../repositories/ConfiguracaoFiscalEmpresaRepository';
 import { EmpresaRepository } from '../repositories/EmpresaRepository';

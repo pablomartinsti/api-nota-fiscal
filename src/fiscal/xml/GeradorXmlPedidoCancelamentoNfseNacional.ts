@@ -1,7 +1,7 @@
 import { create } from 'xmlbuilder2';
 
-import { Empresa } from '../entities/Empresa';
-import { AmbienteFiscal, NotaServico } from '../entities/NotaServico';
+import { Empresa } from '../../entities/Empresa';
+import { AmbienteFiscal, NotaServico } from '../../entities/NotaServico';
 
 const NAMESPACE_NFSE = 'http://www.sped.fazenda.gov.br/nfse';
 const VERSAO_LAYOUT = '1.01';

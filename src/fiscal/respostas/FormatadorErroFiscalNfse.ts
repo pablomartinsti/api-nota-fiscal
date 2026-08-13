@@ -1,4 +1,4 @@
-import { ErroEnvioDpsNfse } from './ClienteNfseNacional';
+import { ErroEnvioDpsNfse } from '../clientes/ClienteNfseNacional';
 
 export function formatarErrosFiscaisNfse(
   erros: ErroEnvioDpsNfse[] | undefined,

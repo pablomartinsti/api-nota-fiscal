@@ -7,8 +7,8 @@ import { TipoEventoFiscalNotaServico } from '../entities/NotaServicoEventoFiscal
 import {
   ClienteNfseNacional,
   ResultadoEnvioDpsNfse,
-} from '../fiscal/ClienteNfseNacional';
-import { formatarErrosFiscaisNfse } from '../fiscal/FormatadorErroFiscalNfse';
+} from '../fiscal/clientes/ClienteNfseNacional';
+import { formatarErrosFiscaisNfse } from '../fiscal/respostas/FormatadorErroFiscalNfse';
 import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
 import { XmlDpsInvalidoError } from '../errors/XmlDpsInvalidoError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';

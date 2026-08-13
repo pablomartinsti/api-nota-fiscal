@@ -2,19 +2,19 @@ import { request as httpsRequest } from 'node:https';
 import { URL } from 'node:url';
 import { gunzipSync } from 'node:zlib';
 
-import { AmbienteFiscal } from '../entities/NotaServico';
-import { CertificadoA1InvalidoError } from '../errors/CertificadoA1InvalidoError';
-import { ComunicacaoNfseError } from '../errors/ComunicacaoNfseError';
-import { ConfiguracaoFiscalAusenteError } from '../errors/ConfiguracaoFiscalAusenteError';
-import { ConfiguracaoSefinNacionalAusenteError } from '../errors/ConfiguracaoSefinNacionalAusenteError';
-import { CertificadoA1 } from './CertificadoA1';
+import { AmbienteFiscal } from '../../entities/NotaServico';
+import { CertificadoA1InvalidoError } from '../../errors/CertificadoA1InvalidoError';
+import { ComunicacaoNfseError } from '../../errors/ComunicacaoNfseError';
+import { ConfiguracaoFiscalAusenteError } from '../../errors/ConfiguracaoFiscalAusenteError';
+import { ConfiguracaoSefinNacionalAusenteError } from '../../errors/ConfiguracaoSefinNacionalAusenteError';
+import { CertificadoA1 } from '../certificados-a1/CertificadoA1';
 import {
   ClienteDistribuicaoNfseNacional,
   ConsultarDocumentosDistribuidosPorNsuInput,
   DocumentoFiscalDistribuidoNfse,
   ResultadoConsultaDocumentosDistribuidosNfse,
 } from './ClienteDistribuicaoNfseNacional';
-import { ProvedorCertificadoA1Arquivo } from './ProvedorCertificadoA1Arquivo';
+import { ProvedorCertificadoA1Arquivo } from '../certificados-a1/ProvedorCertificadoA1Arquivo';
 
 export interface ConfiguracaoClienteHttpAdnNfseNacional {
   baseUrlHomologacao?: string;

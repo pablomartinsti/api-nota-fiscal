@@ -1,6 +1,6 @@
 import { gunzipSync } from 'node:zlib';
 
-import { ErroEnvioDpsNfse } from './ClienteNfseNacional';
+import { ErroEnvioDpsNfse } from '../clientes/ClienteNfseNacional';
 
 const TAMANHO_MAXIMO_MENSAGEM_ERRO = 500;
 const MENSAGEM_SEFIN_INDISPONIVEL =

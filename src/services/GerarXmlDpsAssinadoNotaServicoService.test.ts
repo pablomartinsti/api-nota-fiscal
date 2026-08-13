@@ -8,9 +8,9 @@ import {
 import { PerfilUsuario } from '../entities/Usuario';
 import { CertificadoA1CnpjDivergenteError } from '../errors/CertificadoA1CnpjDivergenteError';
 import { CertificadoA1EmpresaProducaoAusenteError } from '../errors/CertificadoA1EmpresaProducaoAusenteError';
-import { AssinadorXmlDps } from '../fiscal/AssinadorXmlDps';
-import { CertificadoA1, ProvedorCertificadoA1 } from '../fiscal/CertificadoA1';
-import { ValidadorXmlDps } from '../fiscal/ValidadorXmlDps';
+import { AssinadorXmlDps } from '../fiscal/xml/AssinadorXmlDps';
+import { CertificadoA1, ProvedorCertificadoA1 } from '../fiscal/certificados-a1/CertificadoA1';
+import { ValidadorXmlDps } from '../fiscal/xml/ValidadorXmlDps';
 import { EmpresaRepository } from '../repositories/EmpresaRepository';
 import { NotaServicoRepository } from '../repositories/NotaServicoRepository';
 import { GerarXmlDpsNotaServicoService } from './GerarXmlDpsNotaServicoService';

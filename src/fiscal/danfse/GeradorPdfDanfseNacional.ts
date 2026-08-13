@@ -1,4 +1,4 @@
-﻿import { randomUUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import { mkdtemp, readFile, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -6,7 +6,7 @@ import { join } from 'path';
 import { NFSeGerarDanfse, extractChaveFromNFSeId } from '@treeunfe/danfe';
 import { parseNFSeXml } from '@treeunfe/nfse';
 
-import { NotaServico } from '../entities/NotaServico';
+import { NotaServico } from '../../entities/NotaServico';
 
 export interface ResultadoPdfDanfseNacional {
   chaveAcesso: string;

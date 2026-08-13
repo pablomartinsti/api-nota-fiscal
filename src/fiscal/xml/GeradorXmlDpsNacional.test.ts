@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
-import { Cliente } from '../entities/Cliente';
+import { Cliente } from '../../entities/Cliente';
 import {
   Empresa,
   RegimeApuracaoSimplesNacional,
   RegimeEspecialTributacao,
   RegimeTributario,
-} from '../entities/Empresa';
+} from '../../entities/Empresa';
 import {
   CodigoMotivoSubstituicaoNfse,
   NotaServico,
   StatusNota,
   TipoRetencaoIssqn,
-} from '../entities/NotaServico';
-import { Servico } from '../entities/Servico';
+} from '../../entities/NotaServico';
+import { Servico } from '../../entities/Servico';
 import { GeradorXmlDpsNacional } from './GeradorXmlDpsNacional';
 
 describe('GeradorXmlDpsNacional', () => {

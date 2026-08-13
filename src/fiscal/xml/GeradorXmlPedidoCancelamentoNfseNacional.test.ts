@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { Empresa, RegimeTributario } from '../entities/Empresa';
-import { AmbienteFiscal, NotaServico, StatusNota } from '../entities/NotaServico';
+import { Empresa, RegimeTributario } from '../../entities/Empresa';
+import { AmbienteFiscal, NotaServico, StatusNota } from '../../entities/NotaServico';
 import { GeradorXmlPedidoCancelamentoNfseNacional } from './GeradorXmlPedidoCancelamentoNfseNacional';
 
 const chaveAcesso = '12345678901234567890123456789012345678901234567890';

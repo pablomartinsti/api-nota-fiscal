@@ -1,9 +1,9 @@
 import { DOMParser } from '@xmldom/xmldom';
 import { SignedXml } from 'xml-crypto';
 
-import { CertificadoA1InvalidoError } from '../errors/CertificadoA1InvalidoError';
+import { CertificadoA1InvalidoError } from '../../errors/CertificadoA1InvalidoError';
 import { AssinadorXmlDps } from './AssinadorXmlDps';
-import { CertificadoA1 } from './CertificadoA1';
+import { CertificadoA1 } from '../certificados-a1/CertificadoA1';
 
 const C14N = 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315';
 const ENVELOPED_SIGNATURE =
@@ -12,7 +12,7 @@ const RSA_SHA256 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256';
 const SHA256 = 'http://www.w3.org/2001/04/xmlenc#sha256';
 const NAMESPACE_XMLDSIG = 'http://www.w3.org/2000/09/xmldsig#';
 
-export class AssinadorXmlPedRegEventoXmlDsig implements AssinadorXmlDps {
+export class AssinadorXmlDpsXmlDsig implements AssinadorXmlDps {
   assinar(xml: string, certificado: CertificadoA1): string {
     const assinatura = new SignedXml({
       privateKey: certificado.chavePrivadaPem,
@@ -23,13 +23,13 @@ export class AssinadorXmlPedRegEventoXmlDsig implements AssinadorXmlDps {
     });
 
     assinatura.addReference({
-      xpath: "//*[local-name(.)='infPedReg']",
+      xpath: "//*[local-name(.)='infDPS']",
       transforms: [ENVELOPED_SIGNATURE, C14N],
       digestAlgorithm: SHA256,
     });
     assinatura.computeSignature(xml, {
       location: {
-        reference: "//*[local-name(.)='infPedReg']",
+        reference: "//*[local-name(.)='infDPS']",
         action: 'after',
       },
     });

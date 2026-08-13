@@ -1,4 +1,4 @@
-import { AmbienteFiscal } from '../entities/NotaServico';
+import { AmbienteFiscal } from '../../entities/NotaServico';
 import { ErroEnvioDpsNfse } from './ClienteNfseNacional';
 
 export interface ConsultarDocumentosDistribuidosPorNsuInput {
