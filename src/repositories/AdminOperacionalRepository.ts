@@ -53,6 +53,12 @@ export interface AdminConfiguracaoFiscalEmpresaResumo {
   ativo: boolean;
 }
 
+export interface AtualizarConfiguracaoFiscalEmpresaAdminInput {
+  ambienteFiscalPadrao: AmbienteFiscal;
+  serieDpsPadrao: string;
+  emissaoHabilitada?: boolean;
+}
+
 export interface AdminEmpresaOperacionalResumo extends AdminEmpresaResumo {
   configuracaoFiscal: AdminConfiguracaoFiscalEmpresaResumo;
   notas: AdminResumoNotasEmpresa;
@@ -133,6 +139,10 @@ export interface AdminOperacionalRepository {
   atualizarEmissaoEmpresa(
     empresaId: string,
     emissaoHabilitada: boolean,
+  ): Promise<AdminEmpresaOperacionalResumo | null>;
+  atualizarConfiguracaoFiscalEmpresa(
+    empresaId: string,
+    dados: AtualizarConfiguracaoFiscalEmpresaAdminInput,
   ): Promise<AdminEmpresaOperacionalResumo | null>;
   listarNotas(filtros: FiltrosAdminNotas): Promise<AdminNotaResumo[]>;
   listarEventosFiscais(

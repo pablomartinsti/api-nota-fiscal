@@ -26,6 +26,11 @@ adminOperacionalRoutes.patch(
   (request, response) =>
     controller.atualizarEmissaoEmpresa(request, response),
 );
+adminOperacionalRoutes.patch(
+  '/admin/empresas/:empresaId/configuracao-fiscal',
+  (request, response) =>
+    controller.atualizarConfiguracaoFiscalEmpresa(request, response),
+);
 adminOperacionalRoutes.get('/admin/notas', (request, response) =>
   controller.listarNotas(request, response),
 );

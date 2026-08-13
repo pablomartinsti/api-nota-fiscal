@@ -1,5 +1,6 @@
 import { AdminOperacionalController } from '../controllers/AdminOperacionalController';
 import { PrismaAdminOperacionalRepository } from '../database/repositories/PrismaAdminOperacionalRepository';
+import { AtualizarConfiguracaoFiscalEmpresaAdminOperacionalService } from '../services/admin-operacional/AtualizarConfiguracaoFiscalEmpresaAdminOperacionalService';
 import { AtualizarEmissaoEmpresaAdminOperacionalService } from '../services/admin-operacional/AtualizarEmissaoEmpresaAdminOperacionalService';
 import { ListarEventosFiscaisAdminOperacionalService } from '../services/admin-operacional/ListarEventosFiscaisAdminOperacionalService';
 import { ListarEmpresasAdminOperacionalService } from '../services/admin-operacional/ListarEmpresasAdminOperacionalService';
@@ -11,6 +12,9 @@ export function criarAdminOperacionalController(): AdminOperacionalController {
   return new AdminOperacionalController(
     new ListarEmpresasAdminOperacionalService(adminOperacionalRepository),
     new AtualizarEmissaoEmpresaAdminOperacionalService(
+      adminOperacionalRepository,
+    ),
+    new AtualizarConfiguracaoFiscalEmpresaAdminOperacionalService(
       adminOperacionalRepository,
     ),
     new ListarNotasAdminOperacionalService(adminOperacionalRepository),

@@ -1,11 +1,14 @@
 import { Request, Response } from 'express';
 
 import {
+  atualizarConfiguracaoFiscalEmpresaAdminBodySchema,
+  atualizarConfiguracaoFiscalEmpresaAdminParamsSchema,
   atualizarEmissaoEmpresaAdminBodySchema,
   atualizarEmissaoEmpresaAdminParamsSchema,
   listarEventosFiscaisAdminQuerySchema,
   listarNotasAdminQuerySchema,
 } from '../dtos/AdminOperacionalDto';
+import { AtualizarConfiguracaoFiscalEmpresaAdminOperacionalService } from '../services/admin-operacional/AtualizarConfiguracaoFiscalEmpresaAdminOperacionalService';
 import { AtualizarEmissaoEmpresaAdminOperacionalService } from '../services/admin-operacional/AtualizarEmissaoEmpresaAdminOperacionalService';
 import { ListarEventosFiscaisAdminOperacionalService } from '../services/admin-operacional/ListarEventosFiscaisAdminOperacionalService';
 import { ListarEmpresasAdminOperacionalService } from '../services/admin-operacional/ListarEmpresasAdminOperacionalService';
@@ -15,6 +18,7 @@ export class AdminOperacionalController {
   constructor(
     private readonly listarEmpresasService: ListarEmpresasAdminOperacionalService,
     private readonly atualizarEmissaoEmpresaService: AtualizarEmissaoEmpresaAdminOperacionalService,
+    private readonly atualizarConfiguracaoFiscalEmpresaService: AtualizarConfiguracaoFiscalEmpresaAdminOperacionalService,
     private readonly listarNotasService: ListarNotasAdminOperacionalService,
     private readonly listarEventosFiscaisService: ListarEventosFiscaisAdminOperacionalService,
   ) {}
@@ -39,6 +43,25 @@ export class AdminOperacionalController {
       empresaId,
       emissaoHabilitada,
     );
+
+    return response.status(200).json(empresa);
+  }
+
+  async atualizarConfiguracaoFiscalEmpresa(
+    request: Request,
+    response: Response,
+  ): Promise<Response> {
+    const { empresaId } =
+      atualizarConfiguracaoFiscalEmpresaAdminParamsSchema.parse(request.params);
+    const dados = atualizarConfiguracaoFiscalEmpresaAdminBodySchema.parse(
+      request.body,
+    );
+
+    const empresa =
+      await this.atualizarConfiguracaoFiscalEmpresaService.executar(
+        empresaId,
+        dados,
+      );
 
     return response.status(200).json(empresa);
   }

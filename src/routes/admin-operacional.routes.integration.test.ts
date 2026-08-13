@@ -286,6 +286,45 @@ describe('Admin operacional HTTP', () => {
     expect(liberacao.body.configuracaoFiscal.emissaoHabilitada).toBe(true);
   });
 
+  it('deve alterar ambiente fiscal de uma empresa para ADMIN_SISTEMA', async () => {
+    const empresaAdmin = await criarEmpresa('Martir Admin Ambiente Ltda');
+    const admin = await criarUsuario(
+      empresaAdmin.id!,
+      PerfilUsuario.ADMIN_SISTEMA,
+    );
+    const token = await autenticar(admin);
+    const empresaMonitorada = await criarEmpresa('Empresa Ambiente Fiscal Ltda');
+
+    const response = await request(app)
+      .patch(`/admin/empresas/${empresaMonitorada.id}/configuracao-fiscal`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        ambienteFiscalPadrao: AmbienteFiscal.HOMOLOGACAO,
+        serieDpsPadrao: '9',
+        emissaoHabilitada: true,
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.configuracaoFiscal).toEqual(
+      expect.objectContaining({
+        ambienteFiscalPadrao: AmbienteFiscal.HOMOLOGACAO,
+        serieDpsPadrao: '9',
+        emissaoHabilitada: true,
+      }),
+    );
+
+    const configuracao = await prisma.configuracaoFiscalEmpresa.findUnique({
+      where: { empresaId: empresaMonitorada.id! },
+    });
+
+    expect(configuracao).toEqual(
+      expect.objectContaining({
+        ambienteFiscalPadrao: AmbienteFiscal.HOMOLOGACAO,
+        serieDpsPadrao: '9',
+      }),
+    );
+  });
+
   it('deve listar eventos fiscais com contexto da nota e empresa', async () => {
     const empresaAdmin = await criarEmpresa('Martir Admin Eventos Ltda');
     const admin = await criarUsuario(

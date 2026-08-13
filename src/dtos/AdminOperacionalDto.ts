@@ -50,3 +50,13 @@ export const atualizarEmissaoEmpresaAdminParamsSchema = z.object({
 export const atualizarEmissaoEmpresaAdminBodySchema = z.object({
   emissaoHabilitada: z.boolean(),
 });
+
+export const atualizarConfiguracaoFiscalEmpresaAdminParamsSchema = z.object({
+  empresaId: z.string().trim().uuid(),
+});
+
+export const atualizarConfiguracaoFiscalEmpresaAdminBodySchema = z.object({
+  ambienteFiscalPadrao: z.enum(AmbienteFiscal),
+  serieDpsPadrao: z.string().trim().min(1).max(20),
+  emissaoHabilitada: z.boolean().optional(),
+});

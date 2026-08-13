@@ -6,6 +6,7 @@ import {
   TipoEventoFiscalNotaServico,
 } from '../../entities/NotaServicoEventoFiscal';
 import {
+  AtualizarConfiguracaoFiscalEmpresaAdminInput,
   AdminEmpresaOperacionalResumo,
   AdminEventoFiscalResumo,
   AdminNotaResumo,
@@ -135,6 +136,46 @@ export class PrismaAdminOperacionalRepository
       where: { empresaId },
       update: { emissaoHabilitada },
       create: { empresaId, emissaoHabilitada },
+    });
+
+    const empresas = await this.listarEmpresas();
+
+    return (
+      empresas.find((empresaResumo) => empresaResumo.id === empresaId) ?? null
+    );
+  }
+
+  async atualizarConfiguracaoFiscalEmpresa(
+    empresaId: string,
+    dados: AtualizarConfiguracaoFiscalEmpresaAdminInput,
+  ): Promise<AdminEmpresaOperacionalResumo | null> {
+    const empresa = await prisma.empresa.findUnique({
+      where: { id: empresaId },
+      select: { id: true },
+    });
+
+    if (!empresa) {
+      return null;
+    }
+
+    const dadosEmissao =
+      dados.emissaoHabilitada === undefined
+        ? {}
+        : { emissaoHabilitada: dados.emissaoHabilitada };
+
+    await prisma.configuracaoFiscalEmpresa.upsert({
+      where: { empresaId },
+      update: {
+        ambienteFiscalPadrao: dados.ambienteFiscalPadrao,
+        serieDpsPadrao: dados.serieDpsPadrao,
+        ...dadosEmissao,
+      },
+      create: {
+        empresaId,
+        ambienteFiscalPadrao: dados.ambienteFiscalPadrao,
+        serieDpsPadrao: dados.serieDpsPadrao,
+        ...dadosEmissao,
+      },
     });
 
     const empresas = await this.listarEmpresas();
