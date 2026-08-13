@@ -32,10 +32,6 @@ export const notaServicoParamsSchema = z.object({
   notaId: z.string().trim().min(1),
 });
 
-export const emitirNotaServicoSchema = z.object({
-  simularFalha: z.boolean().optional(),
-});
-
 export const cancelarNfseNotaServicoSchema = z.object({
   codigoMotivo: z.enum(['1', '2', '9']),
   motivo: z.string().trim().min(15).max(255),

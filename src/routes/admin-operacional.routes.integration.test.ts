@@ -130,7 +130,7 @@ async function criarNotaComErro(empresa: Empresa) {
       tipo: TipoEventoFiscalNotaServico.ENVIO_DPS,
       status: StatusEventoFiscalNotaServico.ERRO,
       statusHttp: 400,
-      mensagem: 'Rejeicao fiscal simulada.',
+      mensagem: 'Rejeicao fiscal retornada pela SEFIN Nacional.',
     },
   });
 
@@ -311,7 +311,7 @@ describe('Admin operacional HTTP', () => {
         tipo: TipoEventoFiscalNotaServico.ENVIO_DPS,
         status: StatusEventoFiscalNotaServico.ERRO,
         statusHttp: 400,
-        mensagem: 'Rejeicao fiscal simulada.',
+        mensagem: 'Rejeicao fiscal retornada pela SEFIN Nacional.',
         empresa: expect.objectContaining({
           razaoSocial: empresaMonitorada.razaoSocial,
         }),

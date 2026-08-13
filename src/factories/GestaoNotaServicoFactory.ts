@@ -7,7 +7,6 @@ import { PrismaNotaServicoEventoFiscalRepository } from '../database/repositorie
 import { PrismaNotaServicoRepository } from '../database/repositories/PrismaNotaServicoRepository';
 import { PrismaServicoRepository } from '../database/repositories/PrismaServicoRepository';
 import { ClienteHttpSefinNacional } from '../fiscal/ClienteHttpSefinNacional';
-import { EmissorNotaServicoSimulado } from '../fiscal/EmissorNotaServicoSimulado';
 import { GeradorXmlDpsNacional } from '../fiscal/GeradorXmlDpsNacional';
 import { AssinadorXmlDpsXmlDsig } from '../fiscal/AssinadorXmlDpsXmlDsig';
 import { AssinadorXmlPedRegEventoXmlDsig } from '../fiscal/AssinadorXmlPedRegEventoXmlDsig';
@@ -18,12 +17,10 @@ import { AesGcmCifradorTexto } from '../security/AesGcmCifradorTexto';
 import { AtualizarRascunhoNotaServicoService } from '../services/AtualizarRascunhoNotaServicoService';
 import { BaixarDanfseNotaServicoService } from '../services/BaixarDanfseNotaServicoService';
 import { BuscarNotaServicoService } from '../services/BuscarNotaServicoService';
-import { CancelarNotaServicoService } from '../services/CancelarNotaServicoService';
 import { CancelarNfseNotaServicoService } from '../services/CancelarNfseNotaServicoService';
 import { CadastrarRascunhoNotaServicoService } from '../services/CadastrarRascunhoNotaServicoService';
 import { ConsultarNfseEmitidaNotaServicoService } from '../services/ConsultarNfseEmitidaNotaServicoService';
 import { CriarRascunhoSubstituicaoNotaServicoService } from '../services/CriarRascunhoSubstituicaoNotaServicoService';
-import { EmitirNotaServicoService } from '../services/EmitirNotaServicoService';
 import { EnviarDpsAssinadaNotaServicoService } from '../services/EnviarDpsAssinadaNotaServicoService';
 import { ExcluirRascunhoNotaServicoService } from '../services/ExcluirRascunhoNotaServicoService';
 import { GerarProximoNumeroDpsService } from '../services/GerarProximoNumeroDpsService';
@@ -39,7 +36,6 @@ import { MarcarErroNotaServicoComoResolvidoService } from '../services/MarcarErr
 import { ValidarReferenciasNotaServicoService } from '../services/ValidarReferenciasNotaServicoService';
 import { ValidarProntidaoFiscalNotaServicoService } from '../services/ValidarProntidaoFiscalNotaServicoService';
 import { ValidarPermissaoProducaoRealService } from '../services/ValidarPermissaoProducaoRealService';
-import { ValidarOperacaoSimuladaService } from '../services/ValidarOperacaoSimuladaService';
 
 export function criarGestaoNotaServicoController(): GestaoNotaServicoController {
   const notaRepository = new PrismaNotaServicoRepository();
@@ -63,9 +59,6 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     new ValidarPermissaoProducaoRealService(
       env.NFSE_PERMITIR_PRODUCAO_REAL,
     );
-  const validarOperacaoSimulada = new ValidarOperacaoSimuladaService(
-    env.NODE_ENV,
-  );
   const registrarEventoFiscal =
     new RegistrarEventoFiscalNotaServicoService(eventoFiscalRepository);
   const validarReferencias = new ValidarReferenciasNotaServicoService(
@@ -113,14 +106,8 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       validarReferencias,
     ),
     new ExcluirRascunhoNotaServicoService(notaRepository),
-    new EmitirNotaServicoService(
-      notaRepository,
-      new EmissorNotaServicoSimulado(),
-      validarOperacaoSimulada,
-    ),
     new RetornarNotaServicoParaRascunhoService(notaRepository),
     new MarcarErroNotaServicoComoResolvidoService(notaRepository),
-    new CancelarNotaServicoService(notaRepository, validarOperacaoSimulada),
     new ValidarProntidaoFiscalNotaServicoService(
       empresaRepository,
       clienteRepository,

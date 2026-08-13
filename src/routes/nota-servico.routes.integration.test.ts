@@ -258,47 +258,6 @@ describe('Gestao de rascunhos de notas de servico HTTP', () => {
     expect(atualizacao.status).toBe(409);
   });
 
-  it('deve emitir e cancelar uma nota usando o emissor simulado', async () => {
-    const contexto = await criarContexto();
-    const cliente = await criarCliente(contexto.empresa.id!);
-    const servico = await criarServico(contexto.empresa.id!);
-    const cadastro = await request(app)
-      .post('/notas-servico')
-      .set('Authorization', `Bearer ${contexto.token}`)
-      .send(dadosRascunho(cliente.id!, servico.id!));
-
-    const emissao = await request(app)
-      .post(`/notas-servico/${cadastro.body.id}/emitir`)
-      .set('Authorization', `Bearer ${contexto.token}`)
-      .send({});
-
-    expect(emissao.status).toBe(200);
-    expect(emissao.body.status).toBe('EMITIDA');
-    expect(emissao.body.numeroNfse).toBeTruthy();
-    expect(emissao.body.codigoVerificacao).toBeTruthy();
-    expect(emissao.body.dataEmissao).toBeTruthy();
-    expect(emissao.body.linkPdf).toBeTruthy();
-    expect(emissao.body.xmlUrl).toBeTruthy();
-
-    const segundaEmissao = await request(app)
-      .post(`/notas-servico/${cadastro.body.id}/emitir`)
-      .set('Authorization', `Bearer ${contexto.token}`)
-      .send({});
-    const cancelamento = await request(app)
-      .post(`/notas-servico/${cadastro.body.id}/cancelar`)
-      .set('Authorization', `Bearer ${contexto.token}`)
-      .send({});
-    const segundoCancelamento = await request(app)
-      .post(`/notas-servico/${cadastro.body.id}/cancelar`)
-      .set('Authorization', `Bearer ${contexto.token}`)
-      .send({});
-
-    expect(segundaEmissao.status).toBe(409);
-    expect(cancelamento.status).toBe(200);
-    expect(cancelamento.body.status).toBe('CANCELADA');
-    expect(segundoCancelamento.status).toBe(409);
-  });
-
   it('deve informar pendencias e prontidao fiscal da DPS', async () => {
     const contextoIncompleto = await criarContexto();
     const clienteIncompleto = await criarCliente(contextoIncompleto.empresa.id!);
@@ -612,7 +571,7 @@ describe('Gestao de rascunhos de notas de servico HTTP', () => {
     expect(original?.status).toBe('EMITIDA');
   });
 
-  it('deve registrar falha, retornar para rascunho e manter isolamento', async () => {
+  it('deve retornar nota com erro para rascunho mantendo isolamento', async () => {
     const contexto = await criarContexto();
     const outraEmpresa = await criarContexto();
     const cliente = await criarCliente(contexto.empresa.id!);
@@ -622,14 +581,14 @@ describe('Gestao de rascunhos de notas de servico HTTP', () => {
       .set('Authorization', `Bearer ${contexto.token}`)
       .send(dadosRascunho(cliente.id!, servico.id!));
 
-    const emissaoComFalha = await request(app)
-      .post(`/notas-servico/${cadastro.body.id}/emitir`)
-      .set('Authorization', `Bearer ${contexto.token}`)
-      .send({ simularFalha: true });
-
-    expect(emissaoComFalha.status).toBe(200);
-    expect(emissaoComFalha.body.status).toBe('ERRO');
-    expect(emissaoComFalha.body.mensagemErro).toBeTruthy();
+    await prisma.notaServico.update({
+      where: { id: cadastro.body.id },
+      data: {
+        status: 'ERRO',
+        mensagemErro: 'Rejeicao fiscal retornada pela SEFIN Nacional.',
+        mensagemErroFiscal: 'Rejeicao fiscal retornada pela SEFIN Nacional.',
+      },
+    });
 
     const tentativaOutraEmpresa = await request(app)
       .post(`/notas-servico/${cadastro.body.id}/retornar-rascunho`)

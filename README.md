@@ -6,8 +6,7 @@ Eletronicas (NFS-e).
 O projeto possui autenticacao, isolamento de dados por empresa e gestao de
 usuarios, clientes, servicos e notas. O fluxo fiscal oficial da NFS-e Nacional
 ja possui geracao/assinatura de DPS, envio, consulta, cancelamento,
-substituicao e download do DANFSe. As rotas simuladas continuam apenas para
-desenvolvimento local.
+substituicao e download do DANFSe.
 
 ## Tecnologias
 
@@ -32,7 +31,6 @@ desenvolvimento local.
 - Criacao e atualizacao de notas em rascunho
 - Calculo de ISS
 - Fluxo fiscal oficial de envio, consulta, cancelamento e substituicao
-- Ciclo simulado de emissao, erro, retorno para rascunho e cancelamento em desenvolvimento
 - Health check, readiness check e resposta JSON para rotas inexistentes
 - Testes unitarios e testes de integracao HTTP
 
@@ -211,9 +209,7 @@ VPS, pois ela e montada no container em `/app/schemas`.
 - `POST /notas-servico/:notaId/cancelar-nfse`
 - `POST /notas-servico/:notaId/substituir`
 - `PUT /notas-servico/:notaId`
-- `POST /notas-servico/:notaId/emitir`
 - `POST /notas-servico/:notaId/retornar-rascunho`
-- `POST /notas-servico/:notaId/cancelar`
 
 Exceto onboarding, login e rotas operacionais, as rotas exigem o cabecalho:
 
@@ -254,8 +250,7 @@ cancelamento e so muda a nota para `CANCELADA` se a SEFIN aceitar. A rota
 `POST /notas-servico/:notaId/substituir` cria um novo rascunho com vinculo para
 a NFS-e substituida; depois esse rascunho usa o envio fiscal normal. Quando a
 SEFIN aceita a DPS substituidora, a nota original passa para `SUBSTITUIDA` no
-sistema. A rota antiga `POST /notas-servico/:notaId/emitir` ainda usa o emissor
-simulado.
+sistema.
 
 Quando `numeroDps` nao e informado ao criar um rascunho, a API gera o proximo
 numero automaticamente por empresa, ambiente fiscal e serie da DPS. Informar
@@ -329,12 +324,6 @@ Nesta versao, mesmo com a producao real habilitada, a API permite operacoes
 fiscais reais apenas para empresas com `regimeTributario` igual a
 `SIMPLES_NACIONAL`. `MEI`, `LUCRO_PRESUMIDO` e `LUCRO_REAL` podem permanecer
 cadastrados, mas ainda nao sao liberados para emissao real.
-
-As rotas simuladas `POST /notas-servico/:notaId/emitir` e
-`POST /notas-servico/:notaId/cancelar` existem apenas para desenvolvimento e
-testes locais. Em `NODE_ENV="production"`, elas ficam bloqueadas. Para uso
-fiscal real, use `POST /notas-servico/:notaId/enviar-dps` e
-`POST /notas-servico/:notaId/cancelar-nfse`.
 
 Mesmo com `NFSE_PERMITIR_PRODUCAO_REAL="true"`, uma nota em `PRODUCAO` exige
 certificado A1 configurado na propria empresa. O sistema nao usa o certificado

@@ -4,7 +4,6 @@ import {
   atualizarRascunhoNotaServicoSchema,
   cancelarNfseNotaServicoSchema,
   cadastrarRascunhoNotaServicoSchema,
-  emitirNotaServicoSchema,
   notaServicoParamsSchema,
   reconciliarEnvioDpsNotaServicoSchema,
   substituirNfseNotaServicoSchema,
@@ -14,12 +13,10 @@ import { NotaServicoPresenter } from '../presenters/NotaServicoPresenter';
 import { AtualizarRascunhoNotaServicoService } from '../services/AtualizarRascunhoNotaServicoService';
 import { BaixarDanfseNotaServicoService } from '../services/BaixarDanfseNotaServicoService';
 import { BuscarNotaServicoService } from '../services/BuscarNotaServicoService';
-import { CancelarNotaServicoService } from '../services/CancelarNotaServicoService';
 import { CancelarNfseNotaServicoService } from '../services/CancelarNfseNotaServicoService';
 import { CadastrarRascunhoNotaServicoService } from '../services/CadastrarRascunhoNotaServicoService';
 import { ConsultarNfseEmitidaNotaServicoService } from '../services/ConsultarNfseEmitidaNotaServicoService';
 import { CriarRascunhoSubstituicaoNotaServicoService } from '../services/CriarRascunhoSubstituicaoNotaServicoService';
-import { EmitirNotaServicoService } from '../services/EmitirNotaServicoService';
 import { EnviarDpsAssinadaNotaServicoService } from '../services/EnviarDpsAssinadaNotaServicoService';
 import { ExcluirRascunhoNotaServicoService } from '../services/ExcluirRascunhoNotaServicoService';
 import { GerarXmlDpsNotaServicoService } from '../services/GerarXmlDpsNotaServicoService';
@@ -38,10 +35,8 @@ export class GestaoNotaServicoController {
     private readonly buscarService: BuscarNotaServicoService,
     private readonly atualizarService: AtualizarRascunhoNotaServicoService,
     private readonly excluirRascunhoService: ExcluirRascunhoNotaServicoService,
-    private readonly emitirService: EmitirNotaServicoService,
     private readonly retornarParaRascunhoService: RetornarNotaServicoParaRascunhoService,
     private readonly marcarErroComoResolvidoService: MarcarErroNotaServicoComoResolvidoService,
-    private readonly cancelarService: CancelarNotaServicoService,
     private readonly validarProntidaoFiscalService: ValidarProntidaoFiscalNotaServicoService,
     private readonly gerarXmlDpsService: GerarXmlDpsNotaServicoService,
     private readonly gerarXmlDpsAssinadoService: GerarXmlDpsAssinadoNotaServicoService,
@@ -106,18 +101,6 @@ export class GestaoNotaServicoController {
     return response.status(204).send();
   }
 
-  async emitir(request: Request, response: Response): Promise<Response> {
-    const { notaId } = notaServicoParamsSchema.parse(request.params);
-    const { simularFalha } = emitirNotaServicoSchema.parse(request.body ?? {});
-    const nota = await this.emitirService.executar(
-      request.autenticacao,
-      notaId,
-      simularFalha,
-    );
-
-    return response.status(200).json(NotaServicoPresenter.paraHttp(nota));
-  }
-
   async retornarParaRascunho(
     request: Request,
     response: Response,
@@ -137,16 +120,6 @@ export class GestaoNotaServicoController {
   ): Promise<Response> {
     const { notaId } = notaServicoParamsSchema.parse(request.params);
     const nota = await this.marcarErroComoResolvidoService.executar(
-      request.autenticacao,
-      notaId,
-    );
-
-    return response.status(200).json(NotaServicoPresenter.paraHttp(nota));
-  }
-
-  async cancelar(request: Request, response: Response): Promise<Response> {
-    const { notaId } = notaServicoParamsSchema.parse(request.params);
-    const nota = await this.cancelarService.executar(
       request.autenticacao,
       notaId,
     );

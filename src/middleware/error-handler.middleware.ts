@@ -21,7 +21,6 @@ import { EmpresaNaoEncontradaError } from '../errors/EmpresaNaoEncontradaError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { NotaServicoComPendenciasFiscaisError } from '../errors/NotaServicoComPendenciasFiscaisError';
 import { NotaServicoNaoPodeSerAlteradaError } from '../errors/NotaServicoNaoPodeSerAlteradaError';
-import { OperacaoSimuladaBloqueadaError } from '../errors/OperacaoSimuladaBloqueadaError';
 import { ServicoInativoError } from '../errors/ServicoInativoError';
 import { ServicoNaoEncontradoError } from '../errors/ServicoNaoEncontradoError';
 import { SenhaAtualIncorretaError } from '../errors/SenhaAtualIncorretaError';
@@ -129,7 +128,6 @@ export const errorHandler: ErrorRequestHandler = (
 
   if (
     error instanceof AcessoNegadoError ||
-    error instanceof OperacaoSimuladaBloqueadaError ||
     error instanceof EmpresaEmissaoBloqueadaError
   ) {
     response.status(403).json({
