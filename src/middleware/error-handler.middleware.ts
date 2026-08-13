@@ -18,7 +18,6 @@ import { CredenciaisInvalidasError } from '../errors/CredenciaisInvalidasError';
 import { EmailJaCadastradoError } from '../errors/EmailJaCadastradoError';
 import { EmpresaEmissaoBloqueadaError } from '../errors/EmpresaEmissaoBloqueadaError';
 import { EmpresaNaoEncontradaError } from '../errors/EmpresaNaoEncontradaError';
-import { LoginGoogleNaoConfiguradoError } from '../errors/LoginGoogleNaoConfiguradoError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { NotaServicoComPendenciasFiscaisError } from '../errors/NotaServicoComPendenciasFiscaisError';
 import { NotaServicoNaoPodeSerAlteradaError } from '../errors/NotaServicoNaoPodeSerAlteradaError';
@@ -142,8 +141,7 @@ export const errorHandler: ErrorRequestHandler = (
   if (
     error instanceof ChaveCriptografiaAusenteError ||
     error instanceof ConfiguracaoFiscalAusenteError ||
-    error instanceof ConfiguracaoSefinNacionalAusenteError ||
-    error instanceof LoginGoogleNaoConfiguradoError
+    error instanceof ConfiguracaoSefinNacionalAusenteError
   ) {
     response.status(503).json({
       message: error.message,

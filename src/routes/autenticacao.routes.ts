@@ -2,7 +2,6 @@ import { Router } from 'express';
 
 import {
   criarAutenticacaoMiddleware,
-  criarAutenticarUsuarioGoogleController,
   criarAutenticarUsuarioController,
   criarGestaoContaController,
   criarObterPerfilAutenticadoController,
@@ -10,17 +9,12 @@ import {
 
 const autenticacaoRoutes = Router();
 const autenticarUsuarioController = criarAutenticarUsuarioController();
-const autenticarUsuarioGoogleController =
-  criarAutenticarUsuarioGoogleController();
 const autenticacaoMiddleware = criarAutenticacaoMiddleware();
 const obterPerfilAutenticadoController = criarObterPerfilAutenticadoController();
 const gestaoContaController = criarGestaoContaController();
 
 autenticacaoRoutes.post('/sessoes', (request, response) =>
   autenticarUsuarioController.handle(request, response),
-);
-autenticacaoRoutes.post('/sessoes/google', (request, response) =>
-  autenticarUsuarioGoogleController.handle(request, response),
 );
 autenticacaoRoutes.use('/me', (request, response, next) =>
   autenticacaoMiddleware.handle(request, response, next),

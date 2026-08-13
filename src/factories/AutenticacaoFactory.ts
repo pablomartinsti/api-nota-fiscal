@@ -1,17 +1,13 @@
 import { AutenticarUsuarioController } from '../controllers/AutenticarUsuarioController';
-import { AutenticarUsuarioGoogleController } from '../controllers/AutenticarUsuarioGoogleController';
 import { GestaoContaController } from '../controllers/GestaoContaController';
 import { ObterPerfilAutenticadoController } from '../controllers/ObterPerfilAutenticadoController';
 import { obterJwtSecret } from '../config/auth';
-import { env } from '../config/env';
 import { PrismaEmpresaRepository } from '../database/repositories/PrismaEmpresaRepository';
 import { PrismaUsuarioRepository } from '../database/repositories/PrismaUsuarioRepository';
 import { AutenticacaoMiddleware } from '../middleware/autenticacao.middleware';
 import { BcryptComparadorHash } from '../security/BcryptComparadorHash';
 import { BcryptGeradorHash } from '../security/BcryptGeradorHash';
-import { GoogleIdentityTokenVerifier } from '../security/GoogleIdentityTokenVerifier';
 import { JwtGerenciadorToken } from '../security/JwtGerenciadorToken';
-import { AutenticarUsuarioGoogleService } from '../services/AutenticarUsuarioGoogleService';
 import { AutenticarUsuarioService } from '../services/AutenticarUsuarioService';
 import { AlterarSenhaUsuarioAutenticadoService } from '../services/AlterarSenhaUsuarioAutenticadoService';
 import { AtualizarContaUsuarioService } from '../services/AtualizarContaUsuarioService';
@@ -41,22 +37,6 @@ export function criarAutenticarUsuarioController(): AutenticarUsuarioController 
   );
 
   return new AutenticarUsuarioController(service);
-}
-
-export function criarAutenticarUsuarioGoogleController(): AutenticarUsuarioGoogleController {
-  const { usuarioRepository, empresaRepository, gerenciadorToken } =
-    criarDependenciasAutenticacao();
-  const verificadorTokenGoogle = env.GOOGLE_CLIENT_ID
-    ? new GoogleIdentityTokenVerifier(env.GOOGLE_CLIENT_ID)
-    : undefined;
-  const service = new AutenticarUsuarioGoogleService(
-    usuarioRepository,
-    empresaRepository,
-    gerenciadorToken,
-    verificadorTokenGoogle,
-  );
-
-  return new AutenticarUsuarioGoogleController(service);
 }
 
 export function criarAutenticacaoMiddleware(): AutenticacaoMiddleware {
