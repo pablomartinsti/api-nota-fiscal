@@ -11,7 +11,6 @@ import { CifradorTexto } from '../security/CifradorTexto';
 export interface ConfiguracaoFiscalEmpresaResolvida {
   ambienteFiscalPadrao: AmbienteFiscal;
   serieDpsPadrao: string;
-  certificadoA1Path?: string;
   certificadoA1NomeArquivo?: string;
   certificadoA1Conteudo?: string;
   certificadoA1Senha?: string;
@@ -19,7 +18,6 @@ export interface ConfiguracaoFiscalEmpresaResolvida {
 }
 
 export interface ConfiguracaoCertificadoA1EmpresaResolvida {
-  caminho?: string;
   conteudoBase64?: string;
   senha: string;
 }
@@ -44,10 +42,15 @@ export class ResolverConfiguracaoFiscalEmpresaService {
     return {
       ambienteFiscalPadrao: configuracao.ambienteFiscalPadrao,
       serieDpsPadrao: configuracao.serieDpsPadrao,
-      certificadoA1Path: configuracao.certificadoA1Path,
-      certificadoA1NomeArquivo: configuracao.certificadoA1NomeArquivo,
-      certificadoA1Conteudo: configuracao.certificadoA1Conteudo,
-      certificadoA1Senha: configuracao.certificadoA1Senha,
+      ...(configuracao.certificadoA1NomeArquivo
+        ? { certificadoA1NomeArquivo: configuracao.certificadoA1NomeArquivo }
+        : {}),
+      ...(configuracao.certificadoA1Conteudo
+        ? { certificadoA1Conteudo: configuracao.certificadoA1Conteudo }
+        : {}),
+      ...(configuracao.certificadoA1Senha
+        ? { certificadoA1Senha: configuracao.certificadoA1Senha }
+        : {}),
       emissaoHabilitada: configuracao.emissaoHabilitada,
     };
   }
@@ -68,13 +71,12 @@ export class ResolverConfiguracaoFiscalEmpresaService {
 
     if (
       !configuracao.certificadoA1Senha ||
-      (!configuracao.certificadoA1Conteudo && !configuracao.certificadoA1Path)
+      !configuracao.certificadoA1Conteudo
     ) {
       return undefined;
     }
 
     return {
-      caminho: configuracao.certificadoA1Path,
       conteudoBase64: configuracao.certificadoA1Conteudo
         ? this.obterTextoEmClaro(configuracao.certificadoA1Conteudo)
         : undefined,

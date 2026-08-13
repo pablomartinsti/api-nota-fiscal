@@ -38,8 +38,6 @@ export function criarGestaoClienteController(): GestaoClienteController {
         baseUrlHomologacao: env.NFSE_ADN_HOMOLOGACAO_BASE_URL,
         baseUrlProducao: env.NFSE_ADN_PRODUCAO_BASE_URL,
         timeoutMs: env.NFSE_ADN_TIMEOUT_MS,
-        certificadoPath: env.NFSE_CERTIFICADO_PATH,
-        certificadoSenha: env.NFSE_CERTIFICADO_SENHA,
       })),
       resolverConfiguracaoFiscal,
       new ValidarPermissaoProducaoRealService(

@@ -349,7 +349,7 @@ describe('EnviarDpsAssinadaNotaServicoService', () => {
     expect(clienteNfse.enviarDpsAssinada).toHaveBeenCalledWith({
       ambienteFiscal: AmbienteFiscal.PRODUCAO,
       xmlAssinado: '<DPS>assinado</DPS>',
-      certificadoPath: 'C:/certificados/empresa.pfx',
+      certificadoConteudoBase64: 'base64-certificado',
       certificadoSenha: 'senha-empresa',
     });
   });
@@ -434,7 +434,7 @@ function criarResolverComCertificadoEmpresa() {
   return {
     validarEmissaoHabilitada: vi.fn().mockResolvedValue(undefined),
     obterCertificadoA1ParaAmbiente: vi.fn().mockResolvedValue({
-      caminho: 'C:/certificados/empresa.pfx',
+      conteudoBase64: 'base64-certificado',
       senha: 'senha-empresa',
     }),
   } as unknown as ResolverConfiguracaoFiscalEmpresaService;

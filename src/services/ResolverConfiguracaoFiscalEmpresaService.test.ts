@@ -31,7 +31,7 @@ describe('ResolverConfiguracaoFiscalEmpresaService', () => {
         empresaId: 'empresa-1',
         ambienteFiscalPadrao: AmbienteFiscal.PRODUCAO,
         serieDpsPadrao: '12',
-        certificadoA1Path: 'C:/certificados/empresa.pfx',
+        certificadoA1Conteudo: 'base64-certificado',
         certificadoA1Senha: 'senha',
       }),
     );
@@ -39,12 +39,12 @@ describe('ResolverConfiguracaoFiscalEmpresaService', () => {
     await expect(service.executar('empresa-1')).resolves.toEqual({
       ambienteFiscalPadrao: AmbienteFiscal.PRODUCAO,
       serieDpsPadrao: '12',
-      certificadoA1Path: 'C:/certificados/empresa.pfx',
+      certificadoA1Conteudo: 'base64-certificado',
       certificadoA1Senha: 'senha',
       emissaoHabilitada: true,
     });
     await expect(service.obterCertificadoA1('empresa-1')).resolves.toEqual({
-      caminho: 'C:/certificados/empresa.pfx',
+      conteudoBase64: 'base64-certificado',
       senha: 'senha',
     });
   });
@@ -62,7 +62,7 @@ describe('ResolverConfiguracaoFiscalEmpresaService', () => {
     const service = criarService(
       new ConfiguracaoFiscalEmpresa({
         empresaId: 'empresa-1',
-        certificadoA1Path: 'C:/certificados/empresa.pfx',
+        certificadoA1Conteudo: 'base64-certificado',
         certificadoA1Senha: 'criptografado:senha',
       }),
       cifradorTexto,
@@ -132,7 +132,7 @@ describe('ResolverConfiguracaoFiscalEmpresaService', () => {
         empresaId: 'empresa-1',
         ambienteFiscalPadrao: AmbienteFiscal.PRODUCAO,
         serieDpsPadrao: '1',
-        certificadoA1Path: 'C:/certificados/empresa.pfx',
+        certificadoA1Conteudo: 'base64-certificado',
         certificadoA1Senha: 'senha',
       }),
       undefined,

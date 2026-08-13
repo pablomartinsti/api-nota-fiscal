@@ -170,7 +170,7 @@ export class ConfiguracaoFiscalEmpresa {
   possuiCertificadoA1(): boolean {
     return Boolean(
       this._certificadoA1Senha &&
-        (this._certificadoA1Conteudo || this._certificadoA1Path),
+        this._certificadoA1Conteudo,
     );
   }
 

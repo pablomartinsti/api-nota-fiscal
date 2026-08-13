@@ -79,7 +79,7 @@ describe('ValidarProntidaoFiscalNotaServicoService', () => {
         empresaId: 'empresa-1',
         ambienteFiscalPadrao: AmbienteFiscal.PRODUCAO,
         serieDpsPadrao: '1',
-        certificadoA1Path: 'storage/certificados/empresa-1.pfx',
+        certificadoA1Conteudo: 'conteudo-certificado-criptografado',
         certificadoA1Senha: 'senha-criptografada',
       }),
       options: {
@@ -115,7 +115,7 @@ describe('ValidarProntidaoFiscalNotaServicoService', () => {
         empresaId: 'empresa-1',
         ambienteFiscalPadrao: AmbienteFiscal.PRODUCAO,
         serieDpsPadrao: '1',
-        certificadoA1Path: 'storage/certificados/empresa-1.pfx',
+        certificadoA1Conteudo: 'conteudo-certificado-criptografado',
         certificadoA1Senha: 'senha-criptografada',
       }),
       options: {

@@ -265,8 +265,6 @@ numero automaticamente por empresa, ambiente fiscal e serie da DPS. Informar
 Variaveis fiscais:
 
 ```env
-NFSE_CERTIFICADO_PATH=""
-NFSE_CERTIFICADO_SENHA=""
 NFSE_CERTIFICADO_CRYPTO_KEY=""
 NFSE_XSD_DPS_PATH=""
 NFSE_XSD_EVENTO_PATH=""

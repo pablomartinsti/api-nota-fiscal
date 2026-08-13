@@ -49,9 +49,7 @@ export class AtualizarConfiguracaoFiscalEmpresaAutenticadaService {
     return {
       ambienteFiscalPadrao: dados.ambienteFiscalPadrao,
       serieDpsPadrao: dados.serieDpsPadrao,
-      certificadoA1Path: removerCertificado
-        ? undefined
-        : configuracaoExistente?.certificadoA1Path,
+      certificadoA1Path: undefined,
       certificadoA1NomeArquivo: removerCertificado
         ? undefined
         : configuracaoExistente?.certificadoA1NomeArquivo,

@@ -4,7 +4,6 @@ import { access, readFile } from 'node:fs/promises';
 import { basename } from 'node:path';
 
 import { env } from '../config/env';
-import { ProvedorCertificadoA1Arquivo } from '../fiscal/ProvedorCertificadoA1Arquivo';
 
 interface ResultadoCheck {
   nome: string;
@@ -17,12 +16,10 @@ async function main(): Promise<void> {
   const sefinHomologacaoBaseUrl =
     env.NFSE_SEFIN_HOMOLOGACAO_BASE_URL ?? env.NFSE_SEFIN_BASE_URL;
 
-  resultados.push(await verificarArquivo('Certificado A1', env.NFSE_CERTIFICADO_PATH));
   resultados.push(await verificarArquivo('XSD da DPS', env.NFSE_XSD_DPS_PATH));
   resultados.push(
     await verificarArquivo('XSD do pedido de evento', env.NFSE_XSD_EVENTO_PATH),
   );
-  resultados.push(verificarValor('Senha do certificado', env.NFSE_CERTIFICADO_SENHA));
   resultados.push(verificarValor('URL base da SEFIN em homologacao', sefinHomologacaoBaseUrl));
   resultados.push(
     verificarValor('Endpoint de envio da DPS', env.NFSE_SEFIN_ENVIO_DPS_PATH),
@@ -30,7 +27,6 @@ async function main(): Promise<void> {
   resultados.push(verificarUrlSefin(sefinHomologacaoBaseUrl));
   resultados.push(verificarEndpointEnvio(env.NFSE_SEFIN_ENVIO_DPS_PATH));
   resultados.push(await verificarGitignore());
-  resultados.push(await verificarCertificado());
 
   for (const resultado of resultados) {
     const marcador = resultado.sucesso ? 'OK' : 'ERRO';
@@ -123,35 +119,6 @@ async function verificarGitignore(): Promise<ResultadoCheck> {
       nome: 'Protecao de certificados no .gitignore',
       sucesso: false,
       detalhe: '.gitignore nao encontrado',
-    };
-  }
-}
-
-async function verificarCertificado(): Promise<ResultadoCheck> {
-  if (!env.NFSE_CERTIFICADO_PATH || env.NFSE_CERTIFICADO_SENHA === undefined) {
-    return {
-      nome: 'Leitura do certificado A1',
-      sucesso: false,
-      detalhe: 'configuracao incompleta',
-    };
-  }
-
-  try {
-    const certificado = await new ProvedorCertificadoA1Arquivo(() => ({
-      caminho: env.NFSE_CERTIFICADO_PATH,
-      senha: env.NFSE_CERTIFICADO_SENHA,
-    })).obter();
-
-    return {
-      nome: 'Leitura do certificado A1',
-      sucesso: true,
-      detalhe: `CNPJ ${certificado.cnpj}, valido ate ${certificado.validoAte.toISOString().slice(0, 10)}`,
-    };
-  } catch {
-    return {
-      nome: 'Leitura do certificado A1',
-      sucesso: false,
-      detalhe: 'nao foi possivel abrir ou validar o certificado',
     };
   }
 }

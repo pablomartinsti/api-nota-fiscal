@@ -6,6 +6,7 @@ import {
 import { TipoEventoFiscalNotaServico } from '../entities/NotaServicoEventoFiscal';
 import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
 import { CertificadoA1CnpjDivergenteError } from '../errors/CertificadoA1CnpjDivergenteError';
+import { ConfiguracaoFiscalAusenteError } from '../errors/ConfiguracaoFiscalAusenteError';
 import { NotaServicoNaoEncontradaError } from '../errors/NotaServicoNaoEncontradaError';
 import { TransicaoStatusNotaInvalidaError } from '../errors/TransicaoStatusNotaInvalidaError';
 import { AssinadorXmlDps } from '../fiscal/AssinadorXmlDps';
@@ -58,7 +59,7 @@ export class CancelarNfseNotaServicoService {
     private readonly empresaRepository: EmpresaRepository,
     private readonly geradorXml: GeradorXmlPedidoCancelamentoNfseNacional,
     private readonly validadorXml: ValidadorXmlDps,
-    private readonly provedorCertificado: ProvedorCertificadoA1,
+    private readonly provedorCertificado: ProvedorCertificadoA1 | undefined,
     private readonly assinadorXml: AssinadorXmlDps,
     private readonly clienteNfse: ClienteNfseNacional,
     private readonly resolverConfiguracaoFiscal?: ResolverConfiguracaoFiscalEmpresaService,
@@ -227,11 +228,14 @@ export class CancelarNfseNotaServicoService {
       );
 
     if (!configuracaoCertificado) {
-      return this.provedorCertificado.obter();
+      if (this.provedorCertificado) {
+        return this.provedorCertificado.obter();
+      }
+
+      throw new ConfiguracaoFiscalAusenteError();
     }
 
     return new ProvedorCertificadoA1Arquivo(() => ({
-      caminho: configuracaoCertificado.caminho,
       conteudoBase64: configuracaoCertificado.conteudoBase64,
       senha: configuracaoCertificado.senha,
     })).obter();

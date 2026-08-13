@@ -4,7 +4,6 @@ import { ConfiguracaoCertificadoClienteNfseInput } from '../fiscal/ClienteNfseNa
 import { ResolverConfiguracaoFiscalEmpresaService } from './ResolverConfiguracaoFiscalEmpresaService';
 
 type ConfiguracaoCertificadoFiscal = {
-  caminho?: string;
   conteudoBase64?: string;
   senha?: string;
 };
@@ -77,7 +76,6 @@ export async function prepararInputClienteNfse<TInput extends object>(
 
   return {
     ...inputBase,
-    certificadoPath: configuracaoCertificado.caminho,
     certificadoConteudoBase64: configuracaoCertificado.conteudoBase64,
     certificadoSenha: configuracaoCertificado.senha,
   };

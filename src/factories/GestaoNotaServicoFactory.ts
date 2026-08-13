@@ -13,7 +13,6 @@ import { AssinadorXmlDpsXmlDsig } from '../fiscal/AssinadorXmlDpsXmlDsig';
 import { AssinadorXmlPedRegEventoXmlDsig } from '../fiscal/AssinadorXmlPedRegEventoXmlDsig';
 import { GeradorXmlPedidoCancelamentoNfseNacional } from '../fiscal/GeradorXmlPedidoCancelamentoNfseNacional';
 import { GeradorPdfDanfseNacional } from '../fiscal/GeradorPdfDanfseNacional';
-import { ProvedorCertificadoA1Arquivo } from '../fiscal/ProvedorCertificadoA1Arquivo';
 import { ValidadorXmlDpsXsd } from '../fiscal/ValidadorXmlDpsXsd';
 import { AesGcmCifradorTexto } from '../security/AesGcmCifradorTexto';
 import { AtualizarRascunhoNotaServicoService } from '../services/AtualizarRascunhoNotaServicoService';
@@ -87,10 +86,7 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     gerarXmlDpsService,
     empresaRepository,
     new ValidadorXmlDpsXsd(() => env.NFSE_XSD_DPS_PATH),
-    new ProvedorCertificadoA1Arquivo(() => ({
-      caminho: env.NFSE_CERTIFICADO_PATH,
-      senha: env.NFSE_CERTIFICADO_SENHA,
-    })),
+    undefined,
     new AssinadorXmlDpsXmlDsig(),
     resolverConfiguracaoFiscal,
     notaRepository,
@@ -101,13 +97,6 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     baseUrlProducao: env.NFSE_SEFIN_PRODUCAO_BASE_URL,
     endpointEnvioDps: env.NFSE_SEFIN_ENVIO_DPS_PATH,
     timeoutMs: env.NFSE_SEFIN_TIMEOUT_MS,
-    certificadoPath: env.NFSE_CERTIFICADO_PATH,
-    certificadoSenha: env.NFSE_CERTIFICADO_SENHA,
-  }));
-
-  const provedorCertificado = new ProvedorCertificadoA1Arquivo(() => ({
-    caminho: env.NFSE_CERTIFICADO_PATH,
-    senha: env.NFSE_CERTIFICADO_SENHA,
   }));
 
   return new GestaoNotaServicoController(
@@ -167,7 +156,7 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
       empresaRepository,
       new GeradorXmlPedidoCancelamentoNfseNacional(),
       new ValidadorXmlDpsXsd(() => env.NFSE_XSD_EVENTO_PATH),
-      provedorCertificado,
+      undefined,
       new AssinadorXmlPedRegEventoXmlDsig(),
       clienteNfse,
       resolverConfiguracaoFiscal,
