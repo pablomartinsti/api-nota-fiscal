@@ -85,7 +85,6 @@ export function criarGestaoNotaServicoController(): GestaoNotaServicoController 
     notaRepository,
   );
   const clienteNfse = new ClienteHttpSefinNacional(() => ({
-    baseUrl: env.NFSE_SEFIN_BASE_URL,
     baseUrlHomologacao: env.NFSE_SEFIN_HOMOLOGACAO_BASE_URL,
     baseUrlProducao: env.NFSE_SEFIN_PRODUCAO_BASE_URL,
     endpointEnvioDps: env.NFSE_SEFIN_ENVIO_DPS_PATH,

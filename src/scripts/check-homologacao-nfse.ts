@@ -13,8 +13,7 @@ interface ResultadoCheck {
 
 async function main(): Promise<void> {
   const resultados: ResultadoCheck[] = [];
-  const sefinHomologacaoBaseUrl =
-    env.NFSE_SEFIN_HOMOLOGACAO_BASE_URL ?? env.NFSE_SEFIN_BASE_URL;
+  const sefinHomologacaoBaseUrl = env.NFSE_SEFIN_HOMOLOGACAO_BASE_URL;
 
   resultados.push(await verificarArquivo('XSD da DPS', env.NFSE_XSD_DPS_PATH));
   resultados.push(

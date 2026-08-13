@@ -38,7 +38,7 @@ Configure no `.env`:
 NFSE_CERTIFICADO_CRYPTO_KEY="chave-base64-com-32-bytes"
 NFSE_XSD_DPS_PATH="C:\caminho\nfse-xsd\Schemas\1.01\DPS_v1.01.xsd"
 NFSE_XSD_EVENTO_PATH="C:\caminho\nfse-xsd\Schemas\1.01\pedRegEvento_v1.01.xsd"
-NFSE_SEFIN_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/SefinNacional"
+NFSE_SEFIN_HOMOLOGACAO_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/SefinNacional"
 NFSE_SEFIN_ENVIO_DPS_PATH="/nfse"
 NFSE_SEFIN_TIMEOUT_MS=15000
 NFSE_PERMITIR_PRODUCAO_REAL="false"
@@ -53,7 +53,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 A documentacao oficial da SEFIN Nacional abre pelo caminho com `/API`, mas os
 recursos carregados por ela apontam para `/SefinNacional`. Por isso:
 
-- `NFSE_SEFIN_BASE_URL` deve ser `https://sefin.producaorestrita.nfse.gov.br/SefinNacional`;
+- `NFSE_SEFIN_HOMOLOGACAO_BASE_URL` deve ser `https://sefin.producaorestrita.nfse.gov.br/SefinNacional`;
 - `NFSE_SEFIN_ENVIO_DPS_PATH` deve ser `/nfse`;
 - o body enviado para a SEFIN deve ser JSON no formato
   `{ "dpsXmlGZipB64": "..." }`, com a DPS assinada compactada em GZip e
@@ -294,7 +294,7 @@ Se a resposta vier como `ERRO`, confira:
 Erros comuns:
 
 - `Configuracao fiscal para assinatura da DPS nao foi informada.`: falta
-  certificado, senha ou XSD no `.env`.
+  certificado A1 na configuracao fiscal da empresa ou XSD no `.env`.
 - `Configuracao da SEFIN Nacional nao foi informada.`: URL base ou endpoint da
   SEFIN esta ausente ou invalido.
 - `Nao foi possivel comunicar com a SEFIN Nacional.`: falha de rede, TLS,
@@ -371,7 +371,6 @@ curl "http://localhost:3333/notas-servico/NOTA_ID/consulta-nfse" \
 ```
 
 4. mantenha a nota como evidencia de homologacao;
-5. nao use a rota simulada `POST /notas-servico/:notaId/emitir` para essa nota.
 
 Para cancelar uma NFS-e emitida na SEFIN Nacional:
 

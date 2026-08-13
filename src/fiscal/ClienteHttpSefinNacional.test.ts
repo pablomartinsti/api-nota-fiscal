@@ -420,7 +420,8 @@ describe('ClienteHttpSefinNacional', () => {
     const transportador = vi.fn<TransportadorHttpSefinNacional>();
     const cliente = new ClienteHttpSefinNacional(
       () => ({
-        baseUrl: 'http://sefin.producaorestrita.nfse.gov.br/SefinNacional',
+        baseUrlHomologacao:
+          'http://sefin.producaorestrita.nfse.gov.br/SefinNacional',
         endpointEnvioDps: 'nfse',
         certificadoPath: 'certificado.pfx',
         certificadoSenha: 'senha',

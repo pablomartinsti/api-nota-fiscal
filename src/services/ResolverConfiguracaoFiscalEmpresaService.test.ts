@@ -104,7 +104,7 @@ describe('ResolverConfiguracaoFiscalEmpresaService', () => {
     });
   });
 
-  it('deve permitir fallback global apenas em homologacao', async () => {
+  it('deve retornar indefinido em homologacao sem certificado da empresa', async () => {
     const service = criarService(null);
 
     await expect(

@@ -229,10 +229,9 @@ SEFIN Nacional informa `basePath` `/SefinNacional` e envio sincrono em
 `POST /nfse`, recebendo JSON com o campo `dpsXmlGZipB64`. Por isso, a
 URL configurada deve ficar sem `/API`. A API separa a URL da SEFIN por
 ambiente fiscal: `NFSE_SEFIN_HOMOLOGACAO_BASE_URL` para Producao Restrita e
-`NFSE_SEFIN_PRODUCAO_BASE_URL` para producao real. A variavel antiga
-`NFSE_SEFIN_BASE_URL` continua aceita apenas como fallback temporario de
-homologacao. O endpoint interno `POST /notas-servico/:notaId/enviar-dps`
-registra sucesso ou erro fiscal na NotaServico conforme o retorno recebido.
+`NFSE_SEFIN_PRODUCAO_BASE_URL` para producao real. O endpoint interno
+`POST /notas-servico/:notaId/enviar-dps` registra sucesso ou erro fiscal na
+NotaServico conforme o retorno recebido.
 Antes da chamada externa, a nota sai de `RASCUNHO` para `PROCESSANDO`, evitando
 novo envio concorrente da mesma DPS. Em caso de rejeicao fiscal, retorno
 inconsistente ou falha de comunicacao, a nota fica como `ERRO` com mensagem
@@ -264,7 +263,6 @@ NFSE_XSD_DPS_PATH=""
 NFSE_XSD_EVENTO_PATH=""
 NFSE_SEFIN_HOMOLOGACAO_BASE_URL="https://sefin.producaorestrita.nfse.gov.br/SefinNacional"
 NFSE_SEFIN_PRODUCAO_BASE_URL=""
-NFSE_SEFIN_BASE_URL=""
 NFSE_SEFIN_ENVIO_DPS_PATH="/nfse"
 NFSE_SEFIN_TIMEOUT_MS=15000
 NFSE_PERMITIR_PRODUCAO_REAL="false"
@@ -280,9 +278,9 @@ O modelo `ConfiguracaoFiscalEmpresa` ja existe para preparar o SaaS
 multiempresa, guardando ambiente fiscal padrao, serie padrao da DPS e
 certificado A1 por empresa. O fluxo fiscal ja consulta essa
 configuracao ao criar rascunhos, assinar XML, enviar DPS, consultar NFS-e e
-cancelar NFS-e. Quando a empresa ainda nao tiver configuracao ativa ou
-certificado completo configurado, a API usa temporariamente as variaveis globais
-do `.env` como fallback apenas em `HOMOLOGACAO`.
+cancelar NFS-e. Quando a empresa ainda nao tiver certificado completo
+configurado, as operacoes que exigem assinatura ou comunicacao com a SEFIN
+retornam erro de configuracao fiscal.
 
 Para preparar producao real, configure o certificado A1 pela rota de upload em
 Base64. A API valida senha, validade e CNPJ do certificado contra a empresa
@@ -312,9 +310,7 @@ Exemplo para atualizar a configuracao fiscal da empresa autenticada:
 A resposta nunca retorna `certificadoA1Senha` nem `certificadoA1Conteudo`; ela
 informa apenas se o certificado esta configurado e o nome do arquivo enviado.
 Para remover o certificado cadastrado, envie `removerCertificadoA1: true` na
-atualizacao da configuracao fiscal. A configuracao por caminho local continua
-existindo apenas como fallback temporario de desenvolvimento/homologacao via
-variaveis de ambiente.
+atualizacao da configuracao fiscal.
 
 Por seguranca, operacoes fiscais em `PRODUCAO` ficam bloqueadas por padrao.
 Enviar DPS, consultar NFS-e, cancelar NFS-e e criar substituicao em producao

@@ -21,7 +21,6 @@ import { ProvedorCertificadoA1Arquivo } from './ProvedorCertificadoA1Arquivo';
 import { RespostaSefinNacionalParser } from './RespostaSefinNacionalParser';
 
 export interface ConfiguracaoClienteHttpSefinNacional {
-  baseUrl?: string;
   baseUrlHomologacao?: string;
   baseUrlProducao?: string;
   endpointEnvioDps?: string;
@@ -448,10 +447,7 @@ export class ClienteHttpSefinNacional implements ClienteNfseNacional {
       return configuracao.baseUrlProducao?.trim();
     }
 
-    return (
-      configuracao.baseUrlHomologacao?.trim() ??
-      configuracao.baseUrl?.trim()
-    );
+    return configuracao.baseUrlHomologacao?.trim();
   }
 
   private criarCorpoEnvioDps(xmlAssinado: string): string {
