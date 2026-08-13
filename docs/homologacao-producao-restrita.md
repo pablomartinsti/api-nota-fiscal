@@ -19,8 +19,8 @@ O Swagger oficial informa `basePath` `/SefinNacional` e recepcao sincrona em
 
 Confira estes itens:
 
-- Certificado A1 `.pfx` disponivel localmente.
-- Senha do certificado A1.
+- Certificado A1 cadastrado na configuracao fiscal da empresa.
+- Acesso de dono ou administrador para conferir a configuracao fiscal.
 - CNPJ da empresa cadastrada igual ao CNPJ do certificado.
 - XSD oficial da DPS baixado.
 - PostgreSQL rodando.
@@ -35,8 +35,6 @@ Nunca salve certificado real, senha ou `.env` no Git.
 Configure no `.env`:
 
 ```env
-NFSE_CERTIFICADO_PATH="C:\caminho\certificados\empresa.pfx"
-NFSE_CERTIFICADO_SENHA="senha-do-certificado"
 NFSE_CERTIFICADO_CRYPTO_KEY="chave-base64-com-32-bytes"
 NFSE_XSD_DPS_PATH="C:\caminho\nfse-xsd\Schemas\1.01\DPS_v1.01.xsd"
 NFSE_XSD_EVENTO_PATH="C:\caminho\nfse-xsd\Schemas\1.01\pedRegEvento_v1.01.xsd"
@@ -61,16 +59,13 @@ recursos carregados por ela apontam para `/SefinNacional`. Por isso:
   `{ "dpsXmlGZipB64": "..." }`, com a DPS assinada compactada em GZip e
   codificada em Base64.
 - o certificado A1 configurado para a empresa tambem e apresentado na conexao
-  HTTPS com autenticacao mutua TLS. Em desenvolvimento, as variaveis
-  `NFSE_CERTIFICADO_PATH` e `NFSE_CERTIFICADO_SENHA` ainda funcionam como
-  fallback de homologacao.
+  HTTPS com autenticacao mutua TLS.
 
-Observacao: o banco ja possui a tabela de configuracao fiscal por empresa. O
-fluxo fiscal ja usa essa configuracao para ambiente fiscal padrao, serie padrao
-da DPS e certificado A1 quando esses dados estiverem cadastrados para a empresa.
-Enquanto a empresa ainda nao tiver configuracao ativa ou certificado completo,
-o `.env` global continua sendo usado como fallback temporario apenas em
-`HOMOLOGACAO`.
+Observacao: o banco possui uma configuracao fiscal por empresa. O fluxo fiscal
+usa essa configuracao para ambiente fiscal padrao, serie da DPS e certificado A1.
+O arquivo e a senha do certificado sao validados no upload, criptografados e
+salvos no banco. O `.env` nao armazena caminho nem senha de certificado e nao
+existe fallback local, inclusive em homologacao.
 
 Para cadastrar a configuracao fiscal pela API, use a rota autenticada:
 
@@ -135,8 +130,8 @@ ativar o ambiente oficial.
 Mesmo com essa variavel habilitada, producao real exige certificado A1
 configurado na propria empresa pela rota
 `POST /empresa/configuracao-fiscal/certificado-a1`.
-O certificado global do `.env` nao e usado como fallback para notas em
-`PRODUCAO`.
+O certificado e obtido exclusivamente da configuracao fiscal criptografada da
+empresa, tanto em homologacao quanto em producao.
 
 Nesta versao, producao real tambem esta liberada apenas para empresas com
 `regimeTributario` igual a `SIMPLES_NACIONAL`. Empresas `MEI`,
@@ -153,12 +148,8 @@ npm run nfse:check-homologacao
 
 Esse comando valida somente configuracao local:
 
-- existencia do certificado A1;
 - existencia do XSD da DPS;
 - existencia do XSD do pedido de evento;
-- leitura do certificado;
-- validade do certificado;
-- CNPJ encontrado no certificado;
 - formato da URL da SEFIN;
 - protecao basica do `.gitignore`.
 
@@ -169,8 +160,8 @@ Ele nao envia XML para a SEFIN.
 Antes de chamar a rota que envia para a SEFIN, confira manualmente:
 
 - o `.env` aponta para Producao Restrita, nao para Producao;
-- o certificado A1 e o mesmo CNPJ da empresa prestadora;
-- o certificado nao esta vencido;
+- o certificado A1 esta cadastrado na configuracao fiscal da empresa;
+- o certificado pertence ao mesmo CNPJ da empresa prestadora e nao esta vencido;
 - o XML assinado foi gerado sem erro;
 - o cliente/tomador usado e de teste;
 - a nota continua em `RASCUNHO`;
