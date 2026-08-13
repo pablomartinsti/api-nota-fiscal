@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { Empresa, RegimeTributario } from '../entities/Empresa';
 import { PerfilUsuario, Usuario } from '../entities/Usuario';
 import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
-import { InMemoryEmpresaRepository } from '../repositories/in-memory/InMemoryEmpresaRepository';
-import { InMemoryUsuarioRepository } from '../repositories/in-memory/InMemoryUsuarioRepository';
+import { EmpresaRepository } from '../repositories/EmpresaRepository';
+import { UsuarioRepository } from '../repositories/UsuarioRepository';
 import { ValidarContextoAutenticadoService } from './ValidarContextoAutenticadoService';
 
 async function criarContexto({
@@ -14,28 +14,26 @@ async function criarContexto({
   empresaAtiva?: boolean;
   usuarioAtivo?: boolean;
 } = {}) {
-  const empresaRepository = new InMemoryEmpresaRepository();
-  const usuarioRepository = new InMemoryUsuarioRepository();
-  const empresa = await empresaRepository.salvar(
-    new Empresa({
-      razaoSocial: 'Empresa Contexto Ltda',
-      cnpj: '12345678000190',
-      regimeTributario: RegimeTributario.SIMPLES_NACIONAL,
-      cidade: 'Campinas',
-      uf: 'SP',
-      ativo: empresaAtiva,
-    }),
-  );
-  const usuario = await usuarioRepository.salvar(
-    new Usuario({
-      empresaId: empresa.id!,
-      nome: 'Maria Silva',
-      email: 'maria@exemplo.com',
-      senhaHash: 'hash-seguro',
-      perfil: PerfilUsuario.DONO,
-      ativo: usuarioAtivo,
-    }),
-  );
+  const empresa = new Empresa({
+    id: 'empresa-1',
+    razaoSocial: 'Empresa Contexto Ltda',
+    cnpj: '12345678000190',
+    regimeTributario: RegimeTributario.SIMPLES_NACIONAL,
+    cidade: 'Campinas',
+    uf: 'SP',
+    ativo: empresaAtiva,
+  });
+  const usuario = new Usuario({
+    id: 'usuario-1',
+    empresaId: empresa.id!,
+    nome: 'Maria Silva',
+    email: 'maria@exemplo.com',
+    senhaHash: 'hash-seguro',
+    perfil: PerfilUsuario.DONO,
+    ativo: usuarioAtivo,
+  });
+  const empresaRepository = criarEmpresaRepository(empresa);
+  const usuarioRepository = criarUsuarioRepository(usuario);
   const service = new ValidarContextoAutenticadoService(
     usuarioRepository,
     empresaRepository,
@@ -48,8 +46,31 @@ async function criarContexto({
   };
 }
 
+function criarEmpresaRepository(empresa: Empresa): EmpresaRepository {
+  return {
+    salvar: vi.fn(),
+    buscarPorId: vi.fn(async (id: string) =>
+      id === empresa.id ? empresa : null,
+    ),
+    buscarPorCnpj: vi.fn(),
+  };
+}
+
+function criarUsuarioRepository(usuario: Usuario): UsuarioRepository {
+  return {
+    salvar: vi.fn(),
+    buscarPorId: vi.fn(async (id: string) =>
+      id === usuario.id ? usuario : null,
+    ),
+    buscarPorIdEEmpresaId: vi.fn(),
+    buscarPorEmail: vi.fn(),
+    buscarDonoPorEmpresaId: vi.fn(),
+    listarPorEmpresaId: vi.fn(),
+  };
+}
+
 describe('ValidarContextoAutenticadoService', () => {
-  it('deve retornar o contexto atual de usuário e Empresa ativos', async () => {
+  it('deve retornar o contexto atual de usuario e empresa ativos', async () => {
     const { empresa, service, usuario } = await criarContexto();
 
     const contexto = await service.executar({
@@ -65,7 +86,7 @@ describe('ValidarContextoAutenticadoService', () => {
     });
   });
 
-  it('deve rejeitar usuário inexistente ou inativo', async () => {
+  it('deve rejeitar usuario inexistente ou inativo', async () => {
     const contextoAtivo = await criarContexto();
     const contextoInativo = await criarContexto({ usuarioAtivo: false });
 
@@ -85,7 +106,7 @@ describe('ValidarContextoAutenticadoService', () => {
     ).rejects.toBeInstanceOf(AutenticacaoInvalidaError);
   });
 
-  it('deve rejeitar Empresa inativa ou incompatível com o usuário', async () => {
+  it('deve rejeitar empresa inativa ou incompativel com o usuario', async () => {
     const contextoAtivo = await criarContexto();
     const contextoInativo = await criarContexto({ empresaAtiva: false });
 
