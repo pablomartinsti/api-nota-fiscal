@@ -5,14 +5,14 @@ import { PrismaClienteRepository } from '../database/repositories/PrismaClienteR
 import { PrismaEmpresaRepository } from '../database/repositories/PrismaEmpresaRepository';
 import { ClienteHttpAdnNfseNacional } from '../fiscal/clientes/ClienteHttpAdnNfseNacional';
 import { AesGcmCifradorTexto } from '../security/AesGcmCifradorTexto';
-import { AlterarStatusClienteService } from '../services/AlterarStatusClienteService';
-import { AtualizarClienteService } from '../services/AtualizarClienteService';
-import { BuscarClienteService } from '../services/BuscarClienteService';
-import { CadastrarClienteService } from '../services/CadastrarClienteService';
-import { ListarClientesService } from '../services/ListarClientesService';
-import { ListarXmlsNfseClientePeriodoService } from '../services/ListarXmlsNfseClientePeriodoService';
-import { ResolverConfiguracaoFiscalEmpresaService } from '../services/ResolverConfiguracaoFiscalEmpresaService';
-import { ValidarPermissaoProducaoRealService } from '../services/ValidarPermissaoProducaoRealService';
+import { AlterarStatusClienteService } from '../services/clientes/AlterarStatusClienteService';
+import { AtualizarClienteService } from '../services/clientes/AtualizarClienteService';
+import { BuscarClienteService } from '../services/clientes/BuscarClienteService';
+import { CadastrarClienteService } from '../services/clientes/CadastrarClienteService';
+import { ListarClientesService } from '../services/clientes/ListarClientesService';
+import { ListarXmlsNfseClientePeriodoService } from '../services/clientes/ListarXmlsNfseClientePeriodoService';
+import { ResolverConfiguracaoFiscalEmpresaService } from '../services/fiscal/ResolverConfiguracaoFiscalEmpresaService';
+import { ValidarPermissaoProducaoRealService } from '../services/fiscal/ValidarPermissaoProducaoRealService';
 
 export function criarGestaoClienteController(): GestaoClienteController {
   const repository = new PrismaClienteRepository();

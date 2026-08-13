@@ -7,11 +7,11 @@ import {
 } from '../dtos/GestaoEmpresaDto';
 import { ConfiguracaoFiscalEmpresaPresenter } from '../presenters/ConfiguracaoFiscalEmpresaPresenter';
 import { EmpresaPresenter } from '../presenters/EmpresaPresenter';
-import { AtualizarConfiguracaoFiscalEmpresaAutenticadaService } from '../services/AtualizarConfiguracaoFiscalEmpresaAutenticadaService';
-import { AtualizarEmpresaAutenticadaService } from '../services/AtualizarEmpresaAutenticadaService';
-import { BuscarConfiguracaoFiscalEmpresaAutenticadaService } from '../services/BuscarConfiguracaoFiscalEmpresaAutenticadaService';
-import { BuscarEmpresaAutenticadaService } from '../services/BuscarEmpresaAutenticadaService';
-import { ConfigurarCertificadoA1EmpresaAutenticadaService } from '../services/ConfigurarCertificadoA1EmpresaAutenticadaService';
+import { AtualizarConfiguracaoFiscalEmpresaAutenticadaService } from '../services/empresas/AtualizarConfiguracaoFiscalEmpresaAutenticadaService';
+import { AtualizarEmpresaAutenticadaService } from '../services/empresas/AtualizarEmpresaAutenticadaService';
+import { BuscarConfiguracaoFiscalEmpresaAutenticadaService } from '../services/empresas/BuscarConfiguracaoFiscalEmpresaAutenticadaService';
+import { BuscarEmpresaAutenticadaService } from '../services/empresas/BuscarEmpresaAutenticadaService';
+import { ConfigurarCertificadoA1EmpresaAutenticadaService } from '../services/empresas/ConfigurarCertificadoA1EmpresaAutenticadaService';
 
 export class GestaoEmpresaController {
   constructor(

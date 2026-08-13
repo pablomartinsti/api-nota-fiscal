@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 
 import { autenticarUsuarioSchema } from '../dtos/AutenticarUsuarioDto';
-import { AutenticarUsuarioService } from '../services/AutenticarUsuarioService';
+import { AutenticarUsuarioService } from '../services/autenticacao/AutenticarUsuarioService';
 
 export class AutenticarUsuarioController {
   constructor(

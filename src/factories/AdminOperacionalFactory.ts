@@ -1,9 +1,9 @@
 import { AdminOperacionalController } from '../controllers/AdminOperacionalController';
 import { PrismaAdminOperacionalRepository } from '../database/repositories/PrismaAdminOperacionalRepository';
-import { AtualizarEmissaoEmpresaAdminOperacionalService } from '../services/AtualizarEmissaoEmpresaAdminOperacionalService';
-import { ListarEventosFiscaisAdminOperacionalService } from '../services/ListarEventosFiscaisAdminOperacionalService';
-import { ListarEmpresasAdminOperacionalService } from '../services/ListarEmpresasAdminOperacionalService';
-import { ListarNotasAdminOperacionalService } from '../services/ListarNotasAdminOperacionalService';
+import { AtualizarEmissaoEmpresaAdminOperacionalService } from '../services/admin-operacional/AtualizarEmissaoEmpresaAdminOperacionalService';
+import { ListarEventosFiscaisAdminOperacionalService } from '../services/admin-operacional/ListarEventosFiscaisAdminOperacionalService';
+import { ListarEmpresasAdminOperacionalService } from '../services/admin-operacional/ListarEmpresasAdminOperacionalService';
+import { ListarNotasAdminOperacionalService } from '../services/admin-operacional/ListarNotasAdminOperacionalService';
 
 export function criarAdminOperacionalController(): AdminOperacionalController {
   const adminOperacionalRepository = new PrismaAdminOperacionalRepository();

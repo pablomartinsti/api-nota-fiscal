@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 
 import { realizarOnboardingSchema } from '../dtos/RealizarOnboardingDto';
 import { EmpresaPresenter } from '../presenters/EmpresaPresenter';
-import { RealizarOnboardingService } from '../services/RealizarOnboardingService';
+import { RealizarOnboardingService } from '../services/onboarding/RealizarOnboardingService';
 
 export class RealizarOnboardingController {
   constructor(

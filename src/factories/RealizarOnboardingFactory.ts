@@ -1,7 +1,7 @@
 import { RealizarOnboardingController } from '../controllers/RealizarOnboardingController';
 import { PrismaOnboardingRepository } from '../database/repositories/PrismaOnboardingRepository';
 import { BcryptGeradorHash } from '../security/BcryptGeradorHash';
-import { RealizarOnboardingService } from '../services/RealizarOnboardingService';
+import { RealizarOnboardingService } from '../services/onboarding/RealizarOnboardingService';
 
 export function criarRealizarOnboardingController(): RealizarOnboardingController {
   return new RealizarOnboardingController(

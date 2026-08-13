@@ -8,11 +8,11 @@ import { AutenticacaoMiddleware } from '../middleware/autenticacao.middleware';
 import { BcryptComparadorHash } from '../security/BcryptComparadorHash';
 import { BcryptGeradorHash } from '../security/BcryptGeradorHash';
 import { JwtGerenciadorToken } from '../security/JwtGerenciadorToken';
-import { AutenticarUsuarioService } from '../services/AutenticarUsuarioService';
-import { AlterarSenhaUsuarioAutenticadoService } from '../services/AlterarSenhaUsuarioAutenticadoService';
-import { AtualizarContaUsuarioService } from '../services/AtualizarContaUsuarioService';
-import { ObterPerfilAutenticadoService } from '../services/ObterPerfilAutenticadoService';
-import { ValidarContextoAutenticadoService } from '../services/ValidarContextoAutenticadoService';
+import { AutenticarUsuarioService } from '../services/autenticacao/AutenticarUsuarioService';
+import { AlterarSenhaUsuarioAutenticadoService } from '../services/conta/AlterarSenhaUsuarioAutenticadoService';
+import { AtualizarContaUsuarioService } from '../services/conta/AtualizarContaUsuarioService';
+import { ObterPerfilAutenticadoService } from '../services/autenticacao/ObterPerfilAutenticadoService';
+import { ValidarContextoAutenticadoService } from '../services/autenticacao/ValidarContextoAutenticadoService';
 
 function criarDependenciasAutenticacao() {
   const usuarioRepository = new PrismaUsuarioRepository();

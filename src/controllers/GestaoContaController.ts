@@ -5,8 +5,8 @@ import {
   atualizarContaSchema,
 } from '../dtos/GestaoContaDto';
 import { UsuarioPresenter } from '../presenters/UsuarioPresenter';
-import { AlterarSenhaUsuarioAutenticadoService } from '../services/AlterarSenhaUsuarioAutenticadoService';
-import { AtualizarContaUsuarioService } from '../services/AtualizarContaUsuarioService';
+import { AlterarSenhaUsuarioAutenticadoService } from '../services/conta/AlterarSenhaUsuarioAutenticadoService';
+import { AtualizarContaUsuarioService } from '../services/conta/AtualizarContaUsuarioService';
 
 export class GestaoContaController {
   constructor(

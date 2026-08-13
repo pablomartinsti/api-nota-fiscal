@@ -10,23 +10,23 @@ import {
 } from '../dtos/GestaoNotaServicoDto';
 import { NotaServicoEventoFiscalPresenter } from '../presenters/NotaServicoEventoFiscalPresenter';
 import { NotaServicoPresenter } from '../presenters/NotaServicoPresenter';
-import { AtualizarRascunhoNotaServicoService } from '../services/AtualizarRascunhoNotaServicoService';
-import { BaixarDanfseNotaServicoService } from '../services/BaixarDanfseNotaServicoService';
-import { BuscarNotaServicoService } from '../services/BuscarNotaServicoService';
-import { CancelarNfseNotaServicoService } from '../services/CancelarNfseNotaServicoService';
-import { CadastrarRascunhoNotaServicoService } from '../services/CadastrarRascunhoNotaServicoService';
-import { ConsultarNfseEmitidaNotaServicoService } from '../services/ConsultarNfseEmitidaNotaServicoService';
-import { CriarRascunhoSubstituicaoNotaServicoService } from '../services/CriarRascunhoSubstituicaoNotaServicoService';
-import { EnviarDpsAssinadaNotaServicoService } from '../services/EnviarDpsAssinadaNotaServicoService';
-import { ExcluirRascunhoNotaServicoService } from '../services/ExcluirRascunhoNotaServicoService';
-import { GerarXmlDpsNotaServicoService } from '../services/GerarXmlDpsNotaServicoService';
-import { GerarXmlDpsAssinadoNotaServicoService } from '../services/GerarXmlDpsAssinadoNotaServicoService';
-import { ListarEventosFiscaisNotaServicoService } from '../services/ListarEventosFiscaisNotaServicoService';
-import { ListarNotasServicoService } from '../services/ListarNotasServicoService';
-import { ReconciliarEnvioDpsNotaServicoService } from '../services/ReconciliarEnvioDpsNotaServicoService';
-import { RetornarNotaServicoParaRascunhoService } from '../services/RetornarNotaServicoParaRascunhoService';
-import { MarcarErroNotaServicoComoResolvidoService } from '../services/MarcarErroNotaServicoComoResolvidoService';
-import { ValidarProntidaoFiscalNotaServicoService } from '../services/ValidarProntidaoFiscalNotaServicoService';
+import { AtualizarRascunhoNotaServicoService } from '../services/notas-servico/AtualizarRascunhoNotaServicoService';
+import { BaixarDanfseNotaServicoService } from '../services/notas-servico/BaixarDanfseNotaServicoService';
+import { BuscarNotaServicoService } from '../services/notas-servico/BuscarNotaServicoService';
+import { CancelarNfseNotaServicoService } from '../services/notas-servico/CancelarNfseNotaServicoService';
+import { CadastrarRascunhoNotaServicoService } from '../services/notas-servico/CadastrarRascunhoNotaServicoService';
+import { ConsultarNfseEmitidaNotaServicoService } from '../services/notas-servico/ConsultarNfseEmitidaNotaServicoService';
+import { CriarRascunhoSubstituicaoNotaServicoService } from '../services/notas-servico/CriarRascunhoSubstituicaoNotaServicoService';
+import { EnviarDpsAssinadaNotaServicoService } from '../services/notas-servico/EnviarDpsAssinadaNotaServicoService';
+import { ExcluirRascunhoNotaServicoService } from '../services/notas-servico/ExcluirRascunhoNotaServicoService';
+import { GerarXmlDpsNotaServicoService } from '../services/notas-servico/GerarXmlDpsNotaServicoService';
+import { GerarXmlDpsAssinadoNotaServicoService } from '../services/notas-servico/GerarXmlDpsAssinadoNotaServicoService';
+import { ListarEventosFiscaisNotaServicoService } from '../services/notas-servico/ListarEventosFiscaisNotaServicoService';
+import { ListarNotasServicoService } from '../services/notas-servico/ListarNotasServicoService';
+import { ReconciliarEnvioDpsNotaServicoService } from '../services/notas-servico/ReconciliarEnvioDpsNotaServicoService';
+import { RetornarNotaServicoParaRascunhoService } from '../services/notas-servico/RetornarNotaServicoParaRascunhoService';
+import { MarcarErroNotaServicoComoResolvidoService } from '../services/notas-servico/MarcarErroNotaServicoComoResolvidoService';
+import { ValidarProntidaoFiscalNotaServicoService } from '../services/notas-servico/ValidarProntidaoFiscalNotaServicoService';
 
 export class GestaoNotaServicoController {
   constructor(

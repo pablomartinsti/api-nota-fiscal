@@ -1,10 +1,10 @@
 import { GestaoServicoController } from '../controllers/GestaoServicoController';
 import { PrismaServicoRepository } from '../database/repositories/PrismaServicoRepository';
-import { AlterarStatusServicoService } from '../services/AlterarStatusServicoService';
-import { AtualizarServicoService } from '../services/AtualizarServicoService';
-import { BuscarServicoService } from '../services/BuscarServicoService';
-import { CadastrarServicoService } from '../services/CadastrarServicoService';
-import { ListarServicosService } from '../services/ListarServicosService';
+import { AlterarStatusServicoService } from '../services/servicos/AlterarStatusServicoService';
+import { AtualizarServicoService } from '../services/servicos/AtualizarServicoService';
+import { BuscarServicoService } from '../services/servicos/BuscarServicoService';
+import { CadastrarServicoService } from '../services/servicos/CadastrarServicoService';
+import { ListarServicosService } from '../services/servicos/ListarServicosService';
 
 export function criarGestaoServicoController(): GestaoServicoController {
   const repository = new PrismaServicoRepository();

@@ -7,10 +7,10 @@ import {
   usuarioParamsSchema,
 } from '../dtos/GestaoUsuarioDto';
 import { UsuarioPresenter } from '../presenters/UsuarioPresenter';
-import { AlterarPerfilUsuarioService } from '../services/AlterarPerfilUsuarioService';
-import { AlterarStatusUsuarioService } from '../services/AlterarStatusUsuarioService';
-import { CadastrarUsuarioEmpresaService } from '../services/CadastrarUsuarioEmpresaService';
-import { ListarUsuariosEmpresaService } from '../services/ListarUsuariosEmpresaService';
+import { AlterarPerfilUsuarioService } from '../services/usuarios/AlterarPerfilUsuarioService';
+import { AlterarStatusUsuarioService } from '../services/usuarios/AlterarStatusUsuarioService';
+import { CadastrarUsuarioEmpresaService } from '../services/usuarios/CadastrarUsuarioEmpresaService';
+import { ListarUsuariosEmpresaService } from '../services/usuarios/ListarUsuariosEmpresaService';
 
 export class GestaoUsuarioController {
   constructor(

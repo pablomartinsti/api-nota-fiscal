@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 
 import { AutenticacaoInvalidaError } from '../errors/AutenticacaoInvalidaError';
 import { GerenciadorToken } from '../security/GerenciadorToken';
-import { ValidarContextoAutenticadoService } from '../services/ValidarContextoAutenticadoService';
+import { ValidarContextoAutenticadoService } from '../services/autenticacao/ValidarContextoAutenticadoService';
 
 export class AutenticacaoMiddleware {
   constructor(

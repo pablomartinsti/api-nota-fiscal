@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 
 import { EmpresaPresenter } from '../presenters/EmpresaPresenter';
-import { ObterPerfilAutenticadoService } from '../services/ObterPerfilAutenticadoService';
+import { ObterPerfilAutenticadoService } from '../services/autenticacao/ObterPerfilAutenticadoService';
 
 export class ObterPerfilAutenticadoController {
   constructor(
