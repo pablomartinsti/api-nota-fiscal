@@ -220,6 +220,46 @@ describe('EnviarDpsAssinadaNotaServicoService', () => {
     expect(notaOriginal.status).toBe(StatusNota.SUBSTITUIDA);
   });
 
+  it('nao deve enviar substituta com valor diferente da nota original', async () => {
+    const notaOriginal = criarNota(StatusNota.EMITIDA, {
+      id: 'nota-original-1',
+      valorServico: 250,
+      chaveAcesso: '12345678901234567890123456789012345678901234567890',
+    });
+    const notaSubstituta = criarNota(StatusNota.RASCUNHO, {
+      id: 'nota-substituta-1',
+      valorServico: 25,
+      notaSubstituidaId: 'nota-original-1',
+      chaveAcessoSubstituida:
+        '12345678901234567890123456789012345678901234567890',
+      codigoMotivoSubstituicao: CodigoMotivoSubstituicaoNfse.OUTROS,
+      motivoSubstituicao: 'Correcao de dados da NFS-e em homologacao',
+    });
+    const { service, buscarPorIdEEmpresaId, clienteNfse, gerarXml, salvar } =
+      criarService(notaSubstituta);
+
+    buscarPorIdEEmpresaId.mockImplementation(async (id: string) => {
+      if (id === 'nota-substituta-1') {
+        return notaSubstituta;
+      }
+
+      if (id === 'nota-original-1') {
+        return notaOriginal;
+      }
+
+      return null;
+    });
+
+    await expect(
+      service.executar(autenticacao, 'nota-substituta-1'),
+    ).rejects.toThrow(
+      'Para substituir uma NFS-e do Simples Nacional, o valor do servico deve ser igual ao da nota original.',
+    );
+    expect(gerarXml.executar).not.toHaveBeenCalled();
+    expect(clienteNfse.enviarDpsAssinada).not.toHaveBeenCalled();
+    expect(salvar).not.toHaveBeenCalled();
+  });
+
   it('nao deve enviar substituta quando nota original nao esta emitida', async () => {
     const notaOriginal = criarNota(StatusNota.CANCELADA, {
       id: 'nota-original-1',

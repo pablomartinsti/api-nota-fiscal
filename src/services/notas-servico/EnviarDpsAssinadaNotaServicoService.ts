@@ -27,6 +27,7 @@ import {
   obterConfiguracaoCertificadoClienteNfse,
   prepararInputClienteNfse,
 } from '../fiscal/PrepararInputClienteNfseService';
+import { validarValorServicoSubstituicao } from './RegrasSubstituicaoNotaServico';
 
 export class EnviarDpsAssinadaNotaServicoService {
   constructor(
@@ -59,6 +60,9 @@ export class EnviarDpsAssinadaNotaServicoService {
 
     const notaSubstituida =
       await this.buscarNotaSubstituidaParaEmissao(autenticacao, nota);
+    if (notaSubstituida) {
+      validarValorServicoSubstituicao(notaSubstituida, nota.valorServico);
+    }
 
     await this.resolverConfiguracaoFiscal.validarEmissaoHabilitada(
       autenticacao.empresaId,

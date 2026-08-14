@@ -42,7 +42,7 @@ describe('CriarRascunhoSubstituicaoNotaServicoService', () => {
       {
         clienteId: 'cliente-2',
         servicoId: 'servico-2',
-        valorServico: 700,
+        valorServico: 500,
         descricao: 'Servico corrigido',
         serieDps: '1',
         dataCompetencia: new Date('2026-06-18T00:00:00.000Z'),
@@ -62,7 +62,7 @@ describe('CriarRascunhoSubstituicaoNotaServicoService', () => {
     expect(resultado.usuarioId).toBe('usuario-2');
     expect(resultado.clienteId).toBe('cliente-1');
     expect(resultado.servicoId).toBe('servico-2');
-    expect(resultado.valorServico).toBe(700);
+    expect(resultado.valorServico).toBe(500);
     expect(resultado.aliquotaIss).toBe(2);
     expect(resultado.serieDps).toBe('1');
     expect(resultado.numeroDps).toBe('2');
@@ -77,6 +77,24 @@ describe('CriarRascunhoSubstituicaoNotaServicoService', () => {
       'Correcao de dados da NFS-e em homologacao',
     );
     expect(notaSubstituida.status).toBe(StatusNota.EMITIDA);
+  });
+
+  it('deve bloquear substituicao com valor diferente da nota original', async () => {
+    const notaSubstituida = criarNotaEmitida();
+    const { service, salvar, validarReferencias } = criarService(
+      notaSubstituida,
+    );
+
+    await expect(
+      service.executar(autenticacao, 'nota-original-1', {
+        ...dadosSubstituicao(),
+        valorServico: 700,
+      }),
+    ).rejects.toThrow(
+      'Para substituir uma NFS-e do Simples Nacional, o valor do servico deve ser igual ao da nota original.',
+    );
+    expect(validarReferencias.executar).not.toHaveBeenCalled();
+    expect(salvar).not.toHaveBeenCalled();
   });
 
   it('nao deve substituir nota inexistente, cancelada ou sem chave', async () => {
@@ -195,7 +213,7 @@ function dadosSubstituicao() {
   return {
     clienteId: 'cliente-2',
     servicoId: 'servico-2',
-    valorServico: 700,
+    valorServico: 500,
     descricao: 'Servico corrigido',
     serieDps: '1',
     numeroDps: '2',

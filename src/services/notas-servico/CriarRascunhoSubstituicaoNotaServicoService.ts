@@ -12,6 +12,7 @@ import { GerarProximoNumeroDpsService } from './GerarProximoNumeroDpsService';
 import { ResolverConfiguracaoFiscalEmpresaService } from '../fiscal/ResolverConfiguracaoFiscalEmpresaService';
 import { ValidarReferenciasNotaServicoService } from './ValidarReferenciasNotaServicoService';
 import { ValidarPermissaoProducaoRealService } from '../fiscal/ValidarPermissaoProducaoRealService';
+import { validarValorServicoSubstituicao } from './RegrasSubstituicaoNotaServico';
 
 export interface CriarRascunhoSubstituicaoNotaServicoInput
   extends CadastrarRascunhoNotaServicoInput {
@@ -62,6 +63,10 @@ export class CriarRascunhoSubstituicaoNotaServicoService {
       autenticacao.empresaId,
       notaSubstituida.ambienteFiscal,
     );
+    validarValorServicoSubstituicao(
+      notaSubstituida,
+      dados.valorServico,
+    );
 
     const { servico } = await this.validarReferencias.executar(
       autenticacao.empresaId,
@@ -98,7 +103,7 @@ export class CriarRascunhoSubstituicaoNotaServicoService {
       informacoesComplementares:
         dados.informacoesComplementares ??
         notaSubstituida.informacoesComplementares,
-      valorServico: dados.valorServico,
+      valorServico: notaSubstituida.valorServico,
       aliquotaIss: servico.aliquotaIss,
       descricao: dados.descricao,
       notaSubstituidaId: notaSubstituida.id,
