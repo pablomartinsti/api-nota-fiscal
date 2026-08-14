@@ -62,7 +62,7 @@ describe('CriarRascunhoSubstituicaoNotaServicoService', () => {
     expect(resultado.usuarioId).toBe('usuario-2');
     expect(resultado.clienteId).toBe('cliente-1');
     expect(resultado.servicoId).toBe('servico-2');
-    expect(resultado.valorServico).toBe(500);
+    expect(resultado.valorServico).toBe(700);
     expect(resultado.aliquotaIss).toBe(2);
     expect(resultado.serieDps).toBe('1');
     expect(resultado.numeroDps).toBe('2');

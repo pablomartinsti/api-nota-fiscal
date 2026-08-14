@@ -98,7 +98,7 @@ export class CriarRascunhoSubstituicaoNotaServicoService {
       informacoesComplementares:
         dados.informacoesComplementares ??
         notaSubstituida.informacoesComplementares,
-      valorServico: notaSubstituida.valorServico,
+      valorServico: dados.valorServico,
       aliquotaIss: servico.aliquotaIss,
       descricao: dados.descricao,
       notaSubstituidaId: notaSubstituida.id,
