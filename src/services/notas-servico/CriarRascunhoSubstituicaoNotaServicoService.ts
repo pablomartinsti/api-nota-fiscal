@@ -65,7 +65,7 @@ export class CriarRascunhoSubstituicaoNotaServicoService {
 
     const { servico } = await this.validarReferencias.executar(
       autenticacao.empresaId,
-      dados.clienteId,
+      notaSubstituida.clienteId,
       dados.servicoId,
     );
     const configuracaoFiscal = await this.resolverConfiguracaoFiscal.executar(
@@ -81,17 +81,24 @@ export class CriarRascunhoSubstituicaoNotaServicoService {
     const notaSubstituta = new NotaServico({
       empresaId: autenticacao.empresaId,
       usuarioId: autenticacao.usuarioId,
-      clienteId: dados.clienteId,
+      clienteId: notaSubstituida.clienteId,
       servicoId: dados.servicoId,
       ambienteFiscal: notaSubstituida.ambienteFiscal,
       serieDps,
       numeroDps,
-      dataCompetencia: dados.dataCompetencia,
-      codigoMunicipioPrestacao: dados.codigoMunicipioPrestacao,
-      tributacaoIssqn: dados.tributacaoIssqn,
-      tipoRetencaoIssqn: dados.tipoRetencaoIssqn,
-      informacoesComplementares: dados.informacoesComplementares,
-      valorServico: dados.valorServico,
+      dataCompetencia:
+        notaSubstituida.dataCompetencia ?? dados.dataCompetencia,
+      codigoMunicipioPrestacao:
+        notaSubstituida.codigoMunicipioPrestacao ??
+        dados.codigoMunicipioPrestacao,
+      tributacaoIssqn:
+        dados.tributacaoIssqn ?? notaSubstituida.tributacaoIssqn,
+      tipoRetencaoIssqn:
+        dados.tipoRetencaoIssqn ?? notaSubstituida.tipoRetencaoIssqn,
+      informacoesComplementares:
+        dados.informacoesComplementares ??
+        notaSubstituida.informacoesComplementares,
+      valorServico: notaSubstituida.valorServico,
       aliquotaIss: servico.aliquotaIss,
       descricao: dados.descricao,
       notaSubstituidaId: notaSubstituida.id,
