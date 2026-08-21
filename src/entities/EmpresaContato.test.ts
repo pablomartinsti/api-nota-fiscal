@@ -27,6 +27,7 @@ describe('Contato e endereco da Empresa', () => {
       cep: '80.000-000',
       endereco: 'Rua Atualizada',
       numero: '100',
+      complemento: 'Sala 12',
       bairro: 'Centro',
       cidade: 'Curitiba',
       uf: 'PR',
@@ -37,6 +38,7 @@ describe('Contato e endereco da Empresa', () => {
     expect(empresa.cep).toBe('80000000');
     expect(empresa.endereco).toBe('Rua Atualizada');
     expect(empresa.numero).toBe('100');
+    expect(empresa.complemento).toBe('Sala 12');
     expect(empresa.bairro).toBe('Centro');
   });
 

@@ -37,6 +37,7 @@ export interface EmpresaProps {
   cep?: string;
   endereco?: string;
   numero?: string;
+  complemento?: string;
   bairro?: string;
   cidade: string;
   uf: string;
@@ -55,6 +56,7 @@ export interface AlterarDadosCadastraisProps {
   cep?: string;
   endereco?: string;
   numero?: string;
+  complemento?: string;
   bairro?: string;
   cidade: string;
   uf: string;
@@ -75,6 +77,7 @@ export class Empresa {
   private _cep?: string;
   private _endereco?: string;
   private _numero?: string;
+  private _complemento?: string;
   private _bairro?: string;
   private _cidade: string;
   private _uf: string;
@@ -139,6 +142,7 @@ export class Empresa {
     this._cep = cep;
     this._endereco = props.endereco;
     this._numero = props.numero;
+    this._complemento = props.complemento;
     this._bairro = props.bairro;
     this._cidade = cidade;
     this._uf = uf;
@@ -205,6 +209,10 @@ export class Empresa {
     return this._numero;
   }
 
+  get complemento(): string | undefined {
+    return this._complemento;
+  }
+
   get bairro(): string | undefined {
     return this._bairro;
   }
@@ -264,6 +272,7 @@ export class Empresa {
     this._cep = cep;
     this._endereco = props.endereco;
     this._numero = props.numero;
+    this._complemento = props.complemento;
     this._bairro = props.bairro;
     this._cidade = cidade;
     this._uf = uf;

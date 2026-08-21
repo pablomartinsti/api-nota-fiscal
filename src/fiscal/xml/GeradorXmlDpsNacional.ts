@@ -181,6 +181,7 @@ export class GeradorXmlDpsNacional implements GeradorXmlDps {
     this.adicionarTexto(enderecoNacional, 'CEP', cep);
     this.adicionarTexto(endereco, 'xLgr', cliente.endereco);
     this.adicionarTexto(endereco, 'nro', cliente.numero);
+    this.adicionarTextoOpcional(endereco, 'xCpl', cliente.complemento);
     this.adicionarTexto(endereco, 'xBairro', cliente.bairro);
   }
 

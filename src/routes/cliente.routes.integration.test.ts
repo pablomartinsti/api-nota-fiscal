@@ -61,6 +61,7 @@ function dadosCliente(cpfCnpj = documentoUnico()) {
     cep: '12345-678',
     endereco: 'Rua Teste',
     numero: '100',
+    complemento: 'Apto 301',
     bairro: 'Centro',
     cidade: 'Campinas',
     uf: 'SP',
@@ -101,6 +102,7 @@ describe('Gestão de clientes HTTP', () => {
     expect(cadastro.status).toBe(201);
     expect(cadastro.body.empresaId).toBe(contexto.empresa.id);
     expect(cadastro.body.cpfCnpj).toBe(dados.cpfCnpj);
+    expect(cadastro.body.complemento).toBe('Apto 301');
 
     const consulta = await request(app)
       .get(`/clientes/${cadastro.body.id}`)
@@ -132,6 +134,7 @@ describe('Gestão de clientes HTTP', () => {
     expect(atualizacao.body.nomeRazaoSocial).toBe('Cliente Atualizado Ltda');
     expect(atualizacao.body.cpfCnpj).toBe(dados.cpfCnpj);
     expect(atualizacao.body.empresaId).toBe(contexto.empresa.id);
+    expect(atualizacao.body.complemento).toBe('Apto 301');
     expect(status.status).toBe(200);
     expect(status.body.ativo).toBe(false);
   });

@@ -12,6 +12,7 @@ export class ClientePresenter {
       cep: cliente.cep,
       endereco: cliente.endereco,
       numero: cliente.numero,
+      complemento: cliente.complemento,
       bairro: cliente.bairro,
       cidade: cliente.cidade,
       uf: cliente.uf,

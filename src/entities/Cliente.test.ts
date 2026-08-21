@@ -165,6 +165,7 @@ describe('Cliente', () => {
       cep: '87654-321',
       endereco: 'Rua Teste',
       numero: '100',
+      complemento: 'Apto 301',
       bairro: 'Centro',
       cidade: ' Curitiba ',
       uf: 'pr',
@@ -177,6 +178,7 @@ describe('Cliente', () => {
     expect(cliente.cep).toBe('87654321');
     expect(cliente.endereco).toBe('Rua Teste');
     expect(cliente.numero).toBe('100');
+    expect(cliente.complemento).toBe('Apto 301');
     expect(cliente.bairro).toBe('Centro');
     expect(cliente.cidade).toBe('Curitiba');
     expect(cliente.uf).toBe('PR');

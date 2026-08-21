@@ -32,6 +32,7 @@ export const realizarOnboardingSchema = z.object({
       .optional(),
     endereco: z.string().optional(),
     numero: z.string().optional(),
+    complemento: z.string().trim().max(156).optional(),
     bairro: z.string().optional(),
     cidade: z.string().trim().min(1),
     uf: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/),

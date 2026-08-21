@@ -42,6 +42,7 @@ describe('GeradorXmlDpsNacional', () => {
       cep: '13010-000',
       endereco: 'Rua Central',
       numero: '123',
+      complemento: 'Apto 301',
       bairro: 'Centro',
       cidade: 'Campinas',
       uf: 'SP',
@@ -103,6 +104,7 @@ describe('GeradorXmlDpsNacional', () => {
     expect(xml).toContain('<CEP>13010000</CEP>');
     expect(xml).toContain('<xLgr>Rua Central</xLgr>');
     expect(xml).toContain('<nro>123</nro>');
+    expect(xml).toContain('<xCpl>Apto 301</xCpl>');
     expect(xml).toContain('<xBairro>Centro</xBairro>');
     expect(xml).toContain('<fone>19999998888</fone>');
     expect(xml).toContain('<email>cliente@parceiro.com.br</email>');

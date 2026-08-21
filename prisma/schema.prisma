@@ -93,6 +93,7 @@ model Empresa {
   cep                           String?
   endereco                      String?
   numero                        String?
+  complemento                   String?
   bairro                        String?
   cidade                        String
   uf                            String
@@ -163,6 +164,7 @@ model Cliente {
   cep                 String?
   endereco            String?
   numero              String?
+  complemento         String?
   bairro              String?
   cidade              String
   uf                  String

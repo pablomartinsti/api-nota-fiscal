@@ -17,6 +17,7 @@ export class EmpresaPresenter {
       cep: empresa.cep,
       endereco: empresa.endereco,
       numero: empresa.numero,
+      complemento: empresa.complemento,
       bairro: empresa.bairro,
       cidade: empresa.cidade,
       uf: empresa.uf,
